@@ -4,7 +4,7 @@
 
 Cortex is a memory layer built on **CockroachDB** so agents never lose context, and humans stay in control. The DB is the system of record for agentic memory — a task that earlier databases weren't built for.
 
-![MIT license](https://img.shields.io/badge/license-MIT-green) ![CockroachDB](https://img.shields.io/badge/storage-CockroachDB-29b1f8) ![AWS](https://img.shields.io/badge/cloud-AWS-orange) ![TypeScript](https://img.shields.io/badge/TypeScript-3178c6) ![status](https://img.shields.io/badge/status-building-yellow)
+![Apache-2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg) ![CockroachDB](https://img.shields.io/badge/storage-CockroachDB-29b1f8) ![AWS](https://img.shields.io/badge/cloud-AWS-orange) ![TypeScript](https://img.shields.io/badge/TypeScript-3178c6) ![status](https://img.shields.io/badge/status-building-yellow)
 
 ---
 
