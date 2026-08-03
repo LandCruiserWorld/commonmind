@@ -60,6 +60,14 @@
     "cloud": ["AWS SNS", "AWS Lambda", "AWS S3", "Amazon Bedrock"],
     "cockroachTools": ["Distributed Vector Indexing", "Managed MCP Server", "ccloud CLI", "Agent Skills Repo", "Changefeeds (CDC)"]
   },
+  "whyCockroachDB": [
+    "Memory must never go down: data is automatically replicated across nodes for high availability and failover — hardware failure or maintenance never takes agent memory away.",
+    "Kill-the-node resilience: survives disk, machine, rack, and even datacenter failures with minimal latency disruption and no manual intervention.",
+    "Scales horizontally: add nodes as the agent workforce grows, with no performance drop on capture or recall.",
+    "Strong consistency: ACID transactions on a strongly-consistent store mean every replica reflects the same state — no contradictory memory between agents and humans.",
+    "Multi-region and geo-partitioning: reads near the agent for low latency; data-sovereignty compliance; survives regional outages.",
+    "PostgreSQL compatibility: Postgres wire protocol and most Postgres syntax — your tools and engineers drop in without a new language."
+  ],
   "installAndConnect": {
     "install": {"primary": "npm install -g cortex", "scaffold": "npx create-cortex my-app", "note": "One command, zero accounts to see the magic.", "alternatives": ["brew install cortex", "curl -LsS install.sh | sh", "bunx"]},
     "connectExistingClis": ["Claude Code", "Antigravity (agy)", "OpenCode", "Kimi K3", "Qwen", "Codex", "Cursor (MCP)"],
@@ -74,7 +82,22 @@
     },
     "principle": "Meet developers where they already are."
   },
-  "hackathon": {"name": "CockroachDB × AWS Hackathon — Build with Agentic Memory", "deadline": "2026-08-18T21:00:00Z", "status": "building"},
+  "hackathon": {
+    "name": "CockroachDB × AWS Hackathon — Build with Agentic Memory",
+    "deadline": "2026-08-18T21:00:00Z",
+    "status": "building",
+    "submissionGoals": [
+      "Provide a URL to a PUBLIC open-source code repository (GitHub) for judging and testing.",
+      "Repos must contain all necessary source code, a clear README, required dependencies, example configurations/datasets, and setup-and-run instructions so the project is fully functional.",
+      "Repo must be PUBLIC and include an OPEN-SOURCE LICENSE file (Apache-2.0 chosen). The license must be detectable and visible at the top of the repository page (in the About section).",
+      "Provide a URL to a functional demo app.",
+      "Include a video (UNDER 3 minutes) demonstrating the submission and the CockroachDB memory layer at work, uploaded to YouTube or Vimeo and made PUBLIC.",
+      "Tell which CockroachDB tools were used (MCP Server, ccloud CLI, Distributed Vector Indexing, Agent Skills) and HOW — what did the agent actually do with them?",
+      "Tell which AWS services were used (Amazon Bedrock, AWS Lambda, Amazon S3, etc.) and HOW.",
+      "Optional: include an architectural diagram showing how CockroachDB, AWS, and the agent interact.",
+      "Optional: provide feedback on the CockroachDB AI tools or features."
+    ]
+  },
   "buildLog": [
     {"id":"redesign","title":"Landing page · premium redesign","state":"done","date":"Aug 4"},
     {"id":"bible","title":"Product bible (10 principles) + machine-readable spec","state":"done","date":"Aug 4"},
@@ -483,6 +506,22 @@
       <p>Only the moments that cross a decision — started, needs you, finished differently.</p>
       <div class="flows"><span class="flow" style="color:var(--accent)">→ START · deploy 184</span><span class="flow" style="color:var(--amber)">➜ NEEDS YOU · approve?</span><span class="flow" style="color:var(--accent)">✓ DONE · shipped · 2m</span></div>
     </div>
+  </div>
+</section>
+
+<section id="why" class="wrap">
+  <div class="sec">
+    <div class="sec-label">Built on CockroachDB</div>
+    <h2>Why agent memory needs a database that never goes down.</h2>
+    <p class="sub">An agent whose memory goes offline doesn't degrade gracefully — it stops. So Cortex stores its memory in the database designed to survive: <strong>resilient, globally consistent, and SQL-familiar.</strong></p>
+  </div>
+  <div class="grid grid-3" style="margin-top:40px">
+    <div class="card"><div class="ic">🛡</div><h3>Never loses your memory</h3><p>Data is automatically replicated across multiple nodes for high availability and failover. Hardware failure or maintenance won't take your agents' memory away.</p></div>
+    <div class="card"><div class="ic">🌍</div><h3>Resilient to the kill-the-node test</h3><p>Survives disk, machine, rack, and even datacenter failures with minimal latency disruption and no manual intervention — which is why principle #10 is committed to on camera.</p></div>
+    <div class="card"><div class="ic">↔️</div><h3>Scales horizontally</h3><p>As your workforce of agents grows, add nodes. Captures, recalls, and the memory graph scale without a drop in performance.</p></div>
+    <div class="card"><div class="ic">✓</div><h3>Strongly consistent, always</h3><p>ACID transactions over a transactional and strongly-consistent store — every copy across nodes reflects the same state, so agents and humans never see contradictory memory.</p></div>
+    <div class="card"><div class="ic">📍</div><h3>Multi-region & geo-partitioning</h3><p>Reads near your agents for low latency, meets data-sovereignty requirements, and survives regional outages — an extra layer of data safety.</p></div>
+    <div class="card"><div class="ic">🧩</div><h3>SQL you already know</h3><p>PostgreSQL wire protocol and most Postgres syntax. Your engineers and your tools migrate onto Cortex without learning a new language.</p></div>
   </div>
 </section>
 

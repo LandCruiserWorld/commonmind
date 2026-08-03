@@ -104,7 +104,7 @@ Everything is a wedge into the next. This prevents the classic 2-week, all-or-no
 ## 6. 15-Day Execution Plan (Gantt-style, days to Aug 18)
 
 ### Phase 0: Foundation (Days 1–2)
-- [ ] Set up GitHub repo (public, MIT license) with README, structure (`src/`, `tests/`, `docs/`)
+- [ ] Set up GitHub repo (public, Apache-2.0) with README, structure (`src/`, `tests/`, `docs/`)
 - [ ] CokDB Cloud cluster (GLOBAL multi-node) provisioned via **ccloud CLI** (JSON-out, RBAC)
 - [ ] Schema migration: the full `DEVELOPER_SPEC.md` §4 model, applied
 - [ ] Pick naming: candidate final name
