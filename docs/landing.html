@@ -470,7 +470,7 @@
     <div class="sec gx-head">
       <div class="sec-label">Not a log. A living brain.</div>
       <h2>See your company brain — every memory, mapped.</h2>
-      <p class="sub">Context windows are temporary. RAG helps an agent answer better; <strong>memory helps it behave smarter.</strong> Cortex visualizes that memory as a graph the whole company builds.</p>
+      <p class="sub">Take one company. The brain starts with the people — <strong>employees</strong> — and from each of them stems everything they know: decisions, handoffs, runbooks, client history. That knowledge <strong>stays</strong>, outlives any person or agent, and compounds into the company's memory.</p>
     </div>
     <div class="gx-grid">
       <div class="graph-frame">
@@ -775,46 +775,97 @@
   }, { threshold: 0.12 });
   document.querySelectorAll('.reveal').forEach((el, i) => { el.style.transitionDelay = (i % 4) * 60 + 'ms'; io.observe(el); });
 
-  /* interactive memory graph (product visualization) */
+  /* interactive memory graph — the Company brain (product visualization) */
   (function () {
     const cv = document.getElementById('graph-canvas'); if (!cv) return;
     const ctx = cv.getContext('2d'); const DPR = Math.min(window.devicePixelRatio || 1, 2);
-    let W, H;
-    const ACCENT = '#00ADB5', CYAN = '#00ADB5', FAINT = '#717986', PRIV = 'rgba(0,173,181,0.16)';
+    let W, H, view = 'public';
+    const ACCENT = '#00ADB5', FAINT = '#717986', PRIV = 'rgba(0,173,181,0.16)';
     const hub = { x: 0, y: 0 };
-    let nodes = [
-      { a:-2.5, r:9, label:'Agents', cx:-165, cy:-78 },{ a:-1.2, r:7, cx:-205, cy:-48 },{ a:-3.1, r:7, cx:-138, cy:-108 },
-      { a:1.2, r:7, label:'Trading', cx:155, cy:-105 },{ a:2.7, r:8, cx:205, cy:-45 },{ a:3.1, r:8, cx:130, cy:-70 },
-      { a:0.8, r:7, label:'Game', cx:25, cy:118 },{ a:2.0, r:8, cx:-55, cy:96 },
-      { a:-0.4, r:7, cx:-215, cy:95, priv:true },{ a:-2.6, r:8, cx:-120, cy:140, priv:true },{ a:2.2, r:7, cx:235, cy:118, priv:true },{ a:0.4, r:8, cx:80, cy:95, priv:true }
+
+    // Layer 1: employees. Layer 2: their knowledge (pub = shared, priv = yours only).
+    const employees = [
+      { cx:-200, cy:-80,  label:'Ana' },
+      { cx:-110, cy:60,   label:'Marcus' },
+      { cx:-18,  cy:-65,  label:'Priya' },
+      { cx:85,   cy:65,   label:'Leo' },
+      { cx:158,  cy:-70,  label:'Zara' },
+      { cx:238,  cy:45,   label:'Noah' }
     ];
-    nodes.forEach(n => { n.x = 0; n.y = 0; n.baseX = Math.random() * Math.PI * 2; });
+    const knowledge = [
+      { e:0, x:-262, y:-142, priv:false }, { e:0, x:-246, y:-92, priv:true },
+      { e:1, x:-152, y:118,  priv:false }, { e:1, x:-88,  y:104, priv:true },
+      { e:2, x:-52,  y:-128, priv:false }, { e:2, x:4,    y:-92, priv:true },
+      { e:3, x:112,  y:126,  priv:false }, { e:3, x:150,  y:96,  priv:true },
+      { e:4, x:196,  y:-128, priv:false }, { e:4, x:198,  y:-46, priv:true },
+      { e:5, x:292,  y:96,   priv:false }, { e:5, x:270,  y:6,   priv:true }
+    ];
+    employees.forEach(n => { n.x = n.cx; n.y = n.cy; n.baseX = Math.random() * Math.PI * 2; });
+    knowledge.forEach(n => { n.xr = n.x + Math.random()*2-1; n.yr = n.y + Math.random()*2-1; n.x = n.xr; n.y = n.yr; n.baseX = Math.random() * Math.PI * 2; });
     let mouse = { x: 9999, y: 9999 };
     function resize() { const r = cv.getBoundingClientRect(); W = r.width; H = 360; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR,0,0,DPR,0,0); hub.x = W/2; hub.y = H/2; }
     cv.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; });
     cv.addEventListener('pointerleave', () => { mouse.x = 9999; mouse.y = 9999; });
+    // Public / Private toggle.
+    const tog = document.querySelector('.gx-toggle');
+    if (tog) tog.addEventListener('click', e => {
+      const s = e.target.closest('span'); if (!s) return;
+      tog.querySelectorAll('span').forEach(x => x.classList.remove('on'));
+      s.classList.add('on'); view = s.textContent.trim().toLowerCase();
+    });
+    function kind(n) { return (n.priv) ? 'private' : 'public'; }
+    function shown(n) { return kind(n) === view; }
     function tick() {
       ctx.clearRect(0,0,W,H); const hx = hub.x, hy = hub.y;
       const pulse = 1 + .35 * (1 + Math.sin(performance.now()/900)) / 2;
-      nodes.forEach(n => {
-        const t = performance.now() / (7000 + Math.abs(n.a)*1400);
-        n.x = (n.cx + Math.cos(n.baseX + t*2.2)*26) + hx; n.y = (n.cy + Math.sin(n.baseX + t)*22) + hy;
+      employees.forEach(n => {
+        const t = performance.now() / (7000 + Math.abs(n.cx%180)*6);
+        n.x = (n.cx + Math.cos(n.baseX + t*2.2)*8) + hx; n.y = (n.cy + Math.sin(n.baseX + t)*7) + hy;
         const dx = n.x - mouse.x, dy = n.y - mouse.y, d = Math.hypot(dx,dy);
         if (d < 90 && d > .001) { const f = (90-d)/90*20; n.x += dx/d*f; n.y += dy/d*f; }
       });
-      nodes.forEach(n => {
-        ctx.strokeStyle = n.priv ? 'rgba(0,173,181,0.14)' : 'rgba(0,173,181,0.18)';
-        ctx.lineWidth = 1; ctx.setLineDash(n.priv ? [3,4] : []);
-        ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(n.x,n.y); ctx.stroke(); ctx.setLineDash([]);
+      knowledge.forEach(n => {
+        const t = performance.now() / (8000 + Math.abs(n.xr)*200);
+        const wob = 1 + Math.sin(performance.now()/1400 + n.xr)*0.02;
+        n.x = (n.xr + Math.cos(n.baseX + t)*9*wob) + hx; n.y = (n.yr + Math.sin(n.baseX + t)*7*wob) + hy;
+        const dx = n.x - mouse.x, dy = n.y - mouse.y, d = Math.hypot(dx,dy);
+        if (d < 90 && d > .001) { const f = (90-d)/90*20; n.x += dx/d*f; n.y += dy/d*f; }
       });
+      // hub
       ctx.beginPath(); ctx.arc(hx,hy,13*pulse,0,7); ctx.fillStyle = ACCENT; ctx.fill();
       ctx.strokeStyle = ACCENT; ctx.globalAlpha = .3; ctx.lineWidth = 1.5; ctx.beginPath(); ctx.arc(hx,hy,20*pulse,0,7); ctx.stroke(); ctx.globalAlpha = 1;
-      nodes.forEach(n => {
-        const r = n.r * (n.priv ? .85 : 1);
-        ctx.beginPath(); ctx.arc(n.x,n.y,r*2.4,0,7); ctx.fillStyle = n.priv ? 'rgba(0,173,181,0.08)' : 'rgba(0,173,181,0.08)'; ctx.fill();
-        ctx.beginPath(); ctx.arc(n.x,n.y,r,0,7); ctx.fillStyle = n.priv ? PRIV : 'rgba(0,173,181,0.25)'; ctx.fill();
-        ctx.strokeStyle = n.priv ? 'rgba(0,173,181,0.5)' : ACCENT; ctx.lineWidth = 1.5; ctx.setLineDash(n.priv ? [4,3] : []); ctx.stroke(); ctx.setLineDash([]);
-        if (n.label) { ctx.font = '600 9px "JetBrains Mono", monospace'; ctx.fillStyle = FAINT; ctx.fillText(n.label.toUpperCase(), n.x - 6, n.y - r - 10); }
+      ctx.fillStyle = '#0e131a'; ctx.font = '700 10px "JetBrains Mono", monospace'; ctx.textAlign='center';
+      ctx.fillText('COMPANY', hx, hy + 3.5);
+      // employee→hub edges, then employee→knowledge edges
+      employees.forEach(n => {
+        ctx.strokeStyle = 'rgba(0,173,181,0.22)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(n.x,n.y); ctx.stroke();
+      });
+      knowledge.forEach(n => {
+        const p = employees[n.e]; if (!p) return;
+        ctx.strokeStyle = n.priv ? 'rgba(0,173,181,0.14)' : 'rgba(0,173,181,0.20)';
+        ctx.setLineDash(n.priv ? [3,4] : []); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(n.x,n.y); ctx.stroke(); ctx.setLineDash([]);
+      });
+      // employees (layer 1) — always shown
+      employees.forEach(n => {
+        const r = 8;
+        ctx.beginPath(); ctx.arc(n.x,n.y,r*2.4,0,7); ctx.fillStyle = 'rgba(0,173,181,0.08)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(n.x,n.y,r,0,7); ctx.fillStyle = 'rgba(0,173,181,0.3)'; ctx.fill();
+        ctx.strokeStyle = ACCENT; ctx.lineWidth = 1.5; ctx.stroke();
+        ctx.fillStyle = '#c6d1dc'; ctx.font = '600 9px "JetBrains Mono", monospace';
+        ctx.fillText(n.label.toUpperCase(), n.x, n.y - r - 10);
+      });
+      // knowledge (layer 2) — public/private filtered by toggle
+      knowledge.forEach(n => {
+        const dim = !shown(n);
+        ctx.globalAlpha = dim ? 0.18 : 1;
+        const r = 4.6;
+        ctx.beginPath(); ctx.arc(n.x,n.y,r*2.4,0,7); ctx.fillStyle = 'rgba(0,173,181,0.08)'; ctx.fill();
+        ctx.beginPath(); ctx.arc(n.x,n.y,r,0,7); ctx.fillStyle = n.priv ? PRIV : 'rgba(0,173,181,0.35)'; ctx.fill();
+        ctx.strokeStyle = n.priv ? 'rgba(0,173,181,0.5)' : ACCENT; ctx.lineWidth = 1.4;
+        ctx.setLineDash(n.priv ? [4,3] : []); ctx.stroke(); ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
       });
       requestAnimationFrame(tick);
     }
