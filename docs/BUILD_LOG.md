@@ -45,6 +45,15 @@ Built for the **[CockroachDB × AWS Hackathon — Build with Agentic Memory](htt
 
 ---
 
+## Verification snapshot (pre-build) — Aug 3
+Confidence/readiness audit only — no product features built yet.
+- `npm run check` (tsc) ✅ clean.
+- `npm test` ✅ 1/1 passes — **harness fixed** (was broken: `node --test tests/` can't run `.ts`; added `tsconfig.test.json`, tests compile to `.test-dist/`).
+- Local CockroachDB: running `v25.2.3` at `127.0.0.1:26257` (CCL) ✅ — reachable from `pg`.
+- **Gap:** database `cortex` does NOT exist; `schema.sql` was never applied. Tables (`memory_records`, `memory_embeddings` HNSW, `memory_consolidations`) are design-only right now.
+- **Gap for exact criteria fit:** no live agent loop, no AWS deployment artifacts, no end-to-end capture→recall proof.
+- Ready-to-build instructions derived: 1) create DB + apply `schema.sql`, 2) prove `remember()`/`recall()` atomic-write against real cluster, 3) then agents + AWS.
+
 ## Decisions locked
 - **Language:** TypeScript/Node (bench shows both bottleneck on the DB write path — velocity wins).
 - **Storage:** CockroachDB (Cloud GLOBAL for demo/video; single-node for dev).
