@@ -1,0 +1,69 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1080 640" font-family="Inter, -apple-system, Helvetica, Arial, sans-serif">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#141b24"/>
+      <stop offset="1" stop-color="#0e131a"/>
+    </linearGradient>
+    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="6" stdDeviation="8" flood-opacity="0.25"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0 L10 5 L0 10 z" fill="#d9e2ec"/>
+    </marker>
+  </defs>
+
+  <rect width="1080" height="640" fill="url(#bg)"/>
+
+  <text x="60" y="56" fill="#eeeeee" font-size="26" font-weight="700" letter-spacing="-0.01em">Cortex — Agentic Memory Layer</text>
+  <text x="60" y="82" fill="#8aa0b5" font-size="15">CockroachDB as the system of record for agent memory · human decides, agent executes</text>
+
+  <!-- Agents (left) -->
+  <rect x="60" y="140" width="270" height="420" rx="16" fill="#1a232e" filter="url(#shadow)"/>
+  <text x="84" y="180" fill="#eeeeee" font-size="16" font-weight="600">AI Agents</text>
+  <rect x="84" y="202" width="222" height="54" rx="9" fill="#202b38" stroke="#314050"/>
+  <text x="102" y="226" fill="#7fe3e8" font-size="13" font-weight="600">Memory Agent</text>
+  <text x="102" y="244" fill="#8aa0b5" font-size="12">capture · recall</text>
+  <rect x="84" y="266" width="222" height="54" rx="9" fill="#202b38" stroke="#314050"/>
+  <text x="102" y="290" fill="#7fe3e8" font-size="13" font-weight="600">Operator Agent</text>
+  <text x="102" y="308" fill="#8aa0b5" font-size="12">act · approval</text>
+  <rect x="84" y="330" width="222" height="54" rx="9" fill="#202a37" stroke="#314050"/>
+  <text x="102" y="354" fill="#7fe3e8" font-size="13" font-weight="600">Dream-Weaver</text>
+  <text x="102" y="372" fill="#8aa0b5" font-size="12">consolidate</text>
+  <text x="195" y="500" text-anchor="middle" fill="#8aa0b5" font-size="12">MCP server · Agent Skills</text>
+
+  <!-- CockroachDB (center) -->
+  <rect x="410" y="160" width="250" height="380" rx="16" fill="#0e2333" filter="url(#shadow)"/>
+  <text x="434" y="208" fill="#bfe8ff" font-size="16" font-weight="600">CockroachDB Memory</text>
+  <rect x="450" y="228" width="170" height="54" rx="9" fill="#123248" stroke="#1f4a66"/>
+  <text x="470" y="252" fill="#dfefff" font-size="13">notifications</text>
+  <text x="470" y="270" fill="#8fb9d6" font-size="12">transactions</text>
+  <rect x="450" y="294" width="170" height="54" rx="9" fill="#123248" stroke="#1f4a66"/>
+  <text x="470" y="318" fill="#dfefff" font-size="13">memory_embeddings</text>
+  <text x="470" y="336" fill="#8fb9d6" font-size="12">VECTOR(768) · HNSW</text>
+  <rect x="450" y="360" width="170" height="54" rx="9" fill="#123248" stroke="#1f4a66"/>
+  <text x="470" y="384" fill="#dfefff" font-size="13">live_activities</text>
+  <text x="470" y="402" fill="#8fb9d6" font-size="12">stateful cards</text>
+  <text x="535" y="492" text-anchor="middle" fill="#8fb9d6" font-size="12">Distributed Vector Indexing</text>
+
+  <!-- AWS (right) -->
+  <rect x="810" y="170" width="230" height="380" rx="16" fill="#2a201a" filter="url(#shadow)"/>
+  <text x="850" y="206" fill="#ffd9b8" font-size="16" font-weight="600">AWS</text>
+  <rect x="832" y="228" width="186" height="54" rx="9" fill="#35281c" stroke="#5a4630"/>
+  <text x="850" y="252" fill="#ffb27d" font-size="13" font-weight="600">Amazon Bedrock</text>
+  <text x="850" y="270" fill="#c3a284" font-size="12">embeddings</text>
+  <rect x="832" y="294" width="186" height="54" rx="9" fill="#35281c" stroke="#5a4630"/>
+  <text x="850" y="318" fill="#ffb27d" font-size="13" font-weight="600">AWS Lambda</text>
+  <text x="850" y="336" fill="#c3a284" font-size="12">CDC / fanout</text>
+  <rect x="832" y="360" width="186" height="54" rx="9" fill="#35281c" stroke="#5a4630"/>
+  <text x="850" y="384" fill="#ffb27d" font-size="13" font-weight="600">SNS · S3</text>
+  <text x="850" y="402" fill="#c3a284" font-size="12">push · artifacts</text>
+  <text x="925" y="470" text-anchor="middle" fill="#c3a284" font-size="12">serverless</text>
+
+  <!-- Edges -->
+  <line x1="330" y1="370" x2="410" y2="360" stroke="#eaf0f6" stroke-width="2" marker-end="url(#arrow)" opacity="0.75"/>
+  <text x="352" y="362" fill="#eaf0f6" font-size="12" opacity="0.9">capture / recall</text>
+  <line x1="660" y1="360" x2="810" y2="330" stroke="#eaf0f6" stroke-width="2" marker-end="url(#arrow)" opacity="0.75"/>
+  <text x="700" y="340" fill="#eaf0f6" font-size="12" opacity="0.9">changefeed → push</text>
+
+  <text x="60" y="600" fill="#5b6b7a" font-size="12">kill the node → memory survives · multi-region · zero data loss</text>
+</svg>
