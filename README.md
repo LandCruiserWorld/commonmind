@@ -177,6 +177,10 @@ There is no window in which something happened but isn't yet retrievable. Consol
 
 **Approve:** agent requests → notification row committed → push → human decides → decision committed as a new memory → agent resumes with it in context
 
+For the agent-role view of the same system — Memory Agent, Operator Agent and Dream-Weaver against the CockroachDB tables and AWS services — see [`assets/architecture.svg`](./assets/architecture.svg).
+
+> ⚠️ The two diagrams currently disagree on the write path: `assets/architecture.svg` shows `notifications` as the captured row (following the spec), while the diagram above shows `memory_records` (following `src/memory/repository.ts`). That divergence is [open decision #3](./docs/BUILD_LOG.md) — resolve it and both diagrams get corrected to match.
+
 ---
 
 ## Data model
