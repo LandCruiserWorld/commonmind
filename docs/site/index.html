@@ -469,19 +469,20 @@
   <div class="wrap">
     <div class="sec gx-head">
       <div class="sec-label">Not a log. A living brain.</div>
-      <h2>See your company brain — every memory, mapped.</h2>
-      <p class="sub">Take one company. The brain starts with the people — <strong>employees</strong> — and from each of them stems everything they know: decisions, handoffs, runbooks, client history. That knowledge <strong>stays</strong>, outlives any person or agent, and compounds into the company's memory.</p>
+      <h2>See your company brain — every employee and every agent, mapped.</h2>
+      <p class="sub">Take one company. The brain is made of the whole team — <strong>people and dedicated AI agents</strong> — and from each of them stems everything they know: decisions, handoffs, runbooks, client history. That knowledge <strong>stays</strong>, outlives any one person or agent, and compounds into the company's memory.</p>
     </div>
     <div class="gx-grid">
       <div class="graph-frame">
         <canvas id="graph-canvas" aria-label="Company memory graph"></canvas>
         <div class="gx-toggle"><span class="on">Public</span><span>Private</span></div>
-        <div class="gx-legend"><span class="k"><span class="sw" style="background:var(--accent)"></span> shared memory</span><span class="k"><span class="sw" style="background:var(--faint);border:1px dashed var(--faint)"></span> yours only</span></div>
+        <div class="gx-legend"><span class="k"><span class="sw" style="background:var(--accent)"></span> shared memory</span><span class="k"><span class="sw" style="background:var(--faint);border:1px dashed var(--faint)"></span> yours only</span><span class="k"><span class="sw" style="background:#9d8cff"></span> AI agent</span></div>
       </div>
       <div class="gx-copy">
         <div class="gx-row"><div class="n">🌐</div><div><h4>Public — grows the company index</h4><p>Contribute to the shared brain. Visible to teammates and agents, searchable by everyone — a crowdsourced datastore of what your company knows.</p></div></div>
         <div class="gx-row"><div class="n">🔒</div><div><h4>Private — yours, and kept</h4><p>Contribute quietly. Retained for you, never added to the company index. Your footprint stays yours.</p></div></div>
-        <div class="gx-row"><div class="n">🔗</div><div><h4>Relations, not rows</h4><p>Memories connect to memories. The graph shows what depends on what, and who knows it — so nothing important goes quiet.</p></div></div>
+        <div class="gx-row"><div class="n">🤖</div><div><h4>People and agents, together</h4><p>Employees and their dedicated AI agents feed the same brain — a deploy agent recalls the last rollout, a support agent remembers every ticket, and both enrich what the whole company knows.</p></div></div>
+        <div class="gx-row"><div class="n">🔗</div><div><h4>Relations, not rows</h4><p>Memories connect to memories. The graph shows what depends on what, and who — or which agent — knows it, so nothing important goes quiet.</p></div></div>
         <div class="gx-row"><div class="n">🧠</div><div><h4>Built on Three.js</h4><p>An interactive constellation you can fly through — click a node to open the memory behind it. Visuals like this are why the demo feels alive.</p></div></div>
       </div>
     </div>
@@ -783,7 +784,7 @@
     const ACCENT = '#00ADB5', FAINT = '#717986', PRIV = 'rgba(0,173,181,0.16)';
     const hub = { x: 0, y: 0 };
 
-    // Layer 1: employees. Layer 2: their knowledge (pub = shared, priv = yours only).
+    // Layer 1: employees + dedicated AI agents. Layer 2: their knowledge (pub = shared, priv = yours only).
     const employees = [
       { cx:-200, cy:-80,  label:'Ana' },
       { cx:-110, cy:60,   label:'Terry' },
@@ -791,6 +792,12 @@
       { cx:85,   cy:65,   label:'Kousik' },
       { cx:158,  cy:-70,  label:'Sarah' },
       { cx:238,  cy:45,   label:'Noah' }
+    ];
+    const agents = [
+      { cx:-180, cy:115,  label:'Deploy' },
+      { cx:-60,  cy:150,  label:'Support' },
+      { cx:60,   cy:115,  label:'Research' },
+      { cx:170,  cy:145,  label:'Trading' }
     ];
     const knowledge = [
       { e:0, x:-262, y:-142, priv:false }, { e:0, x:-246, y:-92, priv:true },
@@ -800,8 +807,16 @@
       { e:4, x:196,  y:-128, priv:false }, { e:4, x:198,  y:-46, priv:true },
       { e:5, x:292,  y:96,   priv:false }, { e:5, x:270,  y:6,   priv:true }
     ];
+    const agentKnowledge = [
+      { a:0, x:-230, y:165, priv:false }, { a:0, x:-140, y:160, priv:true },
+      { a:1, x:-70,  y:172, priv:false }, { a:1, x:-10,  y:168, priv:true },
+      { a:2, x:40,   y:165, priv:false }, { a:2, x:110,  y:155, priv:true },
+      { a:3, x:215,  y:168, priv:false }, { a:3, x:200,  y:110, priv:true }
+    ];
     employees.forEach(n => { n.x = n.cx; n.y = n.cy; n.baseX = Math.random() * Math.PI * 2; });
+    agents.forEach(n => { n.x = n.cx; n.y = n.cy; n.baseX = Math.random() * Math.PI * 2; });
     knowledge.forEach(n => { n.xr = n.x + Math.random()*2-1; n.yr = n.y + Math.random()*2-1; n.x = n.xr; n.y = n.yr; n.baseX = Math.random() * Math.PI * 2; });
+    agentKnowledge.forEach(n => { n.xr = n.x + Math.random()*2-1; n.yr = n.y + Math.random()*2-1; n.x = n.xr; n.y = n.yr; n.baseX = Math.random() * Math.PI * 2; });
     let mouse = { x: 9999, y: 9999 };
     function resize() { const r = cv.getBoundingClientRect(); W = r.width; H = 360; cv.width = W * DPR; cv.height = H * DPR; ctx.setTransform(DPR,0,0,DPR,0,0); hub.x = W/2; hub.y = H/2; }
     cv.addEventListener('pointermove', e => { const r = cv.getBoundingClientRect(); mouse.x = e.clientX - r.left; mouse.y = e.clientY - r.top; });
