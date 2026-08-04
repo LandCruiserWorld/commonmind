@@ -205,7 +205,17 @@ Full DDL in [`src/db/schema.sql`](./src/db/schema.sql). The memory core:
 
 *Sequential primary keys are banned.* `memory_events` uses `unique_rowid()`, not `BIGSERIAL`. A monotonic PK funnels every insert into a single range and creates a write hotspot — the classic CockroachDB anti-pattern, and `memory_events` is our hottest write path. This is the difference between a system that scales horizontally and one that only claims to.
 
-*Vector dimension is an open decision.* The schema currently declares `VECTOR(768)`, inherited from a KeenDreams port where 768 was the embedding size. Bedrock's `amazon.titan-embed-text-v2:0` emits **1024** (or 512/256 — never 768). These must agree before the first insert. Tracked in [`docs/BUILD_LOG.md`](./docs/BUILD_LOG.md).
+*Vector dimension is `VECTOR(1024)` — Titan v2's native default, decided Aug 4.* The schema originally said 768, carried over from a KeenDreams port where that's Cloudflare Workers AI's `bge-base` size. No Bedrock model emits 768, so it had to move.
+
+We chose **Amazon Titan Text Embeddings V2 at 1024** over the alternatives:
+
+| Option | Dims | Verdict |
+|---|---|---|
+| **Titan v2 (default)** | **1024** | ✅ Retrieval-optimised second generation; **$0.02 / M input tokens** |
+| Titan v2 (reduced) | 512 / 256 | Matryoshka truncations retaining ~99% / ~97% recall — a real optimisation, but *after* submission |
+| Titan v1 | 1536 | ❌ **5× the token price** of v2, ~33% larger index, not retrieval-optimised |
+
+At 4 KB per vector, storage isn't a constraint at our scale, and the Dream-Weaver's "measurably better over time" claim needs a clean quality baseline rather than a truncation chosen for storage we don't need.
 
 ---
 

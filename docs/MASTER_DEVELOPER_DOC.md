@@ -218,7 +218,7 @@ Agents coordinate by **writing and reading the shared memory** — the transacti
 - `devices` — push targets (inbox / fcm / apns)
 - `notifications` — one-shot pushes + approval state machine + idempotency key
 - `live_activities` — stateful lock-screen cards (start/update/end, sequence, replace)
-- `memory_embeddings` — VECTOR(768), C-SPANN index, for semantic recall
+- `memory_embeddings` — VECTOR(1024), C-SPANN index, for semantic recall
 - `memory_consolidations` — dream-weaver outputs (patterns, surprise, digests)
 - `memory_events` — audit/event log; the changefeed source
 

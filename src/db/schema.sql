@@ -75,13 +75,13 @@ CREATE TABLE IF NOT EXISTS memory_records (
   created_at  TIMESTAMPTZ DEFAULT now()
 );
 
--- Embeddings: VECTOR(768) indexed by C-SPANN (CockroachDB's distributed vector
+-- Embeddings: VECTOR(1024) indexed by C-SPANN (CockroachDB's distributed vector
 -- index — hierarchical K-means partitions, NOT HNSW; pgvector syntax will not run).
 CREATE TABLE IF NOT EXISTS memory_embeddings (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   entity_type STRING NOT NULL,
   entity_id   UUID NOT NULL,
-  embedding   VECTOR(768) NOT NULL,
+  embedding   VECTOR(1024) NOT NULL,
   created_at  TIMESTAMPTZ DEFAULT now()
 );
 -- entity_id is the join key from memory_records; without this the recall join scans.
@@ -99,7 +99,7 @@ CREATE TABLE IF NOT EXISTS memory_consolidations (
   surprise_score   FLOAT,
   frequency        INT DEFAULT 0,
   recency          TIMESTAMPTZ,
-  embedding        VECTOR(768) NOT NULL,
+  embedding        VECTOR(1024) NOT NULL,
   created_at       TIMESTAMPTZ DEFAULT now()
 );
 CREATE VECTOR INDEX IF NOT EXISTS memory_consolidations_cspann

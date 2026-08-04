@@ -201,7 +201,7 @@ CREATE TABLE memory_embeddings (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   entity_type STRING NOT NULL,            -- 'notification' | 'incident' | 'runbook' | 'decision'
   entity_id   UUID NOT NULL,
-  embedding   VECTOR(768) NOT NULL,
+  embedding   VECTOR(1024) NOT NULL,
   created_at  TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX ON memory_embeddings (entity_id);   -- join key for recall
@@ -216,7 +216,7 @@ CREATE TABLE memory_consolidations (
   surprise_score FLOAT,
   frequency      INT DEFAULT 0,
   recency        TIMESTAMPTZ,
-  embedding      VECTOR(768) NOT NULL,
+  embedding      VECTOR(1024) NOT NULL,
   created_at     TIMESTAMPTZ DEFAULT now()
 );
 CREATE VECTOR INDEX ON memory_consolidations (embedding vector_cosine_ops);

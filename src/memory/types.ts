@@ -14,7 +14,7 @@ export interface MemoryRecord {
   entityType: EntityType;
   entityId: string;
   content: string;
-  /** 768-dim embedding (CockroachDB VECTOR(768)) */
+  /** 1024-dim embedding (CockroachDB VECTOR(1024)) */
   embedding: number[] | null;
   createdAt: Date;
 }

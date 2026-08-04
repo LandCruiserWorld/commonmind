@@ -114,7 +114,7 @@ These stop the team today. Detail in [`BUILD_LOG.md`](./BUILD_LOG.md).
 
 | # | Decision | Blocks |
 |---|---|---|
-| **1** | **Vector dimension** — schema says `VECTOR(768)`, Bedrock Titan v2 emits 1024 | Every insert. Recommendation: 1024. |
+| ~~1~~ | ~~**Vector dimension**~~ — ✅ **CLOSED Aug 4: `VECTOR(1024)`, Titan v2 default.** v1 rejected (5× price, larger index, not retrieval-optimised); 512/256 deferred as a post-submission optimisation. Rationale in [`BUILD_LOG.md`](./BUILD_LOG.md) | — |
 | **2** | **`getPool()` ignores `loadConfig()`** — unset env dials Postgres' 5432, not 26257 | First connection attempt, with a misleading error |
 | **3** | **Write path** — code writes `memory_records`; the spec writes `notifications` | The schema, both architecture diagrams, and the API contract |
 
