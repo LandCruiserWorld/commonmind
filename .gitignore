@@ -31,3 +31,7 @@ coverage/
 # Wrangler (Cloudflare)
 .wrangler/
 .worker-test*
+# Vendored agent skills — reproducible from skills-lock.json via
+#   npx skills add cockroachlabs/cockroachdb-skills
+.agents/skills/
+.claude/skills/
