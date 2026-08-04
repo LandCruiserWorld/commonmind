@@ -160,15 +160,34 @@ Every component scales to zero, so an idle memory layer costs nothing and a busy
 
 </div>
 
-| Service | What it actually does here |
-|---|---|
-| **Amazon Bedrock** | Titan text embeddings; turns captured content into the vector stored beside it |
-| **AWS Lambda** | API handlers, CDC → SNS bridge, push fanout worker, consolidation workers |
-| **Amazon SNS** | Fanout of changefeed events, one topic per service |
-| **Amazon SQS + DLQ** | Retries and dead-lettering, so a failed push is never a lost memory |
-| **Amazon S3** | Artifacts and images referenced by a memory |
+### The organising principle
 
-**Why not a queue-first design?** Because the changefeed *is* the queue, and it's transactional. If we published to a queue from application code we would reintroduce the dual-write problem: a row committed but its event lost, or an event emitted for a transaction that rolled back. CDC off the committed row makes that class of bug unrepresentable.
+**The database is the event source.** That single decision deletes an entire category of infrastructure. There's no message broker to operate, no outbox table, no reconciliation job, and no dual-write bug — because nothing publishes an event separately from committing the row. **The commit is the event.**
+
+Everything else follows from it.
+
+| Layer | Choice | What it replaces, and why ours wins |
+|---|---|---|
+| **Memory** | **CockroachDB Cloud Basic** (serverless, on AWS) | vs. a dedicated Standard cluster at ~$120–130/mo — which alone would exceed the entire $20/employee price point. Basic is RU-metered and scales to zero |
+| **Compute** | **AWS Lambda** | vs. ECS/EKS — containers you size, patch, and pay for while idle. Lambda is 1M requests/month free, permanently |
+| **HTTP front** | **Lambda Function URLs** | vs. API Gateway — a separate service with routes, stages and integrations to configure. We need an HTTPS endpoint, not a gateway |
+| **Embeddings** | **Bedrock**, Titan v2 @ 1024 | vs. a SageMaker endpoint, which bills while idle — the opposite of serverless. vs. OpenAI, which isn't AWS and fails the requirement outright |
+| **Fanout** | **SNS** → **SQS + DLQ** | vs. Lambda subscribed directly to SNS, which has no retry buffer and no dead-letter — one failed push becomes a permanently lost notification |
+| **Artifacts** | **S3** | Standard, boring, correct |
+
+**Explicitly not used: DynamoDB.** It's a second database, and the thesis here is that *CockroachDB is the system of record for agentic memory*. A second store means a second source of truth, and something has to reconcile them. It fills no gap.
+
+### Why this shape, and not just a cheap one
+
+**Nothing costs anything at rest.** Every layer scales to zero, so an idle tenant is ~free and a busy one bills per invocation. That's what makes $20/employee/month work at 80–90% gross margin. The [AWS Free Tier](https://aws.amazon.com/free/) covers Lambda (1M requests/mo, always free), SNS (1M publishes), SQS (1M requests) and S3 (5 GB). Bedrock isn't free-tier, but Titan v2 at **$0.02 per million input tokens** makes embedding effectively free at demo scale.
+
+**There is exactly one source of truth.** Memory durability never depends on the delivery path. A push can fail, retry, or be dropped entirely and the memory is still correct — it was committed before anything downstream knew it existed.
+
+**Every hop fails safely.** Bedrock down → capture fails closed, no row without its embedding. Lambda down → SQS retries, then dead-letters. Changefeed lagging → the push is late, not lost. The only component whose failure would cost data is CockroachDB, which is the one component engineered specifically not to.
+
+**Why not a queue-first design?** Because the changefeed *is* the queue, and it's transactional. Publishing to a queue from application code reintroduces the dual-write problem: a row committed but its event lost, or an event emitted for a transaction that rolled back. CDC off the committed row makes that class of bug unrepresentable.
+
+**And the one weak spot, stated plainly.** Lambda cold starts run 100 ms–1 s+. The `<50ms` recall figure is a **database-side** measurement, not end-to-end through a cold function. That gets measured properly and republished, or the claim comes off — tracked in [`CHECKLIST.md`](./docs/CHECKLIST.md).
 
 ---
 

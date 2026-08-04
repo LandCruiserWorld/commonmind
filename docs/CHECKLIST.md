@@ -158,6 +158,7 @@ From the [official rules](https://cockroachdb-ai.devpost.com/). Verify each one 
 ## Open, not yet blocking
 
 - [ ] Test covering the atomic-write invariant — principle #1 has no test
+- [ ] **End-to-end latency measurement.** The `<50ms` recall figure is database-side. Measure the full path — client → Lambda (cold *and* warm) → Bedrock embed → C-SPANN search → response — and publish both numbers, or drop the claim. Do it before the Aug 13 benchmark gate
 - [ ] Threshold policy: milestone → priority escalation, per-agent or per-workflow?
 - [ ] Local-first vs cloud-first for the demo run
 - [ ] Register `commonmind.dev` + the npm name (both free as of Aug 4)
