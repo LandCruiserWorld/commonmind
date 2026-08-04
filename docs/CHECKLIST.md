@@ -17,10 +17,12 @@ Open this every morning. Tick things off. It's deliberately thin — the reasoni
 
 ## 🔥 Blocking right now
 
-- [ ] `ccloud` provisions a **multi-node** cluster — gates kill-the-node, and is itself a required tool
-- [ ] `CREATE DATABASE commonmind` + apply [`src/db/schema.sql`](../src/db/schema.sql) to local **and** cloud
-- [ ] `SHOW TABLES` returns the memory core on a real cluster
-- [ ] Fix the site's JSON-LD: `{"id":"mcp","state":"done"}` is **false** and publicly visible — flip to `todo` and redeploy
+> ✅ **Aug 4 evening — the cluster is up and the schema is applied.** The critical path is unblocked. Next gate is Wed Aug 5: capture → recall.
+
+- [x] ~~`ccloud` provisions a **multi-node** cluster~~ ✅ **Aug 4**
+- [x] ~~`CREATE DATABASE commonmind` + apply schema~~ ✅ **Aug 4**
+- [x] ~~`SHOW TABLES` returns the memory core~~ ✅ **Aug 4 — all 8 tables verified**
+- [x] ~~Fix the site's JSON-LD `mcp` state~~ ✅ **Aug 4 — live**
 
 ---
 
@@ -32,8 +34,8 @@ Gates are binary. Met or not met, checked end of day. Detail in [`ROADMAP.md` §
 - [x] Vector dimension decided — `VECTOR(1024)`, Titan v2
 - [x] `getPool()` wired to `loadConfig()`
 - [x] Write path decided — `memory_records` canonical
-- [ ] Multi-node cluster live, schema applied
-- [ ] Partner's dev environment running `npm run check` + `npm test` clean
+- [x] ~~Multi-node cluster live, schema applied~~ ✅
+- [x] ~~Partner's dev environment clean~~ ✅ — `npm test` was broken on Node 20 (quoted glob); fixed Aug 4
 
 ### Wed Aug 5 — **the wedge**
 - [ ] `commonmind capture` writes row + embedding in one transaction

@@ -24,7 +24,7 @@ Built for the **[CockroachDB × AWS Hackathon — Build with Agentic Memory](htt
 ## Verification snapshot (pre-build) — Aug 3
 Confidence/readiness audit only — no product features built yet.
 - `npm run check` (tsc) ✅ clean.
-- `npm test` ✅ 1/1 passes — **harness fixed** (was broken: `node --test tests/` can't run `.ts`; added `tsconfig.test.json`, tests compile to `.test-dist/`).
+- `npm test` ✅ 1/1 passes — harness reworked (`node --test tests/` can't run `.ts`; added `tsconfig.test.json`, tests compile to `.test-dist/`). **Corrected Aug 4:** that fix only worked on Node 22+. See below.
 - Local CockroachDB: running `v25.2.3` at `127.0.0.1:26257` (CCL) ✅ — reachable from `pg`.
 - **Gap:** database `commonmind` does NOT exist; `schema.sql` was never applied. Tables (`memory_records`, `memory_embeddings` C-SPANN, `memory_consolidations`) are design-only right now.
 - **Gap for exact criteria fit:** no live agent loop, no AWS deployment artifacts, no end-to-end capture→recall proof.
@@ -96,6 +96,21 @@ The plan has been using "MCP server" for two different things. They are not the 
 - **Push surface:** Inbox/PWA MVP; native FCM/APNs a stretch (no App Store for the demo).
 - **Demo faces:** Solana trading platform (Raspberry Pi + Tailscale), dev-team coding, game (creature remembers).
 - **Naming:** CommonMind.
+
+## Test harness — Node version bug, fixed Aug 4
+
+Reported from the dev environment: `npm run check` passed but `npm test` failed with `.test-dist/tests/*.test.js` not found. It passed on every machine here, which was the clue.
+
+**Root cause:** the script used a *quoted* glob — `node --test ".test-dist/tests/*.test.js"`. Quoted means the shell doesn't expand it, so Node's test runner has to, and **glob support in `node --test` only arrived in Node 21/22**. On Node 20 the pattern is taken literally and no file matches. `package.json` declared `"node": ">=20"`, so the declared engine range did not match what the script actually required — and a Node 20 user was told their environment was supported.
+
+**Fix:** unquote the glob so the *shell* expands it into real paths before Node sees them. Works on Node 20 and 22 alike, and doesn't force anyone to upgrade mid-build.
+
+```diff
+- "test": "tsc -p tsconfig.test.json && node --test \".test-dist/tests/*.test.js\""
++ "test": "tsc -p tsconfig.test.json && node --test .test-dist/tests/*.test.js"
+```
+
+**Why it hid for a day:** verified only on Node 22 here. This is exactly the failure the submission checklist's "passes on a clean clone" item exists to catch — a judge on Node 20 would have hit it too.
 
 ## Repo review — Aug 4 (pre-handoff to dev team)
 
