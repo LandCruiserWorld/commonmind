@@ -55,6 +55,30 @@ Confidence/readiness audit only — no product features built yet.
 - Ready-to-build instructions derived: 1) create DB + apply `schema.sql`, 2) prove `remember()`/`recall()` atomic-write against real cluster, 3) then agents + AWS.
 
 ## Decisions locked
+
+### Serverless stack — LOCKED Aug 4
+
+Every component scales to zero. Nothing to patch, no servers to size.
+
+| Layer | Service | Notes |
+|---|---|---|
+| **Compute** | **AWS Lambda** | API handlers, CDC → SNS bridge, push fanout, dream-weaver workers |
+| **HTTP front** | **Lambda Function URLs** | Not API Gateway — no extra service, no extra cost, sufficient for our routes |
+| **Embeddings** | **Amazon Bedrock**, Titan Text Embeddings V2 | Serverless inference; no endpoint to manage. 1024 dims |
+| **Event fanout** | **Amazon SNS** | One topic per service |
+| **Queue + retry** | **Amazon SQS + DLQ** | Retries and dead-lettering so a failed push is never a lost memory |
+| **Artifacts** | **Amazon S3** | Images, runbooks, attachments referenced by a memory |
+| **Memory** | **CockroachDB Cloud Basic (serverless)**, on AWS regions | The system of record. RU-metered, scales to zero |
+
+**DynamoDB: explicitly NOT used.** It is a second database, and the thesis of this submission is that *CockroachDB is the system of record for agentic memory*. Introducing a second store creates a second source of truth and directly undercuts **Agentic Memory Design** — which our own §6.1 calls the criterion that decides first place. The judges are CockroachDB; reaching for DynamoDB alongside it implies CockroachDB wasn't sufficient. There is no functional gap it would fill.
+
+**ECS/EKS: dropped.** `DEVELOPER_SPEC` §2.3.1 listed it as an optional fallback if Lambda cold starts hurt the demo. It is not serverless in the sense the submission claims, and it adds ops we don't have time for. Cold starts get handled by keeping functions warm during the recording instead.
+
+**Cold starts — the honest number.** Lambda cold starts run 100 ms–1 s+. The landing page's `<50ms semantic recall` is a **database-side** figure, not end-to-end through a cold Lambda. Either keep functions warm for the demo and state the number as DB-side, or measure end-to-end and publish that instead. Do not claim end-to-end sub-50 ms from a cold start — it is the easiest claim in the submission to falsify.
+
+**Free tier coverage** ([aws.amazon.com/free](https://aws.amazon.com/free/)): Lambda 1M requests/month always free; SNS 1M publishes; SQS 1M requests; S3 5 GB for 12 months. **Bedrock is not free-tier**, but Titan v2 at $0.02 per million input tokens makes demo-scale embedding cost effectively nil.
+
+### Other locked decisions
 - **Language:** TypeScript/Node (bench shows both bottleneck on the DB write path — velocity wins).
 - **Storage:** CockroachDB (Cloud GLOBAL for demo/video; single-node for dev).
 - **Push surface:** Inbox/PWA MVP; native FCM/APNs a stretch (no App Store for the demo).
