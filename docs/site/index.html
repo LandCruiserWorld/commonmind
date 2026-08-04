@@ -189,6 +189,9 @@
   @media (max-width: 560px) { .term-body { font-size: 12px; padding: 18px 16px 22px; } }
 
   .hero-stats { display: flex; gap: 56px; justify-content: center; margin-top: 68px; flex-wrap: wrap; }
+  .hero-demo { max-width: 880px; margin: 64px auto 0; text-align: left; }
+  .hero-demo-head { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 4px; }
+  .hero-demo-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); animation: blink 1.4s step-end infinite; }
   .stat { text-align: center; min-width: 110px; }
   .stat .n { font-size: 32px; font-weight: 800; letter-spacing: -.02em; }
   .stat .l { font-size: 13px; color: var(--faint); margin-top: 4px; }
@@ -414,6 +417,39 @@
     </div>
   </div>
 
+  <div class="hero-demo">
+    <div class="hero-demo-head"><span class="sec-label" style="margin:0">It's a conversation, not a notice</span><span class="hero-demo-dot"></span></div>
+    <div class="ix-grid" style="margin-top:20px">
+      <div class="ix-phone">
+        <div class="notch"></div>
+        <div class="ix-screen">
+          <div class="ix-card">
+            <div class="top"><span class="src">🤖 Deploy Agent</span><span class="time">just now</span></div>
+            <div class="body">Deploy commit 8e7fc2a to production?</div>
+            <div class="meta">run #184 · risk: low · smoke tests pending</div>
+            <div class="ix-btns"><span class="bx ok">Approve</span><span class="bx no">Wait</span></div>
+          </div>
+          <div class="ix-thread">
+            <div class="who">You · asking back</div>
+            <div class="msg"><b>"What does it need me for?"</b></div>
+            <div class="msg u" style="margin-top:8px">It explains: "Smoke tests passed. 14 msgs behind. Rolling out; I'll verify &amp; report."</div>
+          </div>
+          <div class="ix-input"><span>Reply — ask anything, or approve…</span><span class="caret"></span></div>
+          <div class="ix-card" style="opacity:.85">
+            <div class="top"><span class="src">✅ Deploy Agent</span><span class="time">+4m</span></div>
+            <div class="body">Shipped · 2m 11s · smoke green. Saved to memory.</div>
+          </div>
+        </div>
+      </div>
+      <div class="ix-steps">
+        <div class="ix-step"><span class="n">1</span><div><h4>Doorbell</h4><p>An agent hits a milestone and pings you — "needs your decision", not a firehose.</p></div></div>
+        <div class="ix-step"><span class="n">2</span><div><h4>Ask back</h4><p>Tap through to the thread. "What does it need me for?", "what if I say no?" — it answers with real context.</p></div></div>
+        <div class="ix-step"><span class="n">3</span><div><h4>Decide</h4><p>Approve, edit, or deny from the phone. The decision is stored transactionally.</p></div></div>
+        <div class="ix-step"><span class="n">4</span><div><h4>It resumes — and remembers</h4><p>The agent executes the safe work and the whole exchange becomes memory it recalls next time.</p></div></div>
+      </div>
+    </div>
+  </div>
+
   <div class="hero-stats">
     <div class="stat"><div class="n">3</div><div class="l">alert types only</div></div>
     <div class="stat"><div class="n">100%</div><div class="l">recorded & auditable</div></div>
@@ -543,38 +579,14 @@
 
 <section id="talk" class="wrap">
   <div class="sec">
-    <div class="sec-label">It's a conversation, not a notice</div>
-    <h2>Your phone is a control surface for your agents. Not a pager.</h2>
-    <p class="sub">The push is the doorbell. The <strong>thread</strong> is the room. You don't just get told — you ask back, redirect, and decide. The whole exchange becomes memory the agent recalls next time.</p>
+    <div class="sec-label">Control without the noise</div>
+    <h2>Every decision your agent checks with you becomes memory.</h2>
+    <p class="sub">The push is the doorbell. The <strong>thread</strong> is the room. You ask back, redirect, and decide — and the whole exchange is stored transactionally, so the agent recalls it next time. That decision log <strong>is the company brain</strong>: attributable, auditable, and alive.</p>
   </div>
-  <div class="ix-grid">
-    <div class="ix-phone">
-      <div class="notch"></div>
-      <div class="ix-screen">
-        <div class="ix-card">
-          <div class="top"><span class="src">🤖 Deploy Agent</span><span class="time">just now</span></div>
-          <div class="body">Deploy commit 8e7fc2a to production?</div>
-          <div class="meta">run #184 · risk: low · smoke tests pending</div>
-          <div class="ix-btns"><span class="bx ok">Approve</span><span class="bx no">Wait</span></div>
-        </div>
-        <div class="ix-thread">
-          <div class="who">You · asking back</div>
-          <div class="msg"><b>"What does it need me for?"</b></div>
-          <div class="msg u" style="margin-top:8px">It explains: "Smoke tests passed. 14 msgs behind. Rolling out; I'll verify &amp; report."</div>
-        </div>
-        <div class="ix-input"><span>Reply — ask anything, or approve…</span><span class="caret"></span></div>
-        <div class="ix-card" style="opacity:.85">
-          <div class="top"><span class="src">✅ Deploy Agent</span><span class="time">+4m</span></div>
-          <div class="body">Shipped · 2m 11s · smoke green. Saved to memory.</div>
-        </div>
-      </div>
-    </div>
-    <div class="ix-steps">
-      <div class="ix-step"><span class="n">1</span><div><h4>Doorbell</h4><p>An agent hits a milestone and pings you — "needs your decision", not a firehose.</p></div></div>
-      <div class="ix-step"><span class="n">2</span><div><h4>Ask back</h4><p>Tap through to the thread. "What does it need me for?", "what if I say no?" — it answers with real context.</p></div></div>
-      <div class="ix-step"><span class="n">3</span><div><h4>Decide</h4><p>Approve, edit, or deny from the phone. The decision is stored transactionally.</p></div></div>
-      <div class="ix-step"><span class="n">4</span><div><h4>It resumes — and remembers</h4><p>The agent executes the safe work and the whole exchange becomes memory it recalls next time.</p></div></div>
-    </div>
+  <div class="grid grid-3" style="margin-top:40px">
+    <div class="card"><div class="ic">🚪</div><h3>The doorbell</h3><p>An agent pings you only on a milestone — a decision it shouldn't make alone. Everything else is recorded silently.</p></div>
+    <div class="card"><div class="ic">💬</div><h3>Ask back</h3><p>"What does it need me for?", "what if I say no?" — the thread answers from real context, not a canned prompt.</p></div>
+    <div class="card"><div class="ic">🧠</div><h3>It remembers</h3><p>Approve, edit, or deny. The exchange is committed to memory — the next milestone is decided faster, and the brain grows.</p></div>
   </div>
 </section>
 
