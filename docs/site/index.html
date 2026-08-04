@@ -165,9 +165,9 @@
 
   .hero { padding: 132px 0 68px; text-align: center; position: relative; }
   .eyebrow { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(0,173,181,0.22); padding: 7px 15px; border-radius: 999px; margin-bottom: 28px; }
-  .hero h1 { font-size: clamp(40px, 6.6vw, 72px); line-height: 1.02; font-weight: 700; letter-spacing: -.035em; max-width: 900px; margin: 0 auto 26px; }
+  .hero h1 { font-size: clamp(40px, 6.6vw, 72px); line-height: 1.06; font-weight: 700; letter-spacing: -.035em; max-width: 900px; margin: 0 auto 26px; text-wrap: balance; }
   .hero h1 .serif { font-family: var(--serif); font-style: italic; font-weight: 400; letter-spacing: 0; background: linear-gradient(92deg, var(--accent), var(--accent-2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .hero p.lead { font-size: clamp(17px, 2.3vw, 21px); color: var(--muted); max-width: 720px; margin: 0 auto 40px; }
+  .hero p.lead { font-size: clamp(17px, 2.3vw, 21px); color: var(--muted); max-width: 720px; margin: 0 auto 40px; text-wrap: pretty; }
   .hero .lead em { color: var(--text); font-style: normal; font-weight: 600; }
   .cta-row { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
   .audiences { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin-top: 44px; }
@@ -199,8 +199,8 @@
   section { position: relative; z-index: 2; padding: 104px 0; }
   .sec { max-width: 720px; }
   .sec-label { font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); margin-bottom: 16px; font-weight: 600; }
-  h2 { font-size: clamp(28px, 3.6vw, 44px); font-weight: 700; letter-spacing: -.028em; line-height: 1.08; }
-  .sub { color: var(--muted); font-size: 17px; margin-top: 16px; }
+  h2 { font-size: clamp(28px, 3.6vw, 44px); font-weight: 700; letter-spacing: -.028em; line-height: 1.12; text-wrap: balance; }
+  .sub { color: var(--muted); font-size: 17px; margin-top: 16px; text-wrap: pretty; }
   .sub strong { color: var(--text); font-weight: 600; }
 
   .video-wrap { margin-top: 56px; }
@@ -214,6 +214,11 @@
   .video-badge i { width: 7px; height: 7px; border-radius: 50%; background: var(--red); animation: blink 1.4s step-end infinite; }
 
   .grid { display: grid; gap: 18px; }
+  /* Grid/flex children default to min-width:auto and refuse to shrink below their
+     content's min-content width — a nowrap <code> line was forcing the 4-up card
+     grid 197px wider than the viewport. */
+  .grid > *, .ix-grid > *, .bridge-grid > *, .gx-grid > *, .split > *, .case > * { min-width: 0; }
+  .card code, .kbox, .term-body { overflow-x: auto; }
   .grid-2 { grid-template-columns: repeat(2, 1fr); } .grid-3 { grid-template-columns: repeat(3, 1fr); } .grid-4 { grid-template-columns: repeat(4, 1fr); }
   @media (max-width: 900px) { .grid-4, .grid-3 { grid-template-columns: repeat(2, 1fr); } }
   @media (max-width: 560px) { .grid-2, .grid-4, .grid-3 { grid-template-columns: 1fr; } }
