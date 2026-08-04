@@ -253,6 +253,8 @@ Local single-node measured: Node ~1,151–2,334 ops/s; Rust ~1,273–1,712 ops/s
 
 ## PART 4 — THE PLAN TO DEADLINE (Aug 3 → Aug 18)
 
+> ⚠️ **The day-by-day below is SUPERSEDED.** It assumes an Aug 3 start that the build did not follow. The live schedule is [`CHECKLIST.md`](./CHECKLIST.md); the reasoning for the re-baseline is in [`ROADMAP.md`](./ROADMAP.md). This section is retained for its **rules of the plan**, the **video shot-list**, and the **risk register** — all still current.
+
 **Rules of the plan:** (1) The demo/video is the product — it is the onboarding. (2) Don't lose the wedge (capture→recall). (3) Rehearse the kill-the-node scene before recording. (4) Every deliverable gets a 5-second screen grab for the video archive. (5) Freeze features by Day 14; days 14–15 are packaging + rehearsal.
 
 ### Week 1 — Core loop (Aug 3 Sun–Aug 9 Sun)

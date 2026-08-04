@@ -2,6 +2,8 @@
 
 _Status legend:_ ✅ done · 🟡 in build · ⏳ next · ⬜ later.
 
+> **The build-out checklist moved to [`CHECKLIST.md`](./CHECKLIST.md)** — one place owns what to do next. This file owns decisions, their reasoning, and verification history.
+
 Built for the **[CockroachDB × AWS Hackathon — Build with Agentic Memory](https://cockroachdb-ai.devpost.com/)**. Deadline **Aug 18, 2026 @ 5:00pm EDT**.
 
 ## The 10 immutable principles (do not violate)
@@ -16,32 +18,6 @@ Built for the **[CockroachDB × AWS Hackathon — Build with Agentic Memory](htt
 8. **The front door matters** — one command, zero accounts to see the magic.
 9. **Memory improves itself** — consolidation makes it measurably better over time.
 10. **Kill the node, memory survives** — resilience is recorded on camera, not claimed in a README.
-
----
-
-## Phase 0 — Foundation
-- [✅] Landing page / product bible (premium redesign, machine-readable JSON-LD spec)
-- [✅] 10 principles + `#commonmind-bible` JSON-LD (agents read it to stay on track)
-- [🟡] `npm install -g commonmind` front door → local CockroachDB + `save / ask / ask --approval`
-- [🟡] **CommonMind MCP server** (universal adapter: capture · recall · ask · approve · note) — no per-app plugins
-
-## Phase 1 — Core loop (Week 1)
-- [⏳] `commonmind capture` / `commonmind ask` — atomic write + semantic recall (DB-b `pg`)
-- [⏳] C-SPANN vector index + atomic-write invariant (row + embedding, one txn)
-- [⏳] Approval request → human phone decision → callback resume
-- [⏳] CLI capture hooks (Claude Code, opencode, etc.)
-
-## Phase 2 — Product & resilience (Week 2)
-- [ ] Web inbox / PWA push surface
-- [ ] CDC → SNS → Lambda push pipeline
-- [ ] Kill-the-node demo (multi-region / multi-node GLOBAL)
-
-## Phase 3 — Differentiation (Week 3)
-- [ ] Dream-weaver consolidation (surprise scoring + patterns) — self-improving memory
-- [ ] ccloud CLI self-management agent (provision / backup / RBAC, JSON-out)
-- [ ] CommonMind MCP server → all CLIs (Claude, Cursor, Codex, opencode, Copilot)
-- [ ] Multi-node benchmark + README + arch diagram
-- [ ] Submission packaging + demo video
 
 ---
 

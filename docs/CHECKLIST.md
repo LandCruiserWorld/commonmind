@@ -109,6 +109,35 @@ Gates are binary. Met or not met, checked end of day. Detail in [`ROADMAP.md` §
 
 ---
 
+## Build-out by capability
+
+The same work as the daily gates above, organised by *what we're building* rather than *when it's due*. Moved here from `BUILD_LOG.md` so one document owns the actionable plan.
+
+- [✅] Landing page / product bible (premium redesign, machine-readable JSON-LD spec)
+- [✅] 10 principles + `#commonmind-bible` JSON-LD (agents read it to stay on track)
+- [🟡] `npm install -g commonmind` front door → local CockroachDB + `save / ask / ask --approval`
+- [🟡] **CommonMind MCP server** (universal adapter: capture · recall · ask · approve · note) — no per-app plugins
+
+## Phase 1 — Core loop (Week 1)
+- [⏳] `commonmind capture` / `commonmind ask` — atomic write + semantic recall (DB-b `pg`)
+- [⏳] C-SPANN vector index + atomic-write invariant (row + embedding, one txn)
+- [⏳] Approval request → human phone decision → callback resume
+- [⏳] CLI capture hooks (Claude Code, opencode, etc.)
+
+## Phase 2 — Product & resilience (Week 2)
+- [ ] Web inbox / PWA push surface
+- [ ] CDC → SNS → Lambda push pipeline
+- [ ] Kill-the-node demo (multi-region / multi-node GLOBAL)
+
+## Phase 3 — Differentiation (Week 3)
+- [ ] Dream-weaver consolidation (surprise scoring + patterns) — self-improving memory
+- [ ] ccloud CLI self-management agent (provision / backup / RBAC, JSON-out)
+- [ ] CommonMind MCP server → all CLIs (Claude, Cursor, Codex, opencode, Copilot)
+- [ ] Multi-node benchmark + README + arch diagram
+- [ ] Submission packaging + demo video
+
+---
+
 ## Submission requirements
 
 From the [official rules](https://cockroachdb-ai.devpost.com/). Verify each one by *opening the link in a logged-out browser*, not by remembering you did it.
