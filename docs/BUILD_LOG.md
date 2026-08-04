@@ -54,6 +54,18 @@ Every component scales to zero. Nothing to patch, no servers to size.
 
 **Free tier coverage** ([aws.amazon.com/free](https://aws.amazon.com/free/)): Lambda 1M requests/month always free; SNS 1M publishes; SQS 1M requests; S3 5 GB for 12 months. **Bedrock is not free-tier**, but Titan v2 at $0.02 per million input tokens makes demo-scale embedding cost effectively nil.
 
+### Agent Skills Repo — adopted Aug 4
+
+Installed the official [`cockroachlabs/cockroachdb-skills`](https://github.com/cockroachlabs/cockroachdb-skills) — 34 skills, pinned in `skills-lock.json`. The vendored content is gitignored; the lock file reproduces it exactly via `npx skills add`.
+
+This gives us **two distinct uses of the Agent Skills Repo**, a stronger compliance answer than either alone:
+1. **Consuming** the official skills — our agents use them to provision, harden and profile the cluster
+2. **Authoring** our own — `commonmind-query`, `commonmind-approve`, `commonmind-consolidate` (still to build)
+
+Directly relevant to this build: `provisioning-cluster-for-production`, `setting-up-local-cluster`, `designing-multi-region-applications` (kill-the-node), `analyzing-range-distribution` (independently validates the `unique_rowid()` decision over a sequential PK), `designing-application-transactions` (the atomic-write invariant), `benchmarking-transaction-patterns` (Aug 13 gate), `hardening-user-privileges` and `configuring-audit-logging` (Production Readiness scoring).
+
+**Gap worth reporting back.** All 34 skills are operational — provisioning, security, migration, diagnostics. **None cover Distributed Vector Indexing or Changefeeds**, the two features an agentic-memory application leans on hardest and the two this hackathon is themed around. An agent building on CockroachDB gets no skill-level guidance on `CREATE VECTOR INDEX`, C-SPANN partition tuning, or wiring CDC to a sink. Good material for the optional *feedback for Cockroach Labs* item.
+
 ### Other locked decisions
 - **Language:** TypeScript/Node (bench shows both bottleneck on the DB write path — velocity wins).
 - **Storage:** CockroachDB (Cloud GLOBAL for demo/video; single-node for dev).

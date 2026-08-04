@@ -43,9 +43,9 @@ npm test          # should pass 1/1
 npx skills add cockroachlabs/cockroachdb-skills   # official CockroachDB agent skills
 ```
 
-That last one installs 34 official CockroachDB skills your agents can use. Two are worth reading before you start: **`setting-up-local-cluster`** and **`provisioning-cluster-for-production`** — they cover your first task directly.
+If `check` and `test` both pass, your environment is fine. There's no application code yet — that's what we're about to write.
 
-If both pass, your environment is fine. There's no application code yet — that's what we're about to write.
+The last command installs 34 official CockroachDB agent skills. Two are worth reading before you start: **`setting-up-local-cluster`** and **`provisioning-cluster-for-production`** — they cover your first task directly.
 
 ---
 

@@ -150,7 +150,7 @@ From the [official rules](https://cockroachdb-ai.devpost.com/). Verify each one 
 - [ ] Stated: which **CockroachDB tools** used and **HOW** — minimum two ([README table](../README.md#hackathon-compliance))
 - [ ] Stated: which **AWS services** used and **HOW** — minimum one
 - [ ] *Optional:* architecture diagram — ✅ [`assets/images/aws-serverless-architecture.svg`](../assets/images/aws-serverless-architecture.svg)
-- [ ] *Optional:* feedback for Cockroach Labs
+- [ ] *Optional:* feedback for Cockroach Labs — **we have real material**: the official skills repo ships 34 ops skills and none for vector indexing or changefeeds, the two features an agentic-memory build needs most. See [`BUILD_LOG.md`](./BUILD_LOG.md)
 
 ---
 
