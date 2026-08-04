@@ -66,6 +66,30 @@ Directly relevant to this build: `provisioning-cluster-for-production`, `setting
 
 **Gap worth reporting back.** All 34 skills are operational — provisioning, security, migration, diagnostics. **None cover Distributed Vector Indexing or Changefeeds**, the two features an agentic-memory application leans on hardest and the two this hackathon is themed around. An agent building on CockroachDB gets no skill-level guidance on `CREATE VECTOR INDEX`, C-SPANN partition tuning, or wiring CDC to a sink. Good material for the optional *feedback for Cockroach Labs* item.
 
+### The two MCP servers — clarified Aug 4
+
+The plan has been using "MCP server" for two different things. They are not the same, we need **both**, and confusing them wastes days.
+
+**1. CockroachDB's Managed MCP Server** — *the required tool.* A Cockroach-hosted endpoint at `https://cockroachlabs.cloud/mcp`. Enable it from the cluster's **Connect** modal in the Cloud console, which generates a config snippet you paste into Claude Code / Cursor / VS Code.
+
+| | |
+|---|---|
+| Tools | `list_databases`, `select_query`, `get_table_schema` — introspection |
+| Default mode | **Read-only.** System tables deny-listed |
+| Write consent | Opt-in only: `create_database`, `create_table`, `insert_rows`. `DROP`/`TRUNCATE` never supported |
+| Auth | OAuth 2.1 (PKCE) with `mcp:read` / `mcp:write` scopes, or service-account API keys |
+| Authorization | Cloud RBAC checked on **every** tool invocation |
+| Transport | HTTP. SSE deliberately excluded |
+| **Availability** | **CockroachDB Cloud only — no self-hosted support** |
+
+**2. The CommonMind MCP server** — *our product feature.* Ours to build, exposing `memory.capture`, `memory.recall`, `memory.ask`, `memory.approve`, `memory.note` so any MCP-capable CLI reads and writes memory without a per-app plugin.
+
+**Three consequences for the build:**
+
+- **The Managed server is not the capture path.** It's introspection. Memory writes go through our own server and the atomic-write invariant. Anyone who assumes agents capture memory *through* the managed server will build the wrong thing.
+- **It requires the Cloud cluster.** Cloud-only means it cannot be demonstrated against a local single-node instance — another reason cluster provisioning is the blocking task, not a later one.
+- **Both belong in the submission.** Using Cockroach's managed server *and* shipping our own is a materially stronger answer to "which tools did you use and how" than either alone.
+
 ### Other locked decisions
 - **Language:** TypeScript/Node (bench shows both bottleneck on the DB write path — velocity wins).
 - **Storage:** CockroachDB (Cloud GLOBAL for demo/video; single-node for dev).

@@ -71,7 +71,8 @@ Gates are binary. Met or not met, checked end of day. Detail in [`ROADMAP.md` §
 - [ ] **Gate: a real learning curve — or the "improves itself" claim comes off the site**
 
 ### Tue Aug 11 — tools
-- [ ] MCP server exposing `memory.capture / recall / ask / approve / note`
+- [ ] **Enable CockroachDB's Managed MCP Server** — Cloud console → cluster → Connect → MCP. Read-only, RBAC-checked. *Cloud cluster required; does not work self-hosted*
+- [ ] **Build our CommonMind MCP server** exposing `memory.capture / recall / ask / approve / note` — this is the write path, the managed server is not
 - [ ] `docs/agents/` guide files per CLI
 - [ ] ccloud self-ops agent (provision / backup / RBAC, JSON out)
 - [ ] **Gate: two different CLIs recall the same memory**

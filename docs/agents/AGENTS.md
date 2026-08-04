@@ -22,6 +22,7 @@ Several documents in this repo contain schedules. Only the checklist is current 
 
 - **CockroachDB is not Postgres.** It implements the pgwire protocol and most Postgres syntax, but it is not a fork. pgvector syntax (`USING hnsw`) does **not** run here — vector indexes are `CREATE VECTOR INDEX ... (embedding vector_cosine_ops)`, backed by C-SPANN. When a Postgres answer and a CockroachDB doc disagree, the doc wins.
 - **Never use a sequential primary key.** `SERIAL`/`BIGSERIAL` funnels every insert into one range and creates a write hotspot. Use `UUID` or `unique_rowid()`.
+- **"MCP server" is ambiguous here — check which one.** CockroachDB's *Managed* MCP Server is a hosted endpoint for read-only introspection (`select_query`, `get_table_schema`), Cloud-only. *Our* CommonMind MCP server is the one exposing `memory.capture/recall/...`. Memory writes never go through the managed server.
 - **Embeddings are `VECTOR(1024)`** — Titan Text Embeddings V2's native size. Any other dimension fails on insert.
 
 ## The one rule: memory is the product
