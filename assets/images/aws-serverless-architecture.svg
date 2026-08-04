@@ -1,0 +1,114 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 660" width="1160" height="660" role="img" aria-label="CommonMind architecture: agents and people call a Lambda API which embeds content with Amazon Bedrock and commits the memory row and its vector to CockroachDB in a single transaction. A CockroachDB changefeed streams every committed event to Amazon SNS, then SQS with a dead-letter queue, then a Lambda fanout worker that pushes to a web inbox, FCM or APNs. Recall queries read back from the C-SPANN vector index.">
+  <defs>
+    <marker id="aw-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a9b0ba"/>
+    </marker>
+    <marker id="aw-arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00adb5"/>
+    </marker>
+    <marker id="aw-arrow-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6.5" markerHeight="6.5" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#e6b93c"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1160" height="660" rx="18" fill="#222831"/>
+
+  <text x="40" y="54" font-family="Inter, Helvetica, Arial, sans-serif" font-size="27" font-weight="700" fill="#eeeeee">The memory write <tspan fill="#00adb5">is</tspan> the notification.</text>
+  <text x="40" y="82" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#a9b0ba">One transaction records what happened and triggers the push that asks a human about it.</text>
+
+  <!-- legend -->
+  <rect x="838" y="36" width="12" height="12" rx="3" fill="#00adb5"/>
+  <text x="858" y="47" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#a9b0ba">CockroachDB</text>
+  <rect x="962" y="36" width="12" height="12" rx="3" fill="#e6b93c"/>
+  <text x="982" y="47" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" fill="#a9b0ba">AWS serverless</text>
+
+  <!-- ================= WRITE PATH ================= -->
+  <text x="40" y="128" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#717986" letter-spacing="1.5">CAPTURE</text>
+
+  <!-- agents -->
+  <rect x="40" y="144" width="176" height="104" rx="12" fill="#2b3340" stroke="#3a4350"/>
+  <text x="128" y="180" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#eeeeee">Agents &amp; people</text>
+  <text x="128" y="202" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="#a9b0ba">Claude Code &#183; Cursor</text>
+  <text x="128" y="220" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="#a9b0ba">Codex &#183; opencode</text>
+  <text x="128" y="238" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="#00adb5">one MCP server</text>
+
+  <!-- lambda api -->
+  <rect x="266" y="144" width="150" height="104" rx="12" fill="#332e22" stroke="#e6b93c" stroke-width="1.4"/>
+  <text x="341" y="180" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#eeeeee">AWS Lambda</text>
+  <text x="341" y="200" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#e6b93c">API handler</text>
+  <text x="341" y="228" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="#a9b0ba">capture &#183; recall</text>
+
+  <!-- bedrock -->
+  <rect x="266" y="292" width="150" height="86" rx="12" fill="#332e22" stroke="#e6b93c" stroke-width="1.4"/>
+  <text x="341" y="324" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="600" fill="#eeeeee">Bedrock</text>
+  <text x="341" y="344" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" fill="#e6b93c">Titan embeddings</text>
+  <text x="341" y="364" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="#a9b0ba">text &#8594; vector</text>
+
+  <line x1="220" y1="196" x2="260" y2="196" stroke="#a9b0ba" stroke-width="1.6" marker-end="url(#aw-arrow)"/>
+  <line x1="341" y1="252" x2="341" y2="286" stroke="#e6b93c" stroke-width="1.6" marker-end="url(#aw-arrow-amber)"/>
+  <text x="352" y="274" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="#e6b93c">embed</text>
+
+  <!-- ================= COCKROACHDB ================= -->
+  <rect x="466" y="144" width="272" height="234" rx="14" fill="#1d3b3d" stroke="#00adb5" stroke-width="2"/>
+  <text x="602" y="176" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="15" font-weight="700" fill="#eeeeee">CockroachDB</text>
+  <text x="602" y="195" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#00adb5">system of record &#183; 3&#215; replicated</text>
+
+  <rect x="486" y="210" width="232" height="34" rx="8" fill="#24444a" stroke="#2f5f66"/>
+  <text x="500" y="232" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#eeeeee">memory_records</text>
+
+  <rect x="486" y="252" width="232" height="34" rx="8" fill="#24444a" stroke="#2f5f66"/>
+  <text x="500" y="274" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#eeeeee">memory_embeddings</text>
+  <text x="706" y="274" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="9.5" fill="#00adb5">C-SPANN</text>
+
+  <rect x="486" y="294" width="232" height="34" rx="8" fill="#24444a" stroke="#2f5f66"/>
+  <text x="500" y="316" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#eeeeee">memory_events</text>
+
+  <text x="602" y="356" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11.5" font-weight="600" fill="#00adb5">row + vector commit in ONE transaction</text>
+
+  <line x1="420" y1="196" x2="460" y2="196" stroke="#a9b0ba" stroke-width="1.6" marker-end="url(#aw-arrow)"/>
+  <text x="440" y="186" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="#a9b0ba">write</text>
+  <path d="M 420 335 Q 444 335 462 316" stroke="#e6b93c" stroke-width="1.6" fill="none" marker-end="url(#aw-arrow-amber)"/>
+
+  <!-- ================= EVENT PATH ================= -->
+  <text x="792" y="128" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" font-weight="700" fill="#717986" letter-spacing="1.5">FAN OUT</text>
+
+  <rect x="792" y="144" width="150" height="72" rx="12" fill="#332e22" stroke="#e6b93c" stroke-width="1.4"/>
+  <text x="867" y="176" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#eeeeee">Amazon SNS</text>
+  <text x="867" y="196" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="#a9b0ba">topic per service</text>
+
+  <rect x="792" y="238" width="150" height="72" rx="12" fill="#332e22" stroke="#e6b93c" stroke-width="1.4"/>
+  <text x="867" y="270" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#eeeeee">SQS + DLQ</text>
+  <text x="867" y="290" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="#a9b0ba">retries &#183; dead letter</text>
+
+  <rect x="792" y="332" width="150" height="72" rx="12" fill="#332e22" stroke="#e6b93c" stroke-width="1.4"/>
+  <text x="867" y="364" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13.5" font-weight="600" fill="#eeeeee">Lambda</text>
+  <text x="867" y="384" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="#a9b0ba">fanout worker</text>
+
+  <line x1="744" y1="230" x2="786" y2="196" stroke="#00adb5" stroke-width="1.8" marker-end="url(#aw-arrow-teal)"/>
+  <text x="762" y="196" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10" fill="#00adb5">CDC</text>
+  <line x1="867" y1="220" x2="867" y2="232" stroke="#e6b93c" stroke-width="1.6" marker-end="url(#aw-arrow-amber)"/>
+  <line x1="867" y1="314" x2="867" y2="326" stroke="#e6b93c" stroke-width="1.6" marker-end="url(#aw-arrow-amber)"/>
+
+  <!-- push targets -->
+  <rect x="992" y="238" width="128" height="166" rx="12" fill="#2b3340" stroke="#3a4350"/>
+  <text x="1056" y="270" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" font-weight="600" fill="#eeeeee">Human</text>
+  <text x="1056" y="296" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="#a9b0ba">web inbox</text>
+  <text x="1056" y="316" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="#a9b0ba">FCM</text>
+  <text x="1056" y="336" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="#a9b0ba">APNs</text>
+  <text x="1056" y="374" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" font-weight="600" fill="#00adb5">approve / deny</text>
+  <line x1="946" y1="368" x2="986" y2="340" stroke="#e6b93c" stroke-width="1.6" marker-end="url(#aw-arrow-amber)"/>
+
+  <!-- ================= RECALL PATH ================= -->
+  <path d="M 992 420 L 992 470 L 128 470 L 128 258" stroke="#00adb5" stroke-width="1.8" fill="none" stroke-dasharray="6 5" marker-end="url(#aw-arrow-teal)"/>
+  <text x="560" y="462" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#00adb5">the decision is committed back to memory &#8212; the agent recalls it next time</text>
+
+  <!-- recall read arrow -->
+  <path d="M 466 336 L 430 336" stroke="#00adb5" stroke-width="0" fill="none"/>
+
+  <!-- ================= FOOTER ================= -->
+  <rect x="40" y="506" width="1080" height="118" rx="12" fill="#262d38" stroke="#3a4350"/>
+  <text x="66" y="538" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#00adb5" letter-spacing="1.2">WHY THIS SHAPE</text>
+  <text x="66" y="566" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#a9b0ba">The database is both the <tspan fill="#eeeeee" font-weight="600">state store</tspan> and the <tspan fill="#eeeeee" font-weight="600">event source</tspan>. Nothing polls, nothing reconciles: a changefeed on the committed row is the</text>
+  <text x="66" y="588" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#a9b0ba">only trigger the push pipeline needs, so an agent and a human can never disagree about what happened.</text>
+  <text x="66" y="612" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#717986">S3 stores artifacts and images referenced by a memory &#183; every component above scales to zero</text>
+</svg>

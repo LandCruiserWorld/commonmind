@@ -1,0 +1,105 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1160 600" width="1160" height="600" role="img" aria-label="How CockroachDB survives a node failure: a range is replicated three times across nodes; when the leaseholder node dies, Raft elects a new leader and transfers the lease within seconds, then the cluster re-replicates the range to a healthy node to restore three-times replication, with no operator action.">
+  <defs>
+    <marker id="cm-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#a9b0ba"/>
+    </marker>
+    <marker id="cm-arrow-teal" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#00adb5"/>
+    </marker>
+  </defs>
+
+  <rect x="0" y="0" width="1160" height="600" rx="18" fill="#222831"/>
+
+  <text x="40" y="56" font-family="Inter, Helvetica, Arial, sans-serif" font-size="27" font-weight="700" fill="#eeeeee">Kill a node. The memory survives.</text>
+  <text x="40" y="84" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" fill="#a9b0ba">One range of CommonMind memory, replicated 3&#215; and coordinated by Raft.</text>
+
+  <circle cx="600" cy="79" r="8" fill="#1d3b3d" stroke="#00adb5" stroke-width="2"/>
+  <text x="616" y="84" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#a9b0ba">teal ring = leaseholder (serves reads, proposes writes)</text>
+  <circle cx="946" cy="79" r="8" fill="#2f3846" stroke="#00adb5" stroke-width="1.6" stroke-dasharray="3 3"/>
+  <text x="962" y="84" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12.5" fill="#a9b0ba">dashed = new replica</text>
+
+  <!-- ============ PANEL 1 : HEALTHY ============ -->
+  <g>
+    <rect x="40" y="112" width="340" height="330" rx="14" fill="#2b3340" stroke="#3a4350"/>
+    <text x="60" y="142" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#00adb5" letter-spacing="1.4">1 &#183; STEADY STATE</text>
+
+    <!-- raft links -->
+    <line x1="210" y1="230" x2="125" y2="345" stroke="#00adb5" stroke-width="1.5" opacity="0.55"/>
+    <line x1="210" y1="230" x2="295" y2="345" stroke="#00adb5" stroke-width="1.5" opacity="0.55"/>
+    <line x1="125" y1="345" x2="295" y2="345" stroke="#00adb5" stroke-width="1.5" opacity="0.55"/>
+
+    <!-- n1 leaseholder -->
+    <circle cx="210" cy="230" r="36" fill="#1d3b3d" stroke="#00adb5" stroke-width="2.5"/>
+    <text x="210" y="236" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#eeeeee">n1</text>
+    <circle cx="125" cy="345" r="36" fill="#2f3846" stroke="#5c6675" stroke-width="1.6"/>
+    <text x="125" y="350" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#eeeeee">n2</text>
+    <circle cx="295" cy="345" r="36" fill="#2f3846" stroke="#5c6675" stroke-width="1.6"/>
+    <text x="295" y="350" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#eeeeee">n3</text>
+
+    <text x="210" y="404" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="#eeeeee">range 7 &#215; 3 replicas</text>
+    <text x="210" y="424" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#a9b0ba">write commits at 2 / 3 quorum</text>
+  </g>
+
+  <!-- ============ PANEL 2 : FAILURE ============ -->
+  <g>
+    <rect x="410" y="112" width="340" height="330" rx="14" fill="#2b3340" stroke="#3a4350"/>
+    <text x="430" y="142" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#f26d6d" letter-spacing="1.4">2 &#183; n1 DIES</text>
+
+    <line x1="580" y1="230" x2="495" y2="345" stroke="#5c6675" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.4"/>
+    <line x1="580" y1="230" x2="665" y2="345" stroke="#5c6675" stroke-width="1.5" stroke-dasharray="4 4" opacity="0.4"/>
+    <line x1="495" y1="345" x2="665" y2="345" stroke="#00adb5" stroke-width="2" opacity="0.9"/>
+
+    <!-- dead n1 -->
+    <circle cx="580" cy="230" r="36" fill="#2a2529" stroke="#f26d6d" stroke-width="1.8" stroke-dasharray="5 4" opacity="0.75"/>
+    <line x1="566" y1="216" x2="594" y2="244" stroke="#f26d6d" stroke-width="2.4"/>
+    <line x1="594" y1="216" x2="566" y2="244" stroke="#f26d6d" stroke-width="2.4"/>
+
+    <!-- n2 takes lease -->
+    <circle cx="495" cy="345" r="36" fill="#1d3b3d" stroke="#00adb5" stroke-width="2.5"/>
+    <text x="495" y="350" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#eeeeee">n2</text>
+    <circle cx="665" cy="345" r="36" fill="#2f3846" stroke="#5c6675" stroke-width="1.6"/>
+    <text x="665" y="350" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#eeeeee">n3</text>
+
+    <path d="M 552 262 Q 505 296 498 306" stroke="#00adb5" stroke-width="1.8" fill="none" marker-end="url(#cm-arrow-teal)"/>
+    <text x="470" y="286" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="#00adb5">lease</text>
+
+    <text x="580" y="404" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="#eeeeee">2 of 3 still form quorum</text>
+    <text x="580" y="424" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#a9b0ba">reads &amp; writes continue &#183; seconds</text>
+  </g>
+
+  <!-- ============ PANEL 3 : SELF-HEAL ============ -->
+  <g>
+    <rect x="780" y="112" width="340" height="330" rx="14" fill="#2b3340" stroke="#3a4350"/>
+    <text x="800" y="142" font-family="Inter, Helvetica, Arial, sans-serif" font-size="12" font-weight="700" fill="#00adb5" letter-spacing="1.4">3 &#183; SELF-HEALS</text>
+
+    <line x1="950" y1="230" x2="865" y2="345" stroke="#00adb5" stroke-width="1.5" opacity="0.55"/>
+    <line x1="950" y1="230" x2="1035" y2="345" stroke="#00adb5" stroke-width="1.5" opacity="0.55"/>
+    <line x1="865" y1="345" x2="1035" y2="345" stroke="#00adb5" stroke-width="1.5" opacity="0.55"/>
+
+    <!-- new replica n4 -->
+    <circle cx="950" cy="230" r="36" fill="#2f3846" stroke="#00adb5" stroke-width="1.8" stroke-dasharray="3 3"/>
+    <text x="950" y="236" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#eeeeee">n4</text>
+
+    <circle cx="865" cy="345" r="36" fill="#1d3b3d" stroke="#00adb5" stroke-width="2.5"/>
+    <text x="865" y="350" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#eeeeee">n2</text>
+    <circle cx="1035" cy="345" r="36" fill="#2f3846" stroke="#5c6675" stroke-width="1.6"/>
+    <text x="1035" y="350" text-anchor="middle" font-family="Inter, Helvetica, Arial, sans-serif" font-size="14" font-weight="700" fill="#eeeeee">n3</text>
+
+    <path d="M 900 314 Q 926 282 934 266" stroke="#00adb5" stroke-width="1.8" fill="none" marker-end="url(#cm-arrow-teal)"/>
+    <text x="1000" y="292" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="10.5" fill="#00adb5">snapshot</text>
+
+    <text x="950" y="404" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="12" fill="#eeeeee">back to 3&#215; replication</text>
+    <text x="950" y="424" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="11" fill="#a9b0ba">no operator action</text>
+  </g>
+
+  <!-- flow arrows between panels -->
+  <line x1="384" y1="277" x2="406" y2="277" stroke="#a9b0ba" stroke-width="1.6" marker-end="url(#cm-arrow)"/>
+  <line x1="754" y1="277" x2="776" y2="277" stroke="#a9b0ba" stroke-width="1.6" marker-end="url(#cm-arrow)"/>
+
+  <!-- ============ GUARANTEE BAND ============ -->
+  <rect x="40" y="474" width="1080" height="86" rx="12" fill="#262d38" stroke="#3a4350"/>
+  <text x="66" y="507" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="15" fill="#00adb5">survivable failures = (replication factor &#8722; 1) &#247; 2</text>
+  <text x="66" y="532" font-family="Inter, Helvetica, Arial, sans-serif" font-size="13" fill="#a9b0ba">Default 3&#215; replication survives <tspan fill="#eeeeee" font-weight="600">one</tspan> node loss. 5&#215; survives <tspan fill="#eeeeee" font-weight="600">two</tspan>. Below quorum a range goes unavailable rather than serving stale data &#8212; CockroachDB is CP.</text>
+  <text x="1094" y="507" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#717986">Raft consensus</text>
+  <text x="1094" y="532" text-anchor="end" font-family="Inter, Helvetica, Arial, sans-serif" font-size="11" fill="#717986">recovery in seconds</text>
+</svg>
