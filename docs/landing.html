@@ -403,20 +403,6 @@
     <span>Devs &amp; solos</span><span>Teams &amp; agencies</span><span>Trading desks</span><span>Game studios</span><span>SRE / ops</span><span>Startups shipping agents</span>
   </div>
 
-  <div class="term">
-    <div class="term-bar"><span class="t-dot" style="background:#ff5f57"></span><span class="t-dot" style="background:#febc2e"></span><span class="t-dot" style="background:#28c840"></span><span class="term-title">commonmind — demo</span></div>
-    <div class="term-body">
-      <span class="ln"><span class="p"></span><span class="cmd">npx create-commonmind trading-bot</span></span>
-      <span class="ln"><span class="out dim">✔ local CockroachDB running · 127.0.0.1:26257</span></span>
-      <span class="ln"><span class="p"></span><span class="cmd">commonmind save "bought DOGE on momentum — avg 0.22, stop -2%"</span></span>
-      <span class="ln"><span class="out ok">✔ remembered · embedded · 0.18s</span></span>
-      <span class="ln"><span class="p"></span><span class="cmd">commonmind ask "why did we buy DOGE?"</span></span>
-      <span class="ln"><span class="out ok">→  "bought on momentum — avg 0.22, stop -2%" <span class="dim">(similarity 0.94 · 3 months ago)</span></span></span>
-      <span class="ln"><span class="p"></span><span class="cmd">commonmind ask --approval "increase position? (risk +0.5%)"</span></span>
-      <span class="ln"><span class="out ok">📱 pinged 1 phone · waiting on your call…<span class="blink"></span></span></span>
-    </div>
-  </div>
-
   <div class="hero-demo">
     <div class="hero-demo-head"><span class="sec-label" style="margin:0">It's a conversation, not a notice</span><span class="hero-demo-dot"></span></div>
     <div class="ix-grid" style="margin-top:20px">
@@ -492,11 +478,26 @@
   </div>
 
   <div style="text-align:center;margin-top:46px;">
-    <div class="sec-label" style="margin-bottom:18px">Works inside the CLIs you already use</div>
+    <div class="sec-label" style="margin-bottom:18px">Works inside the AI tools you already use</div>
     <div class="logos" style="margin-top:0">
       <span>Claude Code</span><span>Antigravity · agy</span><span>opencode</span><span>Kimi K3</span><span>Qwen</span><span>Codex</span><span>Cursor (MCP)</span>
     </div>
-    <p style="color:var(--faint);font-size:13px;margin-top:18px;font-family:var(--mono)">$ commonmind connect &lt;cli&gt; &nbsp;·&nbsp; one MCP server behind it (capture · recall · ask · approve · note) — no per-app plugins</p>
+    <p style="color:var(--faint);font-size:13px;margin-top:18px;font-family:var(--mono)">One MCP server behind it — connect an employee's AI, and its work is captured to memory automatically (capture · recall · ask · approve · note)</p>
+  </div>
+
+  <div class="term" style="margin-top:56px">
+    <div class="term-bar"><span class="t-dot" style="background:#ff5f57"></span><span class="t-dot" style="background:#febc2e"></span><span class="t-dot" style="background:#28c840"></span><span class="term-title">commonmind — demo</span></div>
+    <div class="term-body">
+      <span class="ln"><span class="p"></span><span class="cmd">npx create-commonmind acme-agency</span></span>
+      <span class="ln"><span class="out dim">✔ local CockroachDB running · 127.0.0.1:26257</span></span>
+      <span class="ln"><span class="p"></span><span class="cmd">commonmind save --from agent "Acme rejected April deck — tone too casual"</span></span>
+      <span class="ln"><span class="out ok">✔ remembered · embedded · 0.18s</span></span>
+      <span class="ln"><span class="p"></span><span class="cmd">commonmind ask "what did Acme reject last quarter?"</span></span>
+      <span class="ln"><span class="out ok">→  "April deck — tone too casual" <span class="dim">(recorded by Agent · similarity 0.94)</span></span></span>
+      <span class="ln"><span class="p"></span><span class="cmd">commonmind ask --approval "send revised deck to Acme?"</span></span>
+      <span class="ln"><span class="out ok">🤖 agent request → 📱 pinged 1 phone · waiting on your call…<span class="blink"></span></span></span>
+      <span class="ln"><span class="out ok">✅ you approved · decision stored · agent resumes</span></span>
+    </div>
   </div>
 </section>
 
