@@ -2,7 +2,7 @@
  * Memory repository (CockroachDB).
  *
  * Implements the capture path: store a memory row AND its embedding in one
- * transaction, plus semantic recall against the HNSW vector index.
+ * transaction, plus semantic recall against the C-SPANN vector index.
  */
 
 import { getPool, withTransaction } from '../db.js';
@@ -30,7 +30,7 @@ export class MemoryRepository {
     });
   }
 
-  /** Semantic recall against the HNSW vector index. */
+  /** Semantic recall against the C-SPANN vector index. */
   async recall(queryEmbedding: number[], limit = 8): Promise<Array<{ id: string; content: string; score: number }>> {
     const res = await getPool().query(
       `SELECT

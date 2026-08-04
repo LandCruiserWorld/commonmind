@@ -89,7 +89,7 @@ The ladder: **capture → recall → act**. Each step makes the next obvious and
 
 > **An agent whose memory goes offline doesn't degrade gracefully — it stops. Our memory is the product: every notification, approval, and Live Activity is a transaction in CockroachDB. Kill the node, memory survives.**
 
-What makes it novel vs. a plain Hark clone:
+What makes it novel vs. a plain webhook-to-push tool:
 1. **Memory is the source of truth** — CDC changefeeds off the DB drive the push pipeline.
 2. **Self-improving consolidation** — background "dream-weaver" agents (Titans/Miras surprise scoring) reorganize memory so agents get measurably better.
 3. **Resilience as the demo** — kill the CockroachDB node live; activities survive and keep updating.
@@ -100,7 +100,7 @@ What makes it novel vs. a plain Hark clone:
 | CockroachDB Tool | How we use it |
 |---|---|
 | **Distributed Vector Indexing** | Semantic recall; surprise scoring for dream-weavers; multi-factor retrieval |
-| **Managed MCP Server** | Agents/humans introspect the CommonMind read-only, safely, with audit logging |
+| **Managed MCP Server** | Agents/humans introspect CommonMind read-only, safely, with audit logging |
 | **ccloud CLI (agent-ready)** | A "memory ops agent" provisions clusters, takes backups, configures RBAC autonomously |
 | **Agent Skills Repo** | We package our own skills (`commonmind-query`, `commonmind-approve`, `commonmind-consolidate`) |
 | **Changefeeds (CDC)** *(bonus)* | The transactional event stream driving SNS → push. Our differentiator |
@@ -136,7 +136,7 @@ Together they form the loop: **capture (Memory) → recall (Memory) → act (Ope
 Judges check *Agentic Memory Design*: is memory used for more than toy queries — state, embeddings, context, transactional data at scale? Our answer, demonstrated the code:
 
 - **State** — every approval and Live Activity is a transaction (the state machine lives in CockroachDB, not in the app).
-- **Embeddings** — memory_embeddings HNSW index for semantic recall.
+- **Embeddings** — memory_embeddings C-SPANN index for semantic recall.
 - **Context** — an agent's next action is decided by vector similarity to its own past.
 - **Transactional history** — events replayable for audit and that self-improving learning curve.
 
@@ -144,7 +144,7 @@ So memory is *the reason each agent can do its job*, which is exactly the criter
 
 ### 2.5.3 The hackage that makes capture automatic (the differentiator)
 
-Capture being manual kills adoption. We make it automatic using **agent CLI hooks** — the same pattern Hark's `harkctl permissions` uses. `commonmind init` drops a hook into your dev CLI:
+Capture being manual kills adoption. We make it automatic using **agent CLI hooks** — the same pattern established dev CLIs use for permission prompts. `commonmind init` drops a hook into your dev CLI:
 
 ```json
 {
@@ -210,7 +210,7 @@ webhook / CLI → API (Lambda/ECS) → CockroachDB (memory commonmind)
                                                  phone / web
 ```
 
-Agents coordinate by **writing and reading the CommonMind** — the transactional memory log doubles as the coordination bus. Every memory write is atomic (operational row + embedding in one transaction).
+Agents coordinate by **writing and reading the shared memory** — the transactional memory log doubles as the coordination bus. Every memory write is atomic (operational row + embedding in one transaction).
 
 ### 3.2 Core tables (CockroachDB)
 
@@ -218,7 +218,7 @@ Agents coordinate by **writing and reading the CommonMind** — the transactiona
 - `devices` — push targets (inbox / fcm / apns)
 - `notifications` — one-shot pushes + approval state machine + idempotency key
 - `live_activities` — stateful lock-screen cards (start/update/end, sequence, replace)
-- `memory_embeddings` — VECTOR(768), HNSW index, for semantic recall
+- `memory_embeddings` — VECTOR(768), C-SPANN index, for semantic recall
 - `memory_consolidations` — dream-weaver outputs (patterns, surprise, digests)
 - `memory_events` — audit/event log; the changefeed source
 
@@ -259,7 +259,7 @@ Local single-node measured: Node ~1,151–2,334 ops/s; Rust ~1,273–1,712 ops/s
 
 | Day | Focus | Deliverables | Exit gate |
 |---|---|---|---|
-| **Mon Aug 3** | Foundation | GitHub repo (public, MIT, in About); `create-commonmind` scaffold (`src/`, `tests/`, `docs/`); final project name; local CockroachDB dev-mode bootstrap script | `npx create-commonmind` runs + launches local DB |
+| **Mon Aug 3** | Foundation | GitHub repo (public, Apache-2.0, in About); `create-commonmind` scaffold (`src/`, `tests/`, `docs/`); final project name; local CockroachDB dev-mode bootstrap script | `npx create-commonmind` runs + launches local DB |
 | **Tue Aug 4** | Wedge | CLI: `commonmind capture`, `commonmind ask` (write + embed + recall); schema migrated (core tables); atomic-write helper | Capture→recall works in <5 min of demo time |
 | **Wed Aug 5** | Wedge → web | Inbox web app (MVP); `/api/memory/search`; embedding provider toggle (local/Bedrock) | Search from web UI recalls CLI-captured memories |
 | **Thu Aug 6** | Act | Notifications API + approvals + idempotency; CLI `commonmind approve`; approval callback | Approval flow round-trips (send→approve→callback) |
@@ -274,7 +274,7 @@ Local single-node measured: Node ~1,151–2,334 ops/s; Rust ~1,273–1,712 ops/s
 | **Mon Aug 10** | Memory | Dream-weaver consolidation (surprise scoring + patterns); `/api/memory/patterns`, `/analytics`, `/consolidation/weekly` | Agent visibly "gets better" (learning curve data) |
 | **Tue Aug 11** | Self-ops | ccloud memory-ops agent (provision/backup/RBAC, JSON-out); **CommonMind MCP server** (capture/recall/ask/approve/note) + `docs/agents/` guide files | ccloud + MCP demonstrably in use in video; Claude + Cursor both recall the same memory |
 | **Wed Aug 12** | Integrations | 2+ real integrations (crypto app, CI/deploy, on-call sim); Landing page copy from Part 1 narrative | Landing page tells the "knowledge that quits" story |
-| **Thu Aug 13** | Bench + docs | Multi-node benchmark run; README with real numbers + arch diagram + MIT license | Repo reads like a product, not a prototype |
+| **Thu Aug 13** | Bench + docs | Multi-node benchmark run; README with real numbers + arch diagram + Apache-2.0 license | Repo reads like a product, not a prototype |
 | **Fri Aug 14** | Video shoot | Full 3-min video recorded on new cluster; B-roll archive; kill-the-node scene recorded (with fallback) | Video cut in progress, <3:00 |
 | **Sat Aug 15** | Video + rehearsal | Video final cut (YouTube public); 3× live rehearsal incl. kill-the-node | Demo runs clean twice in a row |
 | **Sun Aug 16** | Freeze | Feature freeze. No new features. Fix only demo-blocking bugs | Repo, demo URL, video all stable |
@@ -288,7 +288,7 @@ Local single-node measured: Node ~1,151–2,334 ops/s; Rust ~1,273–1,712 ops/s
 
 ### The submission checklist (Devpost)
 
-- [ ] Public repo, MIT license detectable in the About section
+- [ ] Public repo, Apache-2.0 license detectable in the About section
 - [ ] Functional demo URL
 - [ ] Video < 3 min, public YouTube/Vimeo
 - [ ] Which CockroachDB tools used (MCP, ccloud, vector, skills) + HOW the agent used them
@@ -320,7 +320,7 @@ Local single-node measured: Node ~1,151–2,334 ops/s; Rust ~1,273–1,712 ops/s
 | "Another notification tool" perception | High | Lead every asset with the knowledge-that-quits frame, not the webhook |
 
 **Open decisions to lock this week:**
-1. Final name (CommonMind / Perpetual CommonMind / Dreamweaver CommonMind / other)
+1. Final name (CommonMind / settled: CommonMind)
 2. Which integration to show live (crypto app is the strongest already-built evidence)
 3. Demo face: ops/SRE at 3am (recommended) vs. agency turnover vs. agentic-future
 

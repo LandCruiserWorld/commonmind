@@ -75,7 +75,8 @@ CREATE TABLE IF NOT EXISTS memory_records (
   created_at  TIMESTAMPTZ DEFAULT now()
 );
 
--- Embeddings: VECTOR(768) with HNSW index
+-- Embeddings: VECTOR(768) indexed by C-SPANN (CockroachDB's distributed vector
+-- index — hierarchical K-means partitions, NOT HNSW; pgvector syntax will not run).
 CREATE TABLE IF NOT EXISTS memory_embeddings (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   entity_type STRING NOT NULL,
@@ -83,8 +84,11 @@ CREATE TABLE IF NOT EXISTS memory_embeddings (
   embedding   VECTOR(768) NOT NULL,
   created_at  TIMESTAMPTZ DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS memory_embeddings_hnsw
-  ON memory_embeddings USING hnsw (embedding vector_cosine_ops);
+-- entity_id is the join key from memory_records; without this the recall join scans.
+CREATE INDEX IF NOT EXISTS memory_embeddings_entity_idx
+  ON memory_embeddings (entity_id);
+CREATE VECTOR INDEX IF NOT EXISTS memory_embeddings_cspann
+  ON memory_embeddings (embedding vector_cosine_ops);
 
 -- Consolidated memories written by dream-weaver agents
 CREATE TABLE IF NOT EXISTS memory_consolidations (
@@ -98,12 +102,15 @@ CREATE TABLE IF NOT EXISTS memory_consolidations (
   embedding        VECTOR(768) NOT NULL,
   created_at       TIMESTAMPTZ DEFAULT now()
 );
-CREATE INDEX IF NOT EXISTS memory_consolidations_hnsw
-  ON memory_consolidations USING hnsw (embedding vector_cosine_ops);
+CREATE VECTOR INDEX IF NOT EXISTS memory_consolidations_cspann
+  ON memory_consolidations (embedding vector_cosine_ops);
 
 -- Event log / audit: changefeed key (CDC -> SNS -> push pipeline)
+-- NOTE: unique_rowid(), not BIGSERIAL. Sequential primary keys funnel every
+-- insert into one range and create a write hotspot — the classic CockroachDB
+-- anti-pattern, and this is the hottest write path we have.
 CREATE TABLE IF NOT EXISTS memory_events (
-  seq          BIGSERIAL PRIMARY KEY,
+  seq          INT PRIMARY KEY DEFAULT unique_rowid(),
   entity_type  STRING NOT NULL,
   entity_id    UUID NOT NULL,
   action       STRING NOT NULL,

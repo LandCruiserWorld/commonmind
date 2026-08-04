@@ -39,7 +39,7 @@
   <text x="470" y="270" fill="#8fb9d6" font-size="12">transactions</text>
   <rect x="450" y="294" width="170" height="54" rx="9" fill="#123248" stroke="#1f4a66"/>
   <text x="470" y="318" fill="#dfefff" font-size="13">memory_embeddings</text>
-  <text x="470" y="336" fill="#8fb9d6" font-size="12">VECTOR(768) · HNSW</text>
+  <text x="470" y="336" fill="#8fb9d6" font-size="12">VECTOR(768) · C-SPANN</text>
   <rect x="450" y="360" width="170" height="54" rx="9" fill="#123248" stroke="#1f4a66"/>
   <text x="470" y="384" fill="#dfefff" font-size="13">live_activities</text>
   <text x="470" y="402" fill="#8fb9d6" font-size="12">stateful cards</text>

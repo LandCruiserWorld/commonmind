@@ -1,7 +1,7 @@
-# Developer Spec — Perpetual Memory CommonMind
+# Developer Spec — CommonMind
 
 **Project:** CockroachDB × AWS Hackathon — Build with Agentic Memory
-**Working title:** "Perpetual Memory CommonMind" (product codename: *Dreamweaver CommonMind*)
+**Working title:** "CommonMind" — name settled Aug 4, 2026 (was “Cortex”; renamed for collisions)
 **Deadline:** Aug 18, 2026 @ 5:00 PM EDT
 **Stack preference:** TypeScript/Node (fast to ship); Rust optional for perf story
 **Status:** v0 spec — concept locked, implementation pending
@@ -10,13 +10,13 @@
 
 ## 1. Executive Summary
 
-We are building a **webhook → phone notification + agent approval platform** (a "Hark for the agentic era") where the **entire state machine lives in CockroachDB** as the globally-replicated, transactional, always-on memory layer.
+We are building a **webhook → phone notification + agent approval platform** (an approval layer for the agentic era) where the **entire state machine lives in CockroachDB** as the globally-replicated, transactional, always-on memory layer.
 
 The core thesis that wins the hackathon:
 
 > **An agent whose memory goes offline doesn't degrade gracefully — it stops. We make the memory layer *the product*: every notification, approval, and Live Activity is a transaction in CockroachDB. Memory isn't an afterthought; it's the substrate agents think, act, and remember on.**
 
-What makes it novel vs. a plain Hark clone:
+What makes it novel vs. a plain webhook-to-push tool:
 1. **Memory is the source of truth** — CDC changefeeds off the DB drive the push pipeline; the DB is both state store *and* event source.
 2. **Self-improving consolidation** — background "dream-weaver" agents (Titans/Miras-style surprise scoring, ported from KeenDreams v2) reorganize memory so agents get measurably better over time.
 3. **Resilience as the demo** — kill the CockroachDB node live; activities survive and keep updating. Multi-region replication = zero data loss.
@@ -31,7 +31,7 @@ The rules require **≥2 CockroachDB tools** and **≥1 AWS service**. We commit
 | CockroachDB Tool | How we use it |
 |---|---|
 | **Distributed Vector Indexing** | Semantic recall: search notification/incident history; surprise-scoring for dream-weavers; multi-factor retrieval |
-| **Managed MCP Server** | Agents (and humans via our demo UI) introspect the CommonMind read-only, safely, with audit logging |
+| **Managed MCP Server** | Agents (and humans via our demo UI) introspect CommonMind read-only, safely, with audit logging |
 | **ccloud CLI (agent-ready)** | A "memory ops agent" provisions clusters, takes backups, configures RBAC autonomously — agents self-manage infrastructure |
 | **Agent Skills Repo** | We package our own agent skills (e.g. `commonmind-query`, `commonmind-approve`, `commonmind-consolidate`) following the repo's machine-executable format |
 | **Changefeeds (CDC)** | (bonus, not on required list) — the transactional event stream that drives SNS → push. This is our differentiator |
@@ -65,9 +65,9 @@ Pricing tiers (locked): **Self-hosted $0 forever → Premium $20/employee/mo (2+
 
 ```
                  ┌────────────────────────────────────────────────────────┐
- webhook / harkctl │ API (Lambda/ECS)  →  write/read                      │
+ webhook / commonmind │ API (Lambda/ECS)  →  write/read                      │
  ─────────────────>│                     │                                 │
-                 │        CockroachDB (THE MEMORY COMMONMIND)                │
+                 │        CockroachDB (THE MEMORY LAYER)                │
                  │   - services, webhooks, events                         │
                  │   - notifications/approvals state machine              │
                  │   - Live Activities (persistent, resumable)            │
@@ -99,7 +99,7 @@ think (Bedrock) → act (Lambda/ECS) → remember (atomic write: row + embedding
             consolidate (dream-weavers, background)
 ```
 
-- Agents coordinate by **writing and reading the CommonMind**, not by messaging each other. The transactional memory log doubles as the coordination bus.
+- Agents coordinate by **writing and reading the shared memory**, not by messaging each other. The transactional memory log doubles as the coordination bus.
 - Every memory write is **atomic**: the operational row + its embedding are inserted in a single CockroachDB transaction. No consistency gap between "what happened" and "what's retrievable."
 
 ### 3.3 Push pipeline detail
@@ -122,7 +122,7 @@ agent writes to CommonMind (atomic row+embedding)
 
 ## 4. Data Model (CockroachDB Schema)
 
-All tables below in a single database. Vector columns use CockroachDB `vector(...)` type with an HNSW index for the embedding tables.
+All tables below in a single database. Vector columns use the CockroachDB `VECTOR(...)` type indexed by **C-SPANN**, CockroachDB's distributed vector index (a hierarchical K-means partition tree derived from Microsoft's SPANN). CockroachDB does **not** implement HNSW — pgvector's `USING hnsw (...)` syntax will not run here.
 
 ### 4.1 Core
 
@@ -204,7 +204,8 @@ CREATE TABLE memory_embeddings (
   embedding   VECTOR(768) NOT NULL,
   created_at  TIMESTAMPTZ DEFAULT now()
 );
-CREATE INDEX ON memory_embeddings USING hnsw (embedding vector_cosine_ops);
+CREATE INDEX ON memory_embeddings (entity_id);   -- join key for recall
+CREATE VECTOR INDEX ON memory_embeddings (embedding vector_cosine_ops);
 
 -- Consolidated memories written by dream-weaver agents
 CREATE TABLE memory_consolidations (
@@ -218,11 +219,13 @@ CREATE TABLE memory_consolidations (
   embedding      VECTOR(768) NOT NULL,
   created_at     TIMESTAMPTZ DEFAULT now()
 );
-CREATE INDEX ON memory_consolidations USING hnsw (embedding vector_cosine_ops);
+CREATE VECTOR INDEX ON memory_consolidations (embedding vector_cosine_ops);
 
 -- Event log / audit (every write, transactionally)
 CREATE TABLE memory_events (
-  seq          BIGSERIAL PRIMARY KEY,     -- changefeed key
+  seq          INT PRIMARY KEY DEFAULT unique_rowid(),  -- changefeed key; NOT
+                                           -- BIGSERIAL: sequential PKs hotspot a
+                                           -- single range on our hottest write path
   entity_type  STRING NOT NULL,
   entity_id    UUID NOT NULL,
   action       STRING NOT NULL,           -- 'created' | 'updated' | 'approved' | 'expired' ...
@@ -238,7 +241,7 @@ CREATE TABLE memory_events (
 
 ## 5. API Contract (v1)
 
-Auth: `webhookToken` in URL path (like Hark) OR bearer token. Responses are JSON with `{ ok: bool, ... }`.
+Auth: `webhookToken` in URL path OR bearer token. Responses are JSON with `{ ok: bool, ... }`.
 
 ### 5.1 Notification API
 
@@ -259,7 +262,7 @@ Request payload:
     "type": "approval",
     "expiresInSeconds": 900,
     "correlationId": "deploy-184",
-    "callback": { "url": "https://ci.example.com/hark-response", "token": "private-token" }
+    "callback": { "url": "https://ci.example.com/commonmind-response", "token": "private-token" }
   }
 }
 ```
@@ -369,7 +372,7 @@ Local single-node CockroachDB v25.2.3, parallel inserts, `ON CONFLICT DO UPDATE`
 
 ## 8. Demo / Video Script (<3 min, YouTube)
 
-1. **Hook (0:00–0:20):** Terminal: `harkctl notify ask "Deploy to production?" --approval` — an agent (Claude Code / Codex) requests approval.
+1. **Hook (0:00–0:20):** Terminal: `commonmind notify ask "Deploy to production?" --approval` — an agent (Claude Code / Codex) requests approval.
 2. **Phone (0:20–0:50):** Live Activity card appears with Approve/Deny + progress bar pinned in the Dynamic Island. Show it drive Building → Testing → Shipped as events flow through CockroachDB (progress bar moves on each CDC event).
 3. **Memory (0:50–1:30):** `GET /api/memory/search?q=deploy 184` → agent recalls the exact prior deploy, its approval decision, and its outcome. Show the atomic memory (row + embedding in one txn). Dream-weaver insight: "deploys that X-rayed at 22:00 succeeded 40% less often" — memory learned a pattern.
 4. **Resilience (1:30–2:20):** **Kill the CockroachDB node live.** Show the activity card survives; node restarts; agents resume with complete memory. "An agent whose memory goes offline doesn't degrade gracefully — ours never loses it."
@@ -395,12 +398,12 @@ Local single-node CockroachDB v25.2.3, parallel inserts, `ON CONFLICT DO UPDATE`
 - [ ] ccloud self-management agent
 - [ ] CommonMind MCP server (capture / recall / ask / approve / note) + `docs/agents/` guide files
 - [ ] Benchmark fixture vs. multi-node cluster; record numbers for README
-- [ ] 3-min video, architecture diagram, README, MIT license, public repo, demo URL
+- [ ] 3-min video, architecture diagram, README, Apache-2.0 license, public repo, demo URL
 
 ### Stretch (if time)
 - [ ] FCM Android receiver (sideload APK)
 - [ ] Expo/APNs iOS + TestFlight
-- [ ] `harkctl`-style CLI with approval `--wait` semantics
+- [ ] `commonmind`-style CLI with approval `--wait` semantics
 
 ---
 
@@ -423,7 +426,7 @@ Local single-node CockroachDB v25.2.3, parallel inserts, `ON CONFLICT DO UPDATE`
 2. **Language:** TypeScript confirmed; Rust only if we want cold-start numbers in the README.
 3. **Hosting:** Lambda-first for cost/ops; ECS only if the live demo needs consistent sub-50ms API.
 4. **Scope of dream-weavers:** full 5-phase KeenDreams layer, or a lean 2-phase (surprise + patterns) to guarantee ship?
-5. **Name:** "Perpetual Memory CommonMind" / "Dreamweaver CommonMind" — confirm final.
+5. **Name:** "CommonMind" / "the Dream-Weaver agent" — confirm final.
 
 ---
 

@@ -27,7 +27,7 @@ Built for the **[CockroachDB × AWS Hackathon — Build with Agentic Memory](htt
 
 ## Phase 1 — Core loop (Week 1)
 - [⏳] `commonmind capture` / `commonmind ask` — atomic write + semantic recall (DB-b `pg`)
-- [⏳] HNSW vector index + atomic-write invariant (row + embedding, one txn)
+- [⏳] C-SPANN vector index + atomic-write invariant (row + embedding, one txn)
 - [⏳] Approval request → human phone decision → callback resume
 - [⏳] CLI capture hooks (Claude Code, opencode, etc.)
 
@@ -50,7 +50,7 @@ Confidence/readiness audit only — no product features built yet.
 - `npm run check` (tsc) ✅ clean.
 - `npm test` ✅ 1/1 passes — **harness fixed** (was broken: `node --test tests/` can't run `.ts`; added `tsconfig.test.json`, tests compile to `.test-dist/`).
 - Local CockroachDB: running `v25.2.3` at `127.0.0.1:26257` (CCL) ✅ — reachable from `pg`.
-- **Gap:** database `commonmind` does NOT exist; `schema.sql` was never applied. Tables (`memory_records`, `memory_embeddings` HNSW, `memory_consolidations`) are design-only right now.
+- **Gap:** database `commonmind` does NOT exist; `schema.sql` was never applied. Tables (`memory_records`, `memory_embeddings` C-SPANN, `memory_consolidations`) are design-only right now.
 - **Gap for exact criteria fit:** no live agent loop, no AWS deployment artifacts, no end-to-end capture→recall proof.
 - Ready-to-build instructions derived: 1) create DB + apply `schema.sql`, 2) prove `remember()`/`recall()` atomic-write against real cluster, 3) then agents + AWS.
 
@@ -61,7 +61,26 @@ Confidence/readiness audit only — no product features built yet.
 - **Demo faces:** Solana trading platform (Raspberry Pi + Tailscale), dev-team coding, game (creature remembers).
 - **Naming:** CommonMind.
 
+## Repo review — Aug 4 (pre-handoff to dev team)
+
+Fixed in this pass:
+- **`USING hnsw` was invalid SQL for CockroachDB.** CockroachDB has no HNSW; it uses **C-SPANN** (hierarchical K-means partition tree from Microsoft's SPANN). All index DDL is now `CREATE VECTOR INDEX ... (embedding vector_cosine_ops)`. This would have failed the moment `schema.sql` was first applied.
+- **`memory_events.seq` was `BIGSERIAL`** — a sequential PK funnels every insert into one range and hotspots our hottest write path. Now `INT DEFAULT unique_rowid()`.
+- **Added `memory_embeddings (entity_id)` index** — `recall()` joins on it; without it the join scans.
+- `withTransaction` no longer lets a failing `ROLLBACK` mask the original error.
+- License references corrected MIT → Apache-2.0 (LICENSE, `package.json` and GitHub all say Apache-2.0).
+- `"private": true` removed from `package.json` — it blocked the `npm install -g commonmind` front door promised in Phase 0.
+- Removed competitor name ("Hark") and `harkctl` from the public spec; CLI is `commonmind`.
+- Deleted `docs/landing.html`, a byte-identical duplicate of `docs/site/index.html` that had already drifted once.
+- Repaired rename artifacts where "Cortex" had been a common noun ("THE MEMORY CORTEX" → "THE MEMORY LAYER").
+
+**Open — needs a decision before the team builds:**
+- [ ] **Embedding dimension.** Schema says `VECTOR(768)` (9 places); `config.ts` defaults to `amazon.titan-embed-text-v2:0`, which emits **1024** (or 512/256 — never 768). Every insert fails until these agree. Pick: move schema to 1024, or keep 768 and choose a 768-dim model.
+- [ ] **`getPool()` ignores `loadConfig()`** — `db.ts` reads `process.env.COCKROACH_DB_URL` directly, so the config fallback DSN is dead code. Unset env → `pg` defaults to **localhost:5432** (Postgres), not 26257. Should be `getPool(loadConfig().dbUrl)`.
+- [ ] **Spec and code disagree on the write path.** `repository.ts` writes `memory_records` + `memory_embeddings`; `memory_records` appears nowhere in DEVELOPER_SPEC or MASTER_DEVELOPER_DOC, whose atomic-write invariant describes `notifications` + `memory_embeddings`. Decide which is canonical, then converge.
+- [ ] **No test covers the atomic-write invariant** — principle #1, and the only test asserts a string from `hello()`.
+
 ## Open decisions
-- [ ] Final name confirmation (`commonmind`)
+- [✅] Final name confirmation — **CommonMind** (settled Aug 4; renamed from "Cortex", which collides with 8+ live AI-memory products including Harper's)
 - [ ] Threshold policy for milestone → priority escalation (per-agent or per-workflow?)
 - [ ] Local-first vs Cloud-first for the demo run

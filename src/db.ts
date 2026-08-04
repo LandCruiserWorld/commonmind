@@ -29,7 +29,12 @@ export async function withTransaction<T>(
     await client.query('COMMIT');
     return result;
   } catch (err) {
-    await client.query('ROLLBACK');
+    // Roll back best-effort: a failing ROLLBACK must not mask the real error.
+    try {
+      await client.query('ROLLBACK');
+    } catch {
+      /* connection already broken — the original error is the useful one */
+    }
     throw err;
   } finally {
     client.release();

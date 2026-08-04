@@ -56,7 +56,7 @@ This is the **initial foundation**: the product bible and machine-readable spec,
 │ Operator Agent │       │ memory_embeddings  │──CDC──▶│ AWS Lambda (fanout)│
 │ Dream-Weaver   │◀──────│ live_activities    │       │ SNS · S3           │
 └────────────────┘  recall/└────────────────────┘       └───────────────────┘
-   MCP · Skills        approve        VECTOR(768) · HNSW    push · artifacts
+   MCP · Skills        approve        VECTOR(768) · C-SPANN    push · artifacts
 ```
 
 Full diagram: [`assets/architecture.svg`](assets/architecture.svg)

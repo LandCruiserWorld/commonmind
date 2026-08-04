@@ -1,4 +1,4 @@
-# STRATEGIC DEVELOPMENT PLAN — Perpetual Memory CommonMind
+# STRATEGIC DEVELOPMENT PLAN — CommonMind
 ### CockroachDB × AWS Hackathon — Build with Agentic Memory
 **Deadline:** Aug 18, 2026 @ 5:00 PM EDT · **Today:** Aug 03, 2026 → ~15 days
 
@@ -20,7 +20,7 @@ This is a 5-layer thesis — each layer separately defensible, together they win
 
 **Layer 2 — The Agent (Act):** an agent *uses* that memory to decide, runs on your phone via approval and Live Activity. Turns a memory product into an agent product.
 
-**Layer 3 — The Product (Hark-style, but ours):** webhook → notifications + approvals + Live Activities. It's a *real* tool developers/CI/agents genuinely want.
+**Layer 3 — The Product (webhook-to-push shaped, but memory-first):** webhook → notifications + approvals + Live Activities. It's a *real* tool developers/CI/agents genuinely want.
 
 **Layer 4 — The Technology (CockroachDB):** atomic writes, changefeeds, distributed vector indexing, MCP, ccloud. This is what gets the "technical implementation" points and what most teams will be missing.
 
@@ -30,9 +30,9 @@ This is a 5-layer thesis — each layer separately defensible, together they win
 
 ## 2. Positioning & Competitive Landscape
 
-We are NOT building "another webhook-to-push tool." That is Hark and a dozen others. We are building the same UX **with memory as the product**, which changes what you *can do*:
+We are NOT building "another webhook-to-push tool." That category is already crowded. We are building the same UX **with memory as the product**, which changes what you *can do*:
 
-| Feature | Hark (you benchmark) | Us (differentiator) |
+| Feature | Typical webhook-to-push tool | Us (differentiator) |
 |---|---|---|
 | Push/approval/Live Activity | Yes | Yes |
 | Memory is the internal store | (opaque — likely a single-region DB) | **CockroachDB, globally replicated, ALWAYS-ON** |
@@ -44,7 +44,7 @@ We are NOT building "another webhook-to-push tool." That is Hark and a dozen oth
 
 **What this means for judging:** we're not asking judges to trust a hope. We lead with *existing, working integrations* (cryptotrading app + CLI) as evidence of usefulness, then show the memory layer is what makes them "actually useful."
 
-**Interviewee note:** Hark's UX (device pairing, service default avatars, `deviceIds`, Live Activity styles) is a strong reference. Borrow, don't clone — our value is memory-first, not "one more modal."
+**Interviewee note:** Best-in-class webhook-push UX (device pairing, service default avatars, `deviceIds`, Live Activity styles) is a strong reference. Borrow, don't clone — our value is memory-first, not "one more modal."
 
 ---
 
@@ -113,7 +113,7 @@ Everything is a wedge into the next. This prevents the classic 2-week, all-or-no
 ### Phase 1: Core Loop (Days 3–6) — L1 + L2
 - [ ] API service (Node/fastify+pg): API, validator, idempotency
 - [ ] CLI: `commonmind save` / `commonmind ask "..."`→ write + embed + recall (atomic write into CockroachDB)
-- [ ] Embeddings via Bedrock (Claude/Titan) → `memory_embeddings`; HNSW index; search endpoint
+- [ ] Embeddings via Bedrock (Claude/Titan) → `memory_embeddings`; C-SPANN index; search endpoint
 - [ ] Inbox web app (MVP push surface)
 - *Gate: capture → recall works end-to-end within 5 minutes of demo time.*
 
@@ -175,7 +175,7 @@ No new features — hardening + packaging:
 - Deploy-perfectly, or the *submission* (repo+video+demo) is what's judged — not source elegance.
 
 **Important (Devpost) checklist for submission (last day):**
-- [ ] Public repo (repo visible) + detectable license (MIT) in the "About"
+- [ ] Public repo (repo visible) + detectable license (Apache-2.0) in the "About"
 - [ ] Functional demo URL
 - [ ] Video < 3min, public YouTube/Vimeo URL
 - [ ] Document which Cockroach tools (MCP, ccloud, vector, skills) and HOW
@@ -200,7 +200,7 @@ Plus, on paper:
 
 ## 12. Immediate Next Actions (wet-edge)
 
-1. Create GitHub repo + MIT + shell scaffold (`docs/`, `src/`, `tests/`).
+1. Create GitHub repo + Apache-2.0 + shell scaffold (`docs/`, `src/`, `tests/`).
 2. Provision a CockroachDB Cloud multi-node cluster via **ccloud CLI** — also starts the "self-ops" video content for free.
 3. Get the **10-second command→recall** Proto into Bedrock embedding + search.
 4. Write the mock 10-sec video, post anywhere, show it to people, iterate *before* building more.
