@@ -44,6 +44,19 @@ The rules require **≥2 CockroachDB tools** and **≥1 AWS service**. We commit
 | **Amazon Bedrock** | LLM reasoning (write rich push copy), embeddings for vector indexing |
 | **Amazon ECS/EKS** (optional) | Persistent API + Activity API if Lambda cold starts hurt the live demo |
 
+### 2.3.1 Hosting model — serverless on AWS (locked)
+
+Cortex's paid **Premium (hosted)** tier runs entirely on **serverless AWS**, satisfying the hackathon's "deployed on AWS" requirement with no VMs to manage:
+
+- **AWS Lambda** — API handlers, CDC → SNS bridge, dream-weaver consolidation workers, push fanout. Scales to zero, billed per invocation.
+- **Amazon Bedrock** — serverless model inference for embeddings/LLM.
+- **AWS SNS + S3** — serverless push pipeline and artifact storage.
+- **CockroachDB Cloud Basic (serverless)** — the persistent memory layer, hosted on **AWS regions**, RU-metered and scales to zero.
+
+**Cost posture:** this is the **multi-tenant serverless** model — one shared Basic footing serves many tenants; COGS ≈ $5–10/mo per tenant, so hosting is profitable from ~2–5 employees/tenant at $20/employee (or fewer at higher seats). **Avoid** dedicated per-tenant Standard clusters (~$120–130/mo) which undercut the price point.
+
+Pricing tiers (locked): **Self-hosted $0 forever → Premium $20/employee/mo (min 5) → Enterprise custom.**
+
 ---
 
 ## 3. Architecture
