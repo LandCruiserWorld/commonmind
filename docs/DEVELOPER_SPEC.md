@@ -53,9 +53,9 @@ Cortex's paid **Premium (hosted)** tier runs entirely on **serverless AWS**, sat
 - **AWS SNS + S3** — serverless push pipeline and artifact storage.
 - **CockroachDB Cloud Basic (serverless)** — the persistent memory layer, hosted on **AWS regions**, RU-metered and scales to zero.
 
-**Cost posture:** this is the **multi-tenant serverless** model — one shared Basic footing serves many tenants; COGS ≈ $5–10/mo per tenant, so hosting is profitable from ~2–5 employees/tenant at $20/employee (or fewer at higher seats). **Avoid** dedicated per-tenant Standard clusters (~$120–130/mo) which undercut the price point.
+**Cost posture:** this is the **multi-tenant serverless** model — one shared Basic footing serves many tenants; COGS ≈ $5–10/mo per tenant, so hosting is profitable from **2+ employees/tenant** at $20/employee. **Avoid** dedicated per-tenant Standard clusters (~$120–130/mo) which undercut the price point.
 
-Pricing tiers (locked): **Self-hosted $0 forever → Premium $20/employee/mo (min 5) → Enterprise custom.**
+Pricing tiers (locked): **Self-hosted $0 forever → Premium $20/employee/mo (2+) → Enterprise custom.**
 
 ---
 
