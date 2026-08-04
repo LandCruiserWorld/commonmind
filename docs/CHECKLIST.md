@@ -19,6 +19,8 @@ Open this every morning. Tick things off. It's deliberately thin — the reasoni
 
 > ✅ **Aug 4 evening — the cluster is up and the schema is applied.** The critical path is unblocked. Next gate is Wed Aug 5: capture → recall.
 
+- [ ] **Enable CockroachDB's Managed MCP Server** — Cloud console → cluster → **Connect** → MCP, paste the snippet into your client. Two minutes, read-only, RBAC-checked. *A required tool, and a separate thing from the CommonMind MCP server we build ourselves.* Cloud-only — it cannot run against a local cluster
+
 - [x] ~~`ccloud` provisions a **multi-node** cluster~~ ✅ **Aug 4**
 - [x] ~~`CREATE DATABASE commonmind` + apply schema~~ ✅ **Aug 4**
 - [x] ~~`SHOW TABLES` returns the memory core~~ ✅ **Aug 4 — all 8 tables verified**
@@ -56,7 +58,14 @@ Gates are binary. Met or not met, checked end of day. Detail in [`ROADMAP.md` §
 - [ ] Commit the decision back as memory — *this is what makes it CommonMind and not a notifier*
 - [ ] Start an approval, `kill -9` the agent, restart, confirm it resumes. 🎥 Record it
 
+**Also today — the CommonMind MCP server, first three tools:**
+- [ ] `commonmind serve-mcp` exposing `memory.capture`, `memory.recall`, `memory.ask` — a protocol wrapper over the `remember()`/`recall()` that went live yesterday
+- [ ] HTTP transport (**not SSE** — deprecated in MCP and excluded by Cockroach's own server)
+- [ ] Connect one CLI to it and capture a memory through MCP rather than the CLI
+
 > No web UI or phone push needed today. A row plus a CLI read proves the state machine.
+>
+> ⚠️ **If the day is too full, the approval state machine wins and MCP slides to Friday.** Approval is the human-in-the-loop differentiator; MCP is a wrapper over work that already exists.
 
 ### Fri Aug 7 — the pipeline
 **Gate: a push fires from a committed row, not from application code.**
@@ -65,6 +74,10 @@ Gates are binary. Met or not met, checked end of day. Detail in [`ROADMAP.md` §
 - [ ] Lambda fanout worker consuming SQS
 - [ ] Minimal web inbox — unstyled is fine
 - [ ] Test: delete the fanout Lambda; memory should still be correct
+
+**Also today — finish the MCP surface:**
+- [ ] Add `memory.approve` and `memory.note` now that Thursday's state machine exists
+- [ ] **Start dogfooding:** point your own coding agent at CommonMind and let it capture as you work. Every day from here generates real usage — and authentic demo footage — for free
 
 > Biggest risk of the three days, and it depends on AWS being ready. **If AWS isn't ready Thursday night, say so Thursday** — not Friday afternoon.
 
@@ -87,9 +100,8 @@ Gates are binary. Met or not met, checked end of day. Detail in [`ROADMAP.md` §
 - [ ] **Gate: a real learning curve — or the "improves itself" claim comes off the site**
 
 ### Tue Aug 11 — tools
-- [ ] **Enable CockroachDB's Managed MCP Server** — Cloud console → cluster → Connect → MCP. Read-only, RBAC-checked. *Cloud cluster required; does not work self-hosted*
-- [ ] **Build our CommonMind MCP server** exposing `memory.capture / recall / ask / approve / note` — this is the write path, the managed server is not
-- [ ] `docs/agents/` guide files per CLI
+- [ ] `docs/agents/` guide files per CLI — the per-app `AGENTS.md` / `SKILL.md` that tell each agent our MCP tool surface
+- [ ] Verify both MCP servers in one demo: Cockroach's managed server introspecting, ours capturing
 - [ ] ccloud self-ops agent (provision / backup / RBAC, JSON out)
 - [ ] **Gate: two different CLIs recall the same memory**
 

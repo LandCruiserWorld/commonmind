@@ -90,6 +90,21 @@ The plan has been using "MCP server" for two different things. They are not the 
 - **It requires the Cloud cluster.** Cloud-only means it cannot be demonstrated against a local single-node instance — another reason cluster provisioning is the blocking task, not a later one.
 - **Both belong in the submission.** Using Cockroach's managed server *and* shipping our own is a materially stronger answer to "which tools did you use and how" than either alone.
 
+### MCP server moved forward — Aug 4
+
+The CommonMind MCP server was scheduled for **Aug 11**, in week two. Moved to **Thu Aug 6 / Fri Aug 7**, split in two.
+
+**Why it was wrong at Aug 11:**
+- It is **mostly a protocol wrapper** over `remember()` and `recall()`, which go live Wednesday. Three of its five tools — `capture`, `recall`, `ask` — need no new logic. That is half a day, not a week's work.
+- It is a **required tool**, and at Aug 11 it sat in **L4** of the cut ladder — the layer we cut first under pressure. Required tools do not belong there.
+- It **unlocks dogfooding.** Once it exists, our own agents use CommonMind while building CommonMind, which produces genuine usage and authentic demo footage for free. Every day it is late is a day of that lost.
+
+**New shape:** `capture`/`recall`/`ask` on Thu, `approve`/`note` on Fri once the approval state machine exists, `docs/agents/` guides and the two-server demo remain on Aug 11.
+
+**Fallback recorded:** if Thursday is too full, the approval state machine wins and MCP slides to Friday. Approval is the human-in-the-loop differentiator; MCP is a wrapper over work that already exists.
+
+Separately, **enabling Cockroach's Managed MCP Server is not a build task** — it is a console toggle (cluster → Connect → MCP), so it moved to the immediate list rather than a scheduled day.
+
 ### Other locked decisions
 - **Language:** TypeScript/Node (bench shows both bottleneck on the DB write path — velocity wins).
 - **Storage:** CockroachDB (Cloud GLOBAL for demo/video; single-node for dev).
