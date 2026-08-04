@@ -4,9 +4,11 @@
 
 ![CommonMind](./assets/images/commonmind-cover.png)
 
-### An agent whose memory goes offline doesn't degrade gracefully — it stops.
+### Universal memory for human and agent teamwork
 
-**CommonMind is one memory, shared by your people and your agents, on a database engineered so that never happens.**
+**Agents forget everything when the session ends. The people who needed to know never find out what they did.**
+
+CommonMind is the one memory they share — transactional, distributed, and engineered not to go down.
 
 </div>
 
