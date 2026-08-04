@@ -42,7 +42,7 @@ The rules require **≥2 CockroachDB tools** and **≥1 AWS service**. We commit
 | **AWS Lambda** | Push fanout worker, CDC → SNS bridge, dream-weaver consolidation workers, API handlers |
 | **Amazon S3** | Avatars/images, artifact storage (runbooks, incident attachments) |
 | **Amazon Bedrock** | LLM reasoning (write rich push copy), embeddings for vector indexing |
-| **Amazon ECS/EKS** (optional) | Persistent API + Activity API if Lambda cold starts hurt the live demo |
+| ~~**Amazon ECS/EKS**~~ | ~~Persistent API if Lambda cold starts hurt the live demo~~ — **dropped Aug 4**, not serverless |
 
 ### 2.3.1 Hosting model — serverless on AWS (locked)
 
@@ -436,7 +436,7 @@ Local single-node CockroachDB v25.2.3, parallel inserts, `ON CONFLICT DO UPDATE`
 
 1. **Push surface priority:** inbox/PWA only, or push FCM+APNs harder? (Recommend: inbox/PWA + one native screenshot.)
 2. **Language:** TypeScript confirmed; Rust only if we want cold-start numbers in the README.
-3. **Hosting:** Lambda-first for cost/ops; ECS only if the live demo needs consistent sub-50ms API.
+3. **Hosting:** ~~Lambda-first for cost/ops; ECS only if the live demo needs consistent sub-50ms API.~~ **LOCKED Aug 4 — Lambda only; ECS/EKS dropped** (not serverless, adds ops). Cold starts are handled by keeping functions warm during the recording. See the serverless stack in [`BUILD_LOG.md`](./BUILD_LOG.md).
 4. **Scope of dream-weavers:** full five-phase layer, or a lean two-phase (surprise + patterns) to guarantee ship?
 5. **Name:** "CommonMind" / "the Dream-Weaver agent" — confirm final.
 

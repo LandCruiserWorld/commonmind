@@ -111,7 +111,7 @@ What makes it novel vs. a plain webhook-to-push tool:
 | **AWS Lambda** | Push fanout worker, CDC→SNS bridge, dream-weaver workers, API handlers |
 | **Amazon S3** | Avatars/images, artifact storage (runbooks, incident attachments) |
 | **Amazon Bedrock** | LLM reasoning (rich push copy), embeddings for vector indexing |
-| **Amazon ECS/EKS** *(optional)* | Persistent API if Lambda cold starts hurt the live demo |
+| ~~**Amazon ECS/EKS**~~ | ~~Persistent API if Lambda cold starts hurt the live demo~~ — **dropped Aug 4**, not serverless |
 
 **Hosting model (locked):** the paid Premium tier is **serverless on AWS** — Lambda + Bedrock + SNS + S3, with the persistent memory in **CockroachDB Cloud Basic (serverless) hosted on AWS regions**. Multi-tenant serverless keeps COGS ≈ $5–10/mo per tenant (~80–90% gross margin; profitable from **2+ employees** at $20/employee; solos auto-approved at same rate, ≈ break-even with self-serve support); the naive dedicated-per-tenant model (~$120–130/mo Standard cluster) is out. Pricing: **Self-hosted $0 → Premium $20/employee/mo (2+) → Enterprise custom.**
 
