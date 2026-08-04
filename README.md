@@ -28,12 +28,16 @@
 - [Architecture](#architecture)
 - [Data model](#data-model)
 - [The three agents](#the-three-agents)
+- [The human interface](#the-human-interface-a-doorbell-not-a-pager)
+- [Public and private memory](#public-and-private-memory)
 - [Consistency and failure modes](#consistency-and-failure-modes)
 - [Security model](#security-model)
 - [Observability](#observability)
 - [Quickstart](#quickstart)
 - [Interface surface](#interface-surface)
 - [The ten principles](#the-ten-principles)
+- [Proof surfaces](#proof-surfaces)
+- [Editions](#editions)
 - [Hackathon compliance](#hackathon-compliance)
 - [Roadmap](#roadmap)
 - [Repo layout](#repo-layout)
@@ -217,6 +221,41 @@ Agents coordinate by **reading and writing shared memory**, not by messaging eac
 
 ---
 
+## The human interface: a doorbell, not a pager
+
+Agents emit a flood. People can't absorb a flood. So every event is recorded, and only three classes ever reach a human:
+
+| Regime | Trigger | Behaviour |
+|---|---|---|
+| **Silent** | Safe step — build, retry, query, happy-path sub-task | Recorded, never pushed |
+| **Alert** | A milestone crossed, or "needs your decision" | A push you can act on |
+| **Priority** | Finished differently — failure, delay, an answer you'd want tonight | Wakes you if needed |
+
+**A push is a doorbell, not a notice.** The interaction is two-way:
+
+```
+doorbell → thread: ask back → decide (approve / edit / deny) → agent resumes → exchange becomes memory
+```
+
+Response kinds: `approval`, `yes_no`, `text_reply`, `thread_question`. The thread persists in the same memory layer as everything else — recallable and auditable. **The exchange itself becomes memory**, so the next decision of that shape is faster and, eventually, unnecessary.
+
+---
+
+## Public and private memory
+
+Every person and every agent contributes to one shared datastore, but contribution is not surveillance.
+
+| | Visibility | Indexed |
+|---|---|---|
+| **Public** | Teammates and agents; searchable by everyone | Yes — grows the company index |
+| **Private** | The contributor only | **Never** added to the company index |
+
+> Contribute freely. The brain grows from everyone, and everyone controls their footprint.
+
+This is a hard boundary in the data model, not a UI filter: private rows are excluded from the shared index at write time, so a recall query cannot surface them regardless of who asks.
+
+---
+
 ## Consistency and failure modes
 
 What actually happens when each component fails:
@@ -329,18 +368,47 @@ AWS services are in the [Why AWS serverless](#why-aws-serverless) table.
 
 ---
 
+## Proof surfaces
+
+One memory core, four unrelated products. The point of building four is that a memory layer which only works for one workload isn't a memory layer, it's a feature.
+
+| Surface | Integration | What it proves |
+|---|---|---|
+| **Solana trading platform** | Trade decisions captured; risky entries ping the owner's phone for approval. Runs on a Raspberry Pi over Tailscale | Kill the node — the bot keeps its context |
+| **Dev-team coding sessions** | Capture hooks on Claude Code, Antigravity, opencode, Kimi K3, Qwen | A new hire asks the brain, not the person who knows |
+| **Marketing agency** | Client preferences, brand guidelines, campaign history to a shared per-client brain | Onboarding takes days, not months; brand voice never drifts |
+| **Ocean Dreams** (game) | The creature remembers player behaviour across sessions | Behaviour visibly changes based on what it remembers about you |
+
+---
+
+## Editions
+
+| | Self-hosted | Premium | Enterprise |
+|---|---|---|---|
+| **Price** | **$0 forever** | **$20** / employee / mo | Custom |
+| Memory core — capture, recall, act, consolidate | ✅ | ✅ | ✅ |
+| Integrations, MCP server, web inbox | ✅ | ✅ | ✅ |
+| Runs on | Your own CockroachDB | Managed serverless AWS | On-prem / VPC |
+| Uptime | Yours | 99% monitored | Custom SLA |
+| Support | Community | Self-serve onboarding | Dedicated engineer, 24/7 |
+
+Open source is free forever and always will be — self-host it, embed it in a product, ship it. Premium is for teams who'd rather not run a database; 2+ employees, with solo founders auto-approved at the same rate.
+
+---
+
 ## Roadmap
 
-Deadline **Aug 18, 2026, 5:00 PM EDT**.
+Deadline **Aug 18, 2026, 5:00 PM EDT**. Dates from the build log:
 
-| Phase | Deliverable |
+| Date | Deliverable |
 |---|---|
-| **Foundation** | Schema applied to a live cluster; atomic write proven against it |
-| **Core loop** | `capture` → `recall` end-to-end; approval round-trip |
-| **Pipeline** | CDC → SNS → SQS → Lambda → push; web inbox |
-| **Resilience** | Multi-node cluster; kill-the-node demo recorded |
-| **Differentiation** | Dream-weaver consolidation with a measured before/after |
-| **Submission** | Benchmarks with reproduction steps, 3-min video, final docs |
+| **Aug 6** | `create-commonmind` scaffold + CLI |
+| **Aug 9** | Capture → recall end-to-end against a live cluster |
+| **Aug 12** | Trading bot on Raspberry Pi + Tailscale |
+| **Aug 14** | Ocean Dreams integration |
+| **Aug 16** | Agents layer + resilience |
+| **Aug 17** | Demo video + kill-the-node |
+| **Aug 18** | Submission |
 
 Live status and open decisions: [`docs/BUILD_LOG.md`](./docs/BUILD_LOG.md).
 
