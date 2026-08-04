@@ -1,6 +1,8 @@
 # CommonMind — Docs
 
-**Start here.** This page is the map. Read the precedence rules before following any plan in this folder.
+**New to the project? Read [`../CONTRIBUTING.md`](../CONTRIBUTING.md) first** — it's the 15-minute path in.
+
+This page is the map. Read the precedence rules before following any plan in this folder.
 
 ---
 

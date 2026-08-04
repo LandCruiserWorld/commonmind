@@ -19,7 +19,7 @@ CommonMind is the one memory they share — transactional, distributed, and engi
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178c6)](https://www.typescriptlang.org/)
 [![Status: Building](https://img.shields.io/badge/Status-Building-e6b93c)](./docs/BUILD_LOG.md)
 
-[Live site](https://commonmind.agent9.dev) · [Build log](./docs/BUILD_LOG.md) · [Developer spec](./docs/DEVELOPER_SPEC.md) · [Architecture](#architecture) · [Failure modes](#consistency-and-failure-modes)
+**New here? → [Start here](./CONTRIBUTING.md)** · [Live site](https://commonmind.agent9.dev) · [Build log](./docs/BUILD_LOG.md) · [Developer spec](./docs/DEVELOPER_SPEC.md) · [Architecture](#architecture) · [Failure modes](#consistency-and-failure-modes)
 
 ---
 

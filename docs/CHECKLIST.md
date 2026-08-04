@@ -192,7 +192,8 @@ From the [official rules](https://cockroachdb-ai.devpost.com/). Verify each one 
 - [ ] Local-first vs cloud-first for the demo run
 - [ ] Register `commonmind.dev` + the npm name (both free as of Aug 4)
 - [x] ~~GitHub repo description~~ — set Aug 4, with homepage + 8 topics
-- [ ] Docs scaffold: `docs/api/API.md`, `docs/architecture/ARCHITECTURE.md`, `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`, `.github/` issue templates
+- [x] ~~`CONTRIBUTING.md`~~ — written Aug 4 as the team onboarding path
+- [ ] Docs scaffold: `docs/api/API.md`, `docs/architecture/ARCHITECTURE.md`, `SECURITY.md`, `CHANGELOG.md`, `.github/` issue templates
 
 ---
 
