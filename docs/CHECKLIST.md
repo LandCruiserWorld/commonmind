@@ -37,22 +37,36 @@ Gates are binary. Met or not met, checked end of day. Detail in [`ROADMAP.md` §
 - [x] ~~Multi-node cluster live, schema applied~~ ✅
 - [x] ~~Partner's dev environment clean~~ ✅ — `npm test` was broken on Node 20 (quoted glob); fixed Aug 4
 
-### Wed Aug 5 — **the wedge**
-- [ ] `commonmind capture` writes row + embedding in one transaction
-- [ ] `commonmind ask` returns a semantic match from the cloud cluster
-- [ ] Bedrock Titan v2 embeddings wired (1024 dims — must match the schema)
-- [ ] **Gate: capture → recall works end to end**
-- [ ] 🎥 Record the 10-second hook video the same hour. Do not wait for polish
+### Wed Aug 5 — the wedge
+**Gate: `capture` → `ask` works end to end on the cloud cluster.**
+- [ ] `src/embed.ts` — Bedrock `titan-embed-text-v2:0`; string in → **1024 floats** out
+- [ ] Wire the `EMBED_PROVIDER` `local | bedrock` toggle
+- [ ] First real run of `remember()` — row + vector, **one transaction**
+- [ ] First real run of `recall()` — query returns it with a similarity score
+- [ ] Minimal CLI: `commonmind capture "…"` / `commonmind ask "…"`. No flags
+- [ ] 🎥 Record the 10-second hook **the hour it works**. Rough is fine
 
-### Thu Aug 6 — approvals
-- [ ] Approval request → `notifications` row → human decision → agent resumes
-- [ ] Decision is committed as memory and recalled next time
-- [ ] **Gate: approve/deny survives killing the agent process mid-flight**
+> Short on time? Cut the CLI and prove it with a script. The gate is capture→recall, not ergonomics.
+
+### Thu Aug 6 — human in the loop
+**Gate: an approval survives killing the agent mid-flight.**
+- [ ] Write the `notifications` row transactionally
+- [ ] State machine: `pending → approved | denied | expired`, honouring `correlation_id` and `expires_at`
+- [ ] `commonmind ask --approval "…"` waits on the decision
+- [ ] Commit the decision back as memory — *this is what makes it CommonMind and not a notifier*
+- [ ] Start an approval, `kill -9` the agent, restart, confirm it resumes. 🎥 Record it
+
+> No web UI or phone push needed today. A row plus a CLI read proves the state machine.
 
 ### Fri Aug 7 — the pipeline
-- [ ] CDC changefeed on the committed row
-- [ ] → SNS → SQS (+ DLQ) → Lambda fanout → web inbox
-- [ ] **Gate: a push fires from a committed DB row, not from application code**
+**Gate: a push fires from a committed row, not from application code.**
+- [ ] `CREATE CHANGEFEED` on the memory tables
+- [ ] SNS + SQS + **DLQ** (the DLQ is a Production Readiness scoring item)
+- [ ] Lambda fanout worker consuming SQS
+- [ ] Minimal web inbox — unstyled is fine
+- [ ] Test: delete the fanout Lambda; memory should still be correct
+
+> Biggest risk of the three days, and it depends on AWS being ready. **If AWS isn't ready Thursday night, say so Thursday** — not Friday afternoon.
 
 ### Sat Aug 8 — resilience rehearsal
 - [ ] Kill one node on the real cluster; recall uninterrupted
@@ -60,7 +74,7 @@ Gates are binary. Met or not met, checked end of day. Detail in [`ROADMAP.md` §
 - [ ] **Gate: rehearsed, not recorded**
 
 ### Sun Aug 9 — buffer
-- [ ] Whatever slipped this week lands here
+- [ ] Whatever slipped this week lands here. **Don't compress Thursday to protect Wednesday** — that's what this day is for
 - [ ] **Gate: critical path complete through CDC**
 
 ---
