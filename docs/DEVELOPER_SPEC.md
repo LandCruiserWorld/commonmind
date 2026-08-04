@@ -1,7 +1,7 @@
-# Developer Spec — Perpetual Memory Cortex
+# Developer Spec — Perpetual Memory CommonMind
 
 **Project:** CockroachDB × AWS Hackathon — Build with Agentic Memory
-**Working title:** "Perpetual Memory Cortex" (product codename: *Dreamweaver Cortex*)
+**Working title:** "Perpetual Memory CommonMind" (product codename: *Dreamweaver CommonMind*)
 **Deadline:** Aug 18, 2026 @ 5:00 PM EDT
 **Stack preference:** TypeScript/Node (fast to ship); Rust optional for perf story
 **Status:** v0 spec — concept locked, implementation pending
@@ -31,9 +31,9 @@ The rules require **≥2 CockroachDB tools** and **≥1 AWS service**. We commit
 | CockroachDB Tool | How we use it |
 |---|---|
 | **Distributed Vector Indexing** | Semantic recall: search notification/incident history; surprise-scoring for dream-weavers; multi-factor retrieval |
-| **Managed MCP Server** | Agents (and humans via our demo UI) introspect the Cortex read-only, safely, with audit logging |
+| **Managed MCP Server** | Agents (and humans via our demo UI) introspect the CommonMind read-only, safely, with audit logging |
 | **ccloud CLI (agent-ready)** | A "memory ops agent" provisions clusters, takes backups, configures RBAC autonomously — agents self-manage infrastructure |
-| **Agent Skills Repo** | We package our own agent skills (e.g. `cortex-query`, `cortex-approve`, `cortex-consolidate`) following the repo's machine-executable format |
+| **Agent Skills Repo** | We package our own agent skills (e.g. `commonmind-query`, `commonmind-approve`, `commonmind-consolidate`) following the repo's machine-executable format |
 | **Changefeeds (CDC)** | (bonus, not on required list) — the transactional event stream that drives SNS → push. This is our differentiator |
 
 | AWS Service | How we use it |
@@ -46,7 +46,7 @@ The rules require **≥2 CockroachDB tools** and **≥1 AWS service**. We commit
 
 ### 2.3.1 Hosting model — serverless on AWS (locked)
 
-Cortex's paid **Premium (hosted)** tier runs entirely on **serverless AWS**, satisfying the hackathon's "deployed on AWS" requirement with no VMs to manage:
+CommonMind's paid **Premium (hosted)** tier runs entirely on **serverless AWS**, satisfying the hackathon's "deployed on AWS" requirement with no VMs to manage:
 
 - **AWS Lambda** — API handlers, CDC → SNS bridge, dream-weaver consolidation workers, push fanout. Scales to zero, billed per invocation.
 - **Amazon Bedrock** — serverless model inference for embeddings/LLM.
@@ -67,7 +67,7 @@ Pricing tiers (locked): **Self-hosted $0 forever → Premium $20/employee/mo (2+
                  ┌────────────────────────────────────────────────────────┐
  webhook / harkctl │ API (Lambda/ECS)  →  write/read                      │
  ─────────────────>│                     │                                 │
-                 │        CockroachDB (THE MEMORY CORTEX)                │
+                 │        CockroachDB (THE MEMORY COMMONMIND)                │
                  │   - services, webhooks, events                         │
                  │   - notifications/approvals state machine              │
                  │   - Live Activities (persistent, resumable)            │
@@ -99,13 +99,13 @@ think (Bedrock) → act (Lambda/ECS) → remember (atomic write: row + embedding
             consolidate (dream-weavers, background)
 ```
 
-- Agents coordinate by **writing and reading the Cortex**, not by messaging each other. The transactional memory log doubles as the coordination bus.
+- Agents coordinate by **writing and reading the CommonMind**, not by messaging each other. The transactional memory log doubles as the coordination bus.
 - Every memory write is **atomic**: the operational row + its embedding are inserted in a single CockroachDB transaction. No consistency gap between "what happened" and "what's retrievable."
 
 ### 3.3 Push pipeline detail
 
 ```
-agent writes to Cortex (atomic row+embedding)
+agent writes to CommonMind (atomic row+embedding)
   → CockroachDB changefeed (CDC)
   → Amazon SNS (topic per service/account)
   → SQS (queue) + DLQ (dead-letter)
@@ -293,9 +293,9 @@ Activity lifecycle: `active` → updates increment `sequence` → `expired` (aft
 
 These mirror KeenDreams v2's 5-phase intelligence system, running on CockroachDB.
 
-### 5.4 Cortex MCP server (the universal adapter — no per-app plugins)
+### 5.4 CommonMind MCP server (the universal adapter — no per-app plugins)
 
-Because Claude Code, Cursor, Codex CLI, opencode, Copilot, and future agents all speak the **MCP protocol natively**, we ship **one** Cortex MCP server (backed by CockroachDB's Managed MCP Server) instead of per-app plugins. `cortex connect <cli>` either registers Cortex as the tool provider or drops native hooks where supported (Claude Code, opencode). The MCP tool surface is deliberately small and consistent:
+Because Claude Code, Cursor, Codex CLI, opencode, Copilot, and future agents all speak the **MCP protocol natively**, we ship **one** CommonMind MCP server (backed by CockroachDB's Managed MCP Server) instead of per-app plugins. `commonmind connect <cli>` either registers CommonMind as the tool provider or drops native hooks where supported (Claude Code, opencode). The MCP tool surface is deliberately small and consistent:
 
 | Tool | Direction | Behavior |
 |---|---|---|
@@ -345,12 +345,12 @@ Implementations:
 ### 6.6 ccloud self-management agent
 - A "memory ops agent" invoked via ccloud CLI (JSON-out mode) to provision/destroy the cluster, take backups, set RBAC. Demonstrates the agent-ready control plane in the video.
 
-### 6.7 Cortex MCP server (universal adapter)
-- Runs `cortex serve-mcp` (stdio for local CLIs + HTTP/SSE for remote); backed by CockroachDB Managed MCP Server.
+### 6.7 CommonMind MCP server (universal adapter)
+- Runs `commonmind serve-mcp` (stdio for local CLIs + HTTP/SSE for remote); backed by CockroachDB Managed MCP Server.
 - Implements the small tool surface in **5.4**: `memory.capture`, `memory.recall`, `memory.ask`, `memory.approve`, `memory.note` — all are thin wrappers over the API in **5.3** with the same atomic-write + vector path.
 - `memory.capture`/`memory.note` write atomically (row + embedding, `ON CONFLICT`) — no partial memory.
 - `memory.ask`/`memory.approve` reuse the approval state machine + CDC so a decision survives an agent restart.
-- `cortex connect <cli>` registers Cortex as the MCP provider, or drops native hooks (Claude Code, opencode); per-app behavior documented in `docs/agents/*.md`.
+- `commonmind connect <cli>` registers CommonMind as the MCP provider, or drops native hooks (Claude Code, opencode); per-app behavior documented in `docs/agents/*.md`.
 
 ---
 
@@ -393,7 +393,7 @@ Local single-node CockroachDB v25.2.3, parallel inserts, `ON CONFLICT DO UPDATE`
 - [ ] Dream-weaver consolidation workers (surprise scoring + patterns)
 - [ ] Live Activities state machine + Activity API
 - [ ] ccloud self-management agent
-- [ ] Cortex MCP server (capture / recall / ask / approve / note) + `docs/agents/` guide files
+- [ ] CommonMind MCP server (capture / recall / ask / approve / note) + `docs/agents/` guide files
 - [ ] Benchmark fixture vs. multi-node cluster; record numbers for README
 - [ ] 3-min video, architecture diagram, README, MIT license, public repo, demo URL
 
@@ -423,7 +423,7 @@ Local single-node CockroachDB v25.2.3, parallel inserts, `ON CONFLICT DO UPDATE`
 2. **Language:** TypeScript confirmed; Rust only if we want cold-start numbers in the README.
 3. **Hosting:** Lambda-first for cost/ops; ECS only if the live demo needs consistent sub-50ms API.
 4. **Scope of dream-weavers:** full 5-phase KeenDreams layer, or a lean 2-phase (surprise + patterns) to guarantee ship?
-5. **Name:** "Perpetual Memory Cortex" / "Dreamweaver Cortex" — confirm final.
+5. **Name:** "Perpetual Memory CommonMind" / "Dreamweaver CommonMind" — confirm final.
 
 ---
 

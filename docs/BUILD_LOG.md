@@ -1,4 +1,4 @@
-# Cortex — Build Log & Progress
+# CommonMind — Build Log & Progress
 
 _Status legend:_ ✅ done · 🟡 in build · ⏳ next · ⬜ later.
 
@@ -21,12 +21,12 @@ Built for the **[CockroachDB × AWS Hackathon — Build with Agentic Memory](htt
 
 ## Phase 0 — Foundation
 - [✅] Landing page / product bible (premium redesign, machine-readable JSON-LD spec)
-- [✅] 10 principles + `#cortex-bible` JSON-LD (agents read it to stay on track)
-- [🟡] `npm install -g cortex` front door → local CockroachDB + `save / ask / ask --approval`
-- [🟡] **Cortex MCP server** (universal adapter: capture · recall · ask · approve · note) — no per-app plugins
+- [✅] 10 principles + `#commonmind-bible` JSON-LD (agents read it to stay on track)
+- [🟡] `npm install -g commonmind` front door → local CockroachDB + `save / ask / ask --approval`
+- [🟡] **CommonMind MCP server** (universal adapter: capture · recall · ask · approve · note) — no per-app plugins
 
 ## Phase 1 — Core loop (Week 1)
-- [⏳] `cortex capture` / `cortex ask` — atomic write + semantic recall (DB-b `pg`)
+- [⏳] `commonmind capture` / `commonmind ask` — atomic write + semantic recall (DB-b `pg`)
 - [⏳] HNSW vector index + atomic-write invariant (row + embedding, one txn)
 - [⏳] Approval request → human phone decision → callback resume
 - [⏳] CLI capture hooks (Claude Code, opencode, etc.)
@@ -39,7 +39,7 @@ Built for the **[CockroachDB × AWS Hackathon — Build with Agentic Memory](htt
 ## Phase 3 — Differentiation (Week 3)
 - [ ] Dream-weaver consolidation (surprise scoring + patterns) — self-improving memory
 - [ ] ccloud CLI self-management agent (provision / backup / RBAC, JSON-out)
-- [ ] Cortex MCP server → all CLIs (Claude, Cursor, Codex, opencode, Copilot)
+- [ ] CommonMind MCP server → all CLIs (Claude, Cursor, Codex, opencode, Copilot)
 - [ ] Multi-node benchmark + README + arch diagram
 - [ ] Submission packaging + demo video
 
@@ -50,7 +50,7 @@ Confidence/readiness audit only — no product features built yet.
 - `npm run check` (tsc) ✅ clean.
 - `npm test` ✅ 1/1 passes — **harness fixed** (was broken: `node --test tests/` can't run `.ts`; added `tsconfig.test.json`, tests compile to `.test-dist/`).
 - Local CockroachDB: running `v25.2.3` at `127.0.0.1:26257` (CCL) ✅ — reachable from `pg`.
-- **Gap:** database `cortex` does NOT exist; `schema.sql` was never applied. Tables (`memory_records`, `memory_embeddings` HNSW, `memory_consolidations`) are design-only right now.
+- **Gap:** database `commonmind` does NOT exist; `schema.sql` was never applied. Tables (`memory_records`, `memory_embeddings` HNSW, `memory_consolidations`) are design-only right now.
 - **Gap for exact criteria fit:** no live agent loop, no AWS deployment artifacts, no end-to-end capture→recall proof.
 - Ready-to-build instructions derived: 1) create DB + apply `schema.sql`, 2) prove `remember()`/`recall()` atomic-write against real cluster, 3) then agents + AWS.
 
@@ -59,9 +59,9 @@ Confidence/readiness audit only — no product features built yet.
 - **Storage:** CockroachDB (Cloud GLOBAL for demo/video; single-node for dev).
 - **Push surface:** Inbox/PWA MVP; native FCM/APNs a stretch (no App Store for the demo).
 - **Demo faces:** Solana trading platform (Raspberry Pi + Tailscale), dev-team coding, game (creature remembers).
-- **Naming:** Cortex.
+- **Naming:** CommonMind.
 
 ## Open decisions
-- [ ] Final name confirmation (`cortex-memory`)
+- [ ] Final name confirmation (`commonmind`)
 - [ ] Threshold policy for milestone → priority escalation (per-agent or per-workflow?)
 - [ ] Local-first vs Cloud-first for the demo run

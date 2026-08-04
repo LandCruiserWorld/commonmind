@@ -3,16 +3,16 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Cortex — The memory layer for the agentic workforce.</title>
+<title>CommonMind — The memory layer for the agentic workforce.</title>
 <meta name="description" content="A brain for your company that never forgets — and never quits. Record what your people and agents do, recall it in milliseconds, and get alerted only when a milestone needs you." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-<script type="application/ld+json" id="cortex-bible">
+<script type="application/ld+json" id="commonmind-bible">
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "Cortex",
+  "name": "CommonMind",
   "headline": "A brain for your company that never forgets — and never quits.",
   "category": "Agentic Memory Platform",
   "immutablePrinciples": [
@@ -69,13 +69,13 @@
     "PostgreSQL compatibility: Postgres wire protocol and most Postgres syntax — your tools and engineers drop in without a new language."
   ],
   "installAndConnect": {
-    "install": {"primary": "npm install -g cortex", "scaffold": "npx create-cortex my-app", "note": "One command, zero accounts to see the magic.", "alternatives": ["brew install cortex", "curl -LsS install.sh | sh", "bunx"]},
+    "install": {"primary": "npm install -g commonmind", "scaffold": "npx create-commonmind my-app", "note": "One command, zero accounts to see the magic.", "alternatives": ["brew install commonmind", "curl -LsS install.sh | sh", "bunx"]},
     "connectExistingClis": ["Claude Code", "Antigravity (agy)", "OpenCode", "Kimi K3", "Qwen", "Codex", "Cursor (MCP)"],
-    "connectMechanic": "cortex connect <cli> — registers Cortex (via one MCP server) or drops native capture hooks so that CLI remembers automatically",
+    "connectMechanic": "commonmind connect <cli> — registers CommonMind (via one MCP server) or drops native capture hooks so that CLI remembers automatically",
     "mcpServer": {
       "protocol": "Managed CockroachDB MCP Server",
       "why": "One standard every agent already speaks — no per-app plugins.",
-      "run": "cortex serve-mcp",
+      "run": "commonmind serve-mcp",
       "tools": ["memory.capture", "memory.recall", "memory.ask", "memory.approve", "memory.note"],
       "config": "docs/agents/*.md — per-app AGENTS.md / SKILL.md guide files",
       "covers": ["Claude Code", "Cursor", "Codex CLI", "opencode", "Copilot"]
@@ -101,8 +101,8 @@
   "buildLog": [
     {"id":"redesign","title":"Landing page · premium redesign","state":"done","date":"Aug 4"},
     {"id":"bible","title":"Product bible (10 principles) + machine-readable spec","state":"done","date":"Aug 4"},
-    {"id":"mcp","title":"Cortex MCP server (universal adapter)","state":"done","date":"Aug 4"},
-    {"id":"cli","title":"create-cortex scaffold + CLI","state":"todo","date":"Aug 6"},
+    {"id":"mcp","title":"CommonMind MCP server (universal adapter)","state":"done","date":"Aug 4"},
+    {"id":"cli","title":"create-commonmind scaffold + CLI","state":"todo","date":"Aug 6"},
     {"id":"recall","title":"Capture → recall end-to-end","state":"todo","date":"Aug 9"},
     {"id":"trading","title":"Trading bot on Raspberry Pi + Tailscale","state":"todo","date":"Aug 12"},
     {"id":"ocean","title":"Ocean Dreams integration","state":"todo","date":"Aug 14"},
@@ -380,7 +380,7 @@
 
 <nav>
   <div class="wrap nav-inner">
-    <div class="brand"><span class="logo"><svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" d="M12 3.4 20.6 7.2 17.7 18.8 6.3 18.8 3.4 7.2 Z"/><g stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.5"><path d="M12 3.4 12 11.6"/><path d="M20.6 7.2 12 11.6"/><path d="M6.3 18.8 12 11.6"/><path d="M17.7 18.8 12 11.6"/><path d="M3.4 7.2 12 11.6"/></g><circle cx="12" cy="11.6" r="1.7" fill="currentColor"/><g fill="currentColor"><circle cx="12" cy="3.4" r="1.4"/><circle cx="20.6" cy="7.2" r="1.4"/><circle cx="17.7" cy="17" r="1.4"/><circle cx="6.3" cy="17" r="1.4"/><circle cx="3.4" cy="7.2" r="1.4"/></g></svg></span>Cortex</div>
+    <div class="brand"><span class="logo"><svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" d="M12 3.4 20.6 7.2 17.7 18.8 6.3 18.8 3.4 7.2 Z"/><g stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.5"><path d="M12 3.4 12 11.6"/><path d="M20.6 7.2 12 11.6"/><path d="M6.3 18.8 12 11.6"/><path d="M17.7 18.8 12 11.6"/><path d="M3.4 7.2 12 11.6"/></g><circle cx="12" cy="11.6" r="1.7" fill="currentColor"/><g fill="currentColor"><circle cx="12" cy="3.4" r="1.4"/><circle cx="20.6" cy="7.2" r="1.4"/><circle cx="17.7" cy="17" r="1.4"/><circle cx="6.3" cy="17" r="1.4"/><circle cx="3.4" cy="7.2" r="1.4"/></g></svg></span>CommonMind</div>
     <div class="nav-links">
       <a href="#how">How it works</a><a href="#graph">Memory map</a><a href="#bridge">The bridge</a><a href="#talk">Talk back</a><a href="#uses">Use cases</a><a href="#bible">The bible</a><a href="#pricing">Pricing</a>
     </div>
@@ -391,7 +391,7 @@
 <header class="hero wrap">
   <span class="eyebrow">The memory layer for the agentic workforce</span>
   <h1>A brain for your company that <span class="serif">never forgets</span> — and never quits.</h1>
-  <p class="lead">Your agents and people do the work. Cortex remembers all of it — so you can recall anything in milliseconds, <em>and talk back when a milestone needs you.</em></p>
+  <p class="lead">Your agents and people do the work. CommonMind remembers all of it — so you can recall anything in milliseconds, <em>and talk back when a milestone needs you.</em></p>
   <div class="cta-row">
     <a href="#start" class="btn btn-primary">Get started — it's one command</a>
     <a href="#video" class="btn btn-ghost">Watch the demo <span style="font-size:11px">▶</span></a>
@@ -401,15 +401,15 @@
   </div>
 
   <div class="term">
-    <div class="term-bar"><span class="t-dot" style="background:#ff5f57"></span><span class="t-dot" style="background:#febc2e"></span><span class="t-dot" style="background:#28c840"></span><span class="term-title">cortex — demo</span></div>
+    <div class="term-bar"><span class="t-dot" style="background:#ff5f57"></span><span class="t-dot" style="background:#febc2e"></span><span class="t-dot" style="background:#28c840"></span><span class="term-title">commonmind — demo</span></div>
     <div class="term-body">
-      <span class="ln"><span class="p"></span><span class="cmd">npx create-cortex trading-bot</span></span>
+      <span class="ln"><span class="p"></span><span class="cmd">npx create-commonmind trading-bot</span></span>
       <span class="ln"><span class="out dim">✔ local CockroachDB running · 127.0.0.1:26257</span></span>
-      <span class="ln"><span class="p"></span><span class="cmd">cortex save "bought DOGE on momentum — avg 0.22, stop -2%"</span></span>
+      <span class="ln"><span class="p"></span><span class="cmd">commonmind save "bought DOGE on momentum — avg 0.22, stop -2%"</span></span>
       <span class="ln"><span class="out ok">✔ remembered · embedded · 0.18s</span></span>
-      <span class="ln"><span class="p"></span><span class="cmd">cortex ask "why did we buy DOGE?"</span></span>
+      <span class="ln"><span class="p"></span><span class="cmd">commonmind ask "why did we buy DOGE?"</span></span>
       <span class="ln"><span class="out ok">→  "bought on momentum — avg 0.22, stop -2%" <span class="dim">(similarity 0.94 · 3 months ago)</span></span></span>
-      <span class="ln"><span class="p"></span><span class="cmd">cortex ask --approval "increase position? (risk +0.5%)"</span></span>
+      <span class="ln"><span class="p"></span><span class="cmd">commonmind ask --approval "increase position? (risk +0.5%)"</span></span>
       <span class="ln"><span class="out ok">📱 pinged 1 phone · waiting on your call…<span class="blink"></span></span></span>
     </div>
   </div>
@@ -449,10 +449,10 @@
     <p class="sub">The front door is a command you already know — <strong>npm</strong>. No database setup, no cloud account, no signup. And it plugs into the CLIs you already live in.</p>
   </div>
   <div class="grid grid-4" style="margin-top:40px;">
-    <div class="card"><div class="ic">🧱</div><h3>Install</h3><p>The universal one-liner. Sets up Cortex + a local CockroachDB, zero accounts.</p><code>$ npm install -g cortex</code></div>
-    <div class="card"><div class="ic">🔌</div><h3>Connect your CLIs</h3><p>One MCP server covers them all — Claude, Cursor, Codex, opencode — no per-app plugins.</p><code>$ cortex connect --claude</code></div>
-    <div class="card"><div class="ic">🔍</div><h3>Ask</h3><p>Semantic recall of everything it captured — in milliseconds.</p><code>$ cortex ask "how did I fix auth?"</code></div>
-    <div class="card"><div class="ic">📲</div><h3>Act</h3><p>Agents do the safe work; you approve the milestones from your phone.</p><code>$ cortex ask --approval "deploy?"</code></div>
+    <div class="card"><div class="ic">🧱</div><h3>Install</h3><p>The universal one-liner. Sets up CommonMind + a local CockroachDB, zero accounts.</p><code>$ npm install -g commonmind</code></div>
+    <div class="card"><div class="ic">🔌</div><h3>Connect your CLIs</h3><p>One MCP server covers them all — Claude, Cursor, Codex, opencode — no per-app plugins.</p><code>$ commonmind connect --claude</code></div>
+    <div class="card"><div class="ic">🔍</div><h3>Ask</h3><p>Semantic recall of everything it captured — in milliseconds.</p><code>$ commonmind ask "how did I fix auth?"</code></div>
+    <div class="card"><div class="ic">📲</div><h3>Act</h3><p>Agents do the safe work; you approve the milestones from your phone.</p><code>$ commonmind ask --approval "deploy?"</code></div>
   </div>
 
   <div style="text-align:center;margin-top:46px;">
@@ -460,7 +460,7 @@
     <div class="logos" style="margin-top:0">
       <span>Claude Code</span><span>Antigravity · agy</span><span>opencode</span><span>Kimi K3</span><span>Qwen</span><span>Codex</span><span>Cursor (MCP)</span>
     </div>
-    <p style="color:var(--faint);font-size:13px;margin-top:18px;font-family:var(--mono)">$ cortex connect &lt;cli&gt; &nbsp;·&nbsp; one MCP server behind it (capture · recall · ask · approve · note) — no per-app plugins</p>
+    <p style="color:var(--faint);font-size:13px;margin-top:18px;font-family:var(--mono)">$ commonmind connect &lt;cli&gt; &nbsp;·&nbsp; one MCP server behind it (capture · recall · ask · approve · note) — no per-app plugins</p>
   </div>
 </section>
 
@@ -514,7 +514,7 @@
   <div class="sec">
     <div class="sec-label">Built on CockroachDB</div>
     <h2>Why agent memory needs a database that never goes down.</h2>
-    <p class="sub">An agent whose memory goes offline doesn't degrade gracefully — it stops. So Cortex stores its memory in the database designed to survive: <strong>resilient, globally consistent, and SQL-familiar.</strong></p>
+    <p class="sub">An agent whose memory goes offline doesn't degrade gracefully — it stops. So CommonMind stores its memory in the database designed to survive: <strong>resilient, globally consistent, and SQL-familiar.</strong></p>
   </div>
   <div class="grid grid-3" style="margin-top:40px">
     <div class="card"><div class="ic">🛡</div><h3>Never loses your memory</h3><p>Data is automatically replicated across multiple nodes for high availability and failover. Hardware failure or maintenance won't take your agents' memory away.</p></div>
@@ -522,7 +522,7 @@
     <div class="card"><div class="ic">↔️</div><h3>Scales horizontally</h3><p>As your workforce of agents grows, add nodes. Captures, recalls, and the memory graph scale without a drop in performance.</p></div>
     <div class="card"><div class="ic">✓</div><h3>Strongly consistent, always</h3><p>ACID transactions over a transactional and strongly-consistent store — every copy across nodes reflects the same state, so agents and humans never see contradictory memory.</p></div>
     <div class="card"><div class="ic">📍</div><h3>Multi-region & geo-partitioning</h3><p>Reads near your agents for low latency, meets data-sovereignty requirements, and survives regional outages — an extra layer of data safety.</p></div>
-    <div class="card"><div class="ic">🧩</div><h3>SQL you already know</h3><p>PostgreSQL wire protocol and most Postgres syntax. Your engineers and your tools migrate onto Cortex without learning a new language.</p></div>
+    <div class="card"><div class="ic">🧩</div><h3>SQL you already know</h3><p>PostgreSQL wire protocol and most Postgres syntax. Your engineers and your tools migrate onto CommonMind without learning a new language.</p></div>
   </div>
 </section>
 
@@ -598,9 +598,9 @@
       </div>
       <div class="right">
         <div class="role" style="margin-bottom:4px">Try it</div>
-        <div class="kbox"><span class="c">$</span> <span class="k">cortex save</span> <span class="c">"client prefers short, no-jargon copy"</span></div>
-        <div class="kbox"><span class="c">$</span> <span class="k">cortex ask</span> <span class="c">"what did Acme reject last quarter?"</span></div>
-        <div class="kbox"><span class="c">$</span> <span class="k">cortex note</span> <span class="c">"--client acme" "avoid 22:00 sends"</span></div>
+        <div class="kbox"><span class="c">$</span> <span class="k">commonmind save</span> <span class="c">"client prefers short, no-jargon copy"</span></div>
+        <div class="kbox"><span class="c">$</span> <span class="k">commonmind ask</span> <span class="c">"what did Acme reject last quarter?"</span></div>
+        <div class="kbox"><span class="c">$</span> <span class="k">commonmind note</span> <span class="c">"--client acme" "avoid 22:00 sends"</span></div>
       </div>
     </div>
 
@@ -613,9 +613,9 @@
       </div>
       <div class="right">
         <div class="role" style="margin-bottom:4px">Try it</div>
-        <div class="kbox"><span class="c">$</span> <span class="k">cortex save</span> <span class="c">"bought DOGE on momentum — avg 0.22, stop -2%"</span></div>
-        <div class="kbox"><span class="c">$</span> <span class="k">cortex ask</span> <span class="c">"why did we buy DOGE?"</span></div>
-        <div class="kbox"><span class="c">$</span> <span class="k">cortex ask --approval</span> <span class="c">"increase position? (risk +0.5%)"</span></div>
+        <div class="kbox"><span class="c">$</span> <span class="k">commonmind save</span> <span class="c">"bought DOGE on momentum — avg 0.22, stop -2%"</span></div>
+        <div class="kbox"><span class="c">$</span> <span class="k">commonmind ask</span> <span class="c">"why did we buy DOGE?"</span></div>
+        <div class="kbox"><span class="c">$</span> <span class="k">commonmind ask --approval</span> <span class="c">"increase position? (risk +0.5%)"</span></div>
       </div>
     </div>
 
@@ -628,9 +628,9 @@
       </div>
       <div class="right">
         <div class="role" style="margin-bottom:4px">Try it</div>
-        <div class="kbox"><span class="c">$</span> <span class="k">cortex login</span> <span class="c">--as engineer (SSO)</span></div>
-        <div class="kbox"><span class="c">$</span> <span class="k">cortex ask</span> <span class="c">"how do we do auth?" → 3-year-old fix</span></div>
-        <div class="kbox"><span class="c">$</span> <span class="k">cortex note</span> <span class="c">"decision: watermark LLM outputs"</span></div>
+        <div class="kbox"><span class="c">$</span> <span class="k">commonmind login</span> <span class="c">--as engineer (SSO)</span></div>
+        <div class="kbox"><span class="c">$</span> <span class="k">commonmind ask</span> <span class="c">"how do we do auth?" → 3-year-old fix</span></div>
+        <div class="kbox"><span class="c">$</span> <span class="k">commonmind note</span> <span class="c">"decision: watermark LLM outputs"</span></div>
       </div>
     </div>
 
@@ -671,7 +671,7 @@
       <div class="bible-item"><span class="n">09</span><div><h4>Memory improves itself</h4><p>Consolidation makes it measurably better over time — a learning curve, visible.</p></div></div>
       <div class="bible-item"><span class="n">10</span><div><h4>Kill the node, memory survives</h4><p>Resilience is recorded on camera, not claimed in a README.</p></div></div>
     </div>
-    <div class="bible-note">The machine-readable spec is embedded in this page as JSON-LD (#cortex-bible) — agents can read it to stay on track.</div>
+    <div class="bible-note">The machine-readable spec is embedded in this page as JSON-LD (#commonmind-bible) — agents can read it to stay on track.</div>
   </div>
 </section>
 
@@ -698,7 +698,7 @@
 </section>
 
 <section id="pricing" class="wrap">
-  <div class="sec"><div class="sec-label">Pricing</div><h2>Open source forever. Scale when your brain does.</h2><p class="sub">Run Cortex free on your own infrastructure — your memory, your control. Or let us host it on serverless AWS with a 99% uptime guarantee, billed per employee.</p></div>
+  <div class="sec"><div class="sec-label">Pricing</div><h2>Open source forever. Scale when your brain does.</h2><p class="sub">Run CommonMind free on your own infrastructure — your memory, your control. Or let us host it on serverless AWS with a 99% uptime guarantee, billed per employee.</p></div>
   <div class="grid grid-3 price-grid">
     <div class="card price featured">
       <span class="featured-tag">Open source</span>
@@ -736,8 +736,8 @@
   <div class="log">
     <div class="log-item"><span class="log-state wip">In build</span><div><h4>Landing page · premium redesign</h4><p>Refined dark theme, editorial type, live neural-network field, interactive memory map, full mobile pass.</p></div><span class="date">Aug 3</span></div>
     <div class="log-item"><span class="log-state wip">In build</span><div><h4>Product bible (10 principles) + machine-readable spec</h4><p>Embedded JSON-LD so agents building the app can read the immutable truths and stay on track.</p></div><span class="date">Aug 3</span></div>
-    <div class="log-item"><span class="log-state wip">In build</span><div><h4>Fresh MCP server (universal adapter)</h4><p>Baked into the spec: one Cortex MCP server (capture · recall · ask · approve · note) covers Claude, Cursor, Codex, opencode, Copilot — no per-app plugins.</p></div><span class="date">Aug 3</span></div>
-    <div class="log-item"><span class="log-state todo">Next</span><div><h4>create-cortex scaffold + CLI</h4><p>npm install -g cortex → local CockroachDB + save / ask / ask --approval surface.</p></div><span class="date">—</span></div>
+    <div class="log-item"><span class="log-state wip">In build</span><div><h4>Fresh MCP server (universal adapter)</h4><p>Baked into the spec: one CommonMind MCP server (capture · recall · ask · approve · note) covers Claude, Cursor, Codex, opencode, Copilot — no per-app plugins.</p></div><span class="date">Aug 3</span></div>
+    <div class="log-item"><span class="log-state todo">Next</span><div><h4>create-commonmind scaffold + CLI</h4><p>npm install -g commonmind → local CockroachDB + save / ask / ask --approval surface.</p></div><span class="date">—</span></div>
     <div class="log-item"><span class="log-state todo">Next</span><div><h4>Capture → recall end-to-end</h4><p>10-second "oh cool" moment on local CockroachDB, then the hook video.</p></div><span class="date">—</span></div>
     <div class="log-item"><span class="log-state todo">Later</span><div><h4>Trading bot on Raspberry Pi + Tailscale</h4><p>Wire the Solana platform on real hardware — the Swiss Army Knife proof.</p></div><span class="date">—</span></div>
     <div class="log-item"><span class="log-state todo">Later</span><div><h4>Ocean Dreams integration</h4><p>The creature remembers player behavior across sessions — a demo that visibly "gets" your memory.</p></div><span class="date">—</span></div>
@@ -748,7 +748,7 @@
 <footer>
   <div class="wrap">
     <div class="foot-grid">
-      <div style="max-width:260px;"><div class="brand" style="margin-bottom:14px;"><span class="logo" style="width:26px;height:26px;border-radius:8px"><svg viewBox="0 0 24 24" fill="none" style="width:16px;height:16px"><path stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" d="M12 3.4 20.6 7.2 17.7 18.8 6.3 18.8 3.4 7.2 Z"/><g stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.5"><path d="M12 3.4 12 11.6"/><path d="M20.6 7.2 12 11.6"/><path d="M6.3 18.8 12 11.6"/><path d="M17.7 18.8 12 11.6"/><path d="M3.4 7.2 12 11.6"/></g><circle cx="12" cy="11.6" r="1.7" fill="currentColor"/><g fill="currentColor"><circle cx="12" cy="3.4" r="1.4"/><circle cx="20.6" cy="7.2" r="1.4"/><circle cx="17.7" cy="17" r="1.4"/><circle cx="6.3" cy="17" r="1.4"/><circle cx="3.4" cy="7.2" r="1.4"/></g></svg></span>Cortex</div><p style="font-size:13px;color:var(--faint)">The memory layer for the agentic workforce. Never forgets. Never quits.</p></div>
+      <div style="max-width:260px;"><div class="brand" style="margin-bottom:14px;"><span class="logo" style="width:26px;height:26px;border-radius:8px"><svg viewBox="0 0 24 24" fill="none" style="width:16px;height:16px"><path stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" d="M12 3.4 20.6 7.2 17.7 18.8 6.3 18.8 3.4 7.2 Z"/><g stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.5"><path d="M12 3.4 12 11.6"/><path d="M20.6 7.2 12 11.6"/><path d="M6.3 18.8 12 11.6"/><path d="M17.7 18.8 12 11.6"/><path d="M3.4 7.2 12 11.6"/></g><circle cx="12" cy="11.6" r="1.7" fill="currentColor"/><g fill="currentColor"><circle cx="12" cy="3.4" r="1.4"/><circle cx="20.6" cy="7.2" r="1.4"/><circle cx="17.7" cy="17" r="1.4"/><circle cx="6.3" cy="17" r="1.4"/><circle cx="3.4" cy="7.2" r="1.4"/></g></svg></span>CommonMind</div><p style="font-size:13px;color:var(--faint)">The memory layer for the agentic workforce. Never forgets. Never quits.</p></div>
       <div class="foot-col"><h4>Product</h4><a href="#how">How it works</a><a href="#graph">Memory map</a><a href="#uses">Use cases</a><a href="#pricing">Pricing</a><a href="#start">Get started</a></div>
       <div class="foot-col"><h4>Developers</h4><a href="#">Documentation</a><a href="#">CLI reference</a><a href="#">Agent hooks</a><a href="#">open source</a></div>
       <div class="foot-col"><h4>The bible</h4><a href="#bible">10 principles</a><a href="#log">Build log</a><a href="#video">Demo video</a><a href="#bridge">The bridge</a></div>

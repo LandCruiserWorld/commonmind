@@ -1,4 +1,4 @@
-# AGENTS.md — Cortex Memory
+# AGENTS.md — CommonMind
 
 Guidance for coding agents working in this repo.
 

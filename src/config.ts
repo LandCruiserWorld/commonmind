@@ -22,11 +22,11 @@ const required = (name: string, fallback?: string): string => {
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   return {
-    dbUrl: required('COCKROACH_DB_URL', 'postgresql://root@127.0.0.1:26257/cortex?sslmode=disable'),
-    apiToken: required('CORTEX_API_TOKEN', 'dev'),
+    dbUrl: required('COCKROACH_DB_URL', 'postgresql://root@127.0.0.1:26257/commonmind?sslmode=disable'),
+    apiToken: required('COMMONMIND_API_TOKEN', 'dev'),
     embedProvider: (env.EMBED_PROVIDER === 'bedrock' ? 'bedrock' : 'local') as Config['embedProvider'],
     awsRegion: env.AWS_REGION ?? 'us-east-1',
     bedrockEmbedModelId: env.BEDROCK_EMBED_MODEL_ID ?? 'amazon.titan-embed-text-v2:0',
-    snsTopicArn: env.CORTEX_SNS_TOPIC_ARN ?? '',
+    snsTopicArn: env.COMMONMIND_SNS_TOPIC_ARN ?? '',
   };
 }

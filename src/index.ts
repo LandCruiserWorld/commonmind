@@ -1,5 +1,5 @@
 /**
- * Cortex Memory — entry point (CLI / dev harness).
+ * CommonMind — entry point (CLI / dev harness).
  *
  * For now this wires config + the memory repository so `npm test` and early
  * demos can exercise the atomic-write + recall path against CockroachDB.
@@ -12,5 +12,5 @@ export { loadConfig, getPool, MemoryRepository };
 
 export function hello(): string {
   const { embedProvider } = loadConfig();
-  return `cortex-memory ready (embeddings: ${embedProvider})`;
+  return `commonmind ready (embeddings: ${embedProvider})`;
 }

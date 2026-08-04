@@ -14,7 +14,7 @@
 
   <rect width="1080" height="640" fill="url(#bg)"/>
 
-  <text x="60" y="56" fill="#eeeeee" font-size="26" font-weight="700" letter-spacing="-0.01em">Cortex — Agentic Memory Layer</text>
+  <text x="60" y="56" fill="#eeeeee" font-size="26" font-weight="700" letter-spacing="-0.01em">CommonMind — Agentic Memory Layer</text>
   <text x="60" y="82" fill="#8aa0b5" font-size="15">CockroachDB as the system of record for agent memory · human decides, agent executes</text>
 
   <!-- Agents (left) -->

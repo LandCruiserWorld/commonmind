@@ -1,8 +1,10 @@
-# Cortex Memory
+# CommonMind
 
 > **CockroachDB-as-memory for the agentic workforce.** Agents that think. Agents that act. Agents that remember — **reliably, globally, at any scale.**
 
-Cortex is a memory layer built on **CockroachDB** so agents never lose context, and humans stay in control. The DB is the system of record for agentic memory — a task that earlier databases weren't built for.
+CommonMind is a memory layer built on **CockroachDB** so agents never lose context, and humans stay in control. One memory, held in common: your people and your agents write to the same store and read from the same store, so neither side has to reconstruct what the other already knows. The DB is the system of record for that shared memory — a task earlier databases weren't built for.
+
+**Live:** [commonmind.agent9.dev](https://commonmind.agent9.dev)
 
 ![Apache-2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg) ![CockroachDB](https://img.shields.io/badge/storage-CockroachDB-29b1f8) ![AWS](https://img.shields.io/badge/cloud-AWS-orange) ![TypeScript](https://img.shields.io/badge/TypeScript-3178c6) ![status](https://img.shields.io/badge/status-building-yellow)
 
@@ -12,7 +14,7 @@ Cortex is a memory layer built on **CockroachDB** so agents never lose context, 
 
 Traditional databases were tuned for human-scale reads and writes. Agentic systems are different: they **spawn autonomously, write constantly, and need memory that persists across regions and failures — with zero data loss and no downtime.**
 
-CockroachDB was built for that. Cortex uses it as the **memory layer** of an agent — not a bolt-on, but the thing that makes the agent useful.
+CockroachDB was built for that. CommonMind uses it as the **memory layer** of an agent — not a bolt-on, but the thing that makes the agent useful.
 
 ```
 capture → recall (memory) → act (with human approval) → improve (dream-weaver)
@@ -66,6 +68,6 @@ Full diagram: [`assets/architecture.svg`](assets/architecture.svg)
 - [Build log](docs/BUILD_LOG.md) — live status & locked decisions
 
 ## License
-[MIT](LICENSE)
+[Apache-2.0](LICENSE)
 
 _Built for the [CockroachDB × AWS Hackathon — Build with Agentic Memory](https://cockroachdb-ai.devpost.com/)._

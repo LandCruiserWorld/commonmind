@@ -1,4 +1,4 @@
--- Cortex memory — CockroachDB schema (v1)
+-- CommonMind memory — CockroachDB schema (v1)
 -- Every vector write carries its source row in the SAME transaction (atomic
 -- memory invariant). Dream-weaver consolidation + changefeeds build on these.
 

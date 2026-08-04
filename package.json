@@ -1,5 +1,5 @@
 {
-  "name": "cortex-memory",
+  "name": "commonmind",
   "version": "0.1.0",
   "description": "CockroachDB-as-memory for the agentic workforce. Capture · recall · act — reliably, globally, at any scale.",
   "type": "module",

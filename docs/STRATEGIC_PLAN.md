@@ -1,4 +1,4 @@
-# STRATEGIC DEVELOPMENT PLAN — Perpetual Memory Cortex
+# STRATEGIC DEVELOPMENT PLAN — Perpetual Memory CommonMind
 ### CockroachDB × AWS Hackathon — Build with Agentic Memory
 **Deadline:** Aug 18, 2026 @ 5:00 PM EDT · **Today:** Aug 03, 2026 → ~15 days
 
@@ -112,7 +112,7 @@ Everything is a wedge into the next. This prevents the classic 2-week, all-or-no
 
 ### Phase 1: Core Loop (Days 3–6) — L1 + L2
 - [ ] API service (Node/fastify+pg): API, validator, idempotency
-- [ ] CLI: `cortex save` / `cortex ask "..."`→ write + embed + recall (atomic write into CockroachDB)
+- [ ] CLI: `commonmind save` / `commonmind ask "..."`→ write + embed + recall (atomic write into CockroachDB)
 - [ ] Embeddings via Bedrock (Claude/Titan) → `memory_embeddings`; HNSW index; search endpoint
 - [ ] Inbox web app (MVP push surface)
 - *Gate: capture → recall works end-to-end within 5 minutes of demo time.*
@@ -151,8 +151,8 @@ No new features — hardening + packaging:
 
 | Time | Scene | On-screen/memory | Voice helper |
 |---|---|---|---|
-| 0:00–0:20 | Captures/recalls | Terminal: `cortex capture "..."` → `cortex ask "how did I..."` → result in ms with similarity | "One command; it remembers your work." |
-| 0:20–0:55 | Agent approval | `cortex ask --approval`, deploy request, phone shows Approve/Deny Live card, progress advances | "The agent respects it; it checks with you." |
+| 0:00–0:20 | Captures/recalls | Terminal: `commonmind capture "..."` → `commonmind ask "how did I..."` → result in ms with similarity | "One command; it remembers your work." |
+| 0:20–0:55 | Agent approval | `commonmind ask --approval`, deploy request, phone shows Approve/Deny Live card, progress advances | "The agent respects it; it checks with you." |
 | 0:55–1:30 | Memory / search | `GET /api/memory/search?q=deploy 184 ` → recalls prior deployment + outcome; dream solver surfaces a pattern | "It looks up its past. It learned." |
 | 1:30–2:20 | Resilience | Kill node screen (cockroach quit / fail), phone card visible; node back, same event, recall intact | "An agent's memory down = it stops. Ours never." |
 | 2:20–2:50 | Self-ops | ccloud CLI backup + RBAC | "It runs its own memory." |

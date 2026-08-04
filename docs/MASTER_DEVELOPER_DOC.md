@@ -1,4 +1,4 @@
-# MASTER DEVELOPER DOCUMENT — "The Cortex"
+# MASTER DEVELOPER DOCUMENT — "The CommonMind"
 ### A brain for your company that never forgets — and never quits.
 **Project:** CockroachDB × AWS Hackathon — Build with Agentic Memory
 **Deadline:** Aug 18, 2026 @ 5:00 PM EDT · **Plan start:** Mon Aug 3, 2026
@@ -76,10 +76,10 @@ As agents do more of the actual work, capability stops being the scarce thing. T
 
 ### 2.1 What we're building (product definition)
 
-**The Cortex** is a webhook → agent → phone platform where **CockroachDB is the transactional, globally-replicated, self-improving memory layer**. It captures knowledge (from people, CLIs, agents, and incident events), makes it instantly recallable, lets agents act on it (with human approval), and never loses it — even if a datacenter dies.
+**The CommonMind** is a webhook → agent → phone platform where **CockroachDB is the transactional, globally-replicated, self-improving memory layer**. It captures knowledge (from people, CLIs, agents, and incident events), makes it instantly recallable, lets agents act on it (with human approval), and never loses it — even if a datacenter dies.
 
 Three surfaces, one memory core:
-1. **Capture — Terminal CLI** (the wedge): `cortex capture "fixed auth timeout"` → session stored + embedded.
+1. **Capture — Terminal CLI** (the wedge): `commonmind capture "fixed auth timeout"` → session stored + embedded.
 2. **Explore — Web/App**: semantic search of captured knowledge ("how did I fix the auth timeout?").
 3. **Act — Agent + approvals**: agents read/write the same memory, request phone approval, drive Live Activities.
 
@@ -100,9 +100,9 @@ What makes it novel vs. a plain Hark clone:
 | CockroachDB Tool | How we use it |
 |---|---|
 | **Distributed Vector Indexing** | Semantic recall; surprise scoring for dream-weavers; multi-factor retrieval |
-| **Managed MCP Server** | Agents/humans introspect the Cortex read-only, safely, with audit logging |
+| **Managed MCP Server** | Agents/humans introspect the CommonMind read-only, safely, with audit logging |
 | **ccloud CLI (agent-ready)** | A "memory ops agent" provisions clusters, takes backups, configures RBAC autonomously |
-| **Agent Skills Repo** | We package our own skills (`cortex-query`, `cortex-approve`, `cortex-consolidate`) |
+| **Agent Skills Repo** | We package our own skills (`commonmind-query`, `commonmind-approve`, `commonmind-consolidate`) |
 | **Changefeeds (CDC)** *(bonus)* | The transactional event stream driving SNS → push. Our differentiator |
 
 | AWS Service | How we use it |
@@ -144,29 +144,29 @@ So memory is *the reason each agent can do its job*, which is exactly the criter
 
 ### 2.5.3 The hackage that makes capture automatic (the differentiator)
 
-Capture being manual kills adoption. We make it automatic using **agent CLI hooks** — the same pattern Hark's `harkctl permissions` uses. `cortex init` drops a hook into your dev CLI:
+Capture being manual kills adoption. We make it automatic using **agent CLI hooks** — the same pattern Hark's `harkctl permissions` uses. `commonmind init` drops a hook into your dev CLI:
 
 ```json
 {
   "hooks": {
-    "SessionStop": [{"hooks":[{"type":"command","command":"cortex capture --from-hook"}]}],
-    "SessionStart": [{"hooks":[{"type":"command","command":"cortex inject --project"}]}]
+    "SessionStop": [{"hooks":[{"type":"command","command":"commonmind capture --from-hook"}]}],
+    "SessionStart": [{"hooks":[{"type":"command","command":"commonmind inject --project"}]}]
   }
 }
 ```
 
-- On **SessionStop**, `cortex capture --from-hook` reads the session transcript (Claude Code passes it on stdin), distills the decisions/gotchas with an LLM, and writes them atomically into CockroachDB. The agent **remembers on its own** — zero user effort.
-- On **SessionStart**, `cortex inject --project` pulls that memory back into the agent's context — so the agent *starts already knowing*: *"Last session you fixed the auth timeout; the migration is pending."*
+- On **SessionStop**, `commonmind capture --from-hook` reads the session transcript (Claude Code passes it on stdin), distills the decisions/gotchas with an LLM, and writes them atomically into CockroachDB. The agent **remembers on its own** — zero user effort.
+- On **SessionStart**, `commonmind inject --project` pulls that memory back into the agent's context — so the agent *starts already knowing*: *"Last session you fixed the auth timeout; the migration is pending."*
 
 Same hook scripts install into **Claude Code, Codex, and opencode**. This is the "never forgets, never quits" story literally wiring into the developer's daily tool, and it's an unforgettable 10-second demo beat.
 
 ### 2.5.3b The MCP server — the universal adapter (solves "per-app plugins")
 
-CockroachDB's **Managed MCP Server** is our answer to "does every employee's Claude/Cursor/Codex need its own plugin?" **No — they all speak MCP natively, so one Cortex MCP server covers them all.** We ship one MCP server that any MCP-capable tool (Claude Code, Cursor, Codex CLI, opencode, Copilot, any future agent) exposes directly, instead of per-app plugins:
+CockroachDB's **Managed MCP Server** is our answer to "does every employee's Claude/Cursor/Codex need its own plugin?" **No — they all speak MCP natively, so one CommonMind MCP server covers them all.** We ship one MCP server that any MCP-capable tool (Claude Code, Cursor, Codex CLI, opencode, Copilot, any future agent) exposes directly, instead of per-app plugins:
 
 ```
-cortex serve-mcp            # runs the MCP server: stdio + HTTP/SSE
-cortex connect <cli>        # 1) registered the tool with the CLI  OR
+commonmind serve-mcp            # runs the MCP server: stdio + HTTP/SSE
+commonmind connect <cli>        # 1) registered the tool with the CLI  OR
                             # 2) dropped native hooks where the CLI supports them (Claude Code, opencode)
 ```
 
@@ -200,7 +200,7 @@ The demo shows a before/after recall curve — *the same question answered bette
 ### 3.1 Flow
 
 ```
-webhook / CLI → API (Lambda/ECS) → CockroachDB (memory cortex)
+webhook / CLI → API (Lambda/ECS) → CockroachDB (memory commonmind)
                                       │ atomic write: row + embedding
                                       ▼
                          CDC changefeed → SNS → SQS → Lambda fanout
@@ -210,7 +210,7 @@ webhook / CLI → API (Lambda/ECS) → CockroachDB (memory cortex)
                                                  phone / web
 ```
 
-Agents coordinate by **writing and reading the Cortex** — the transactional memory log doubles as the coordination bus. Every memory write is atomic (operational row + embedding in one transaction).
+Agents coordinate by **writing and reading the CommonMind** — the transactional memory log doubles as the coordination bus. Every memory write is atomic (operational row + embedding in one transaction).
 
 ### 3.2 Core tables (CockroachDB)
 
@@ -259,10 +259,10 @@ Local single-node measured: Node ~1,151–2,334 ops/s; Rust ~1,273–1,712 ops/s
 
 | Day | Focus | Deliverables | Exit gate |
 |---|---|---|---|
-| **Mon Aug 3** | Foundation | GitHub repo (public, MIT, in About); `create-cortex` scaffold (`src/`, `tests/`, `docs/`); final project name; local CockroachDB dev-mode bootstrap script | `npx create-cortex` runs + launches local DB |
-| **Tue Aug 4** | Wedge | CLI: `cortex capture`, `cortex ask` (write + embed + recall); schema migrated (core tables); atomic-write helper | Capture→recall works in <5 min of demo time |
+| **Mon Aug 3** | Foundation | GitHub repo (public, MIT, in About); `create-commonmind` scaffold (`src/`, `tests/`, `docs/`); final project name; local CockroachDB dev-mode bootstrap script | `npx create-commonmind` runs + launches local DB |
+| **Tue Aug 4** | Wedge | CLI: `commonmind capture`, `commonmind ask` (write + embed + recall); schema migrated (core tables); atomic-write helper | Capture→recall works in <5 min of demo time |
 | **Wed Aug 5** | Wedge → web | Inbox web app (MVP); `/api/memory/search`; embedding provider toggle (local/Bedrock) | Search from web UI recalls CLI-captured memories |
-| **Thu Aug 6** | Act | Notifications API + approvals + idempotency; CLI `cortex approve`; approval callback | Approval flow round-trips (send→approve→callback) |
+| **Thu Aug 6** | Act | Notifications API + approvals + idempotency; CLI `commonmind approve`; approval callback | Approval flow round-trips (send→approve→callback) |
 | **Fri Aug 7** | Act | Live Activities state machine (start/update/end, sequence, replace) | Activity lifecycle drives end-to-end |
 | **Sat Aug 8** | Resilience | CDC changefeed → SNS → SQS → Lambda fanout → provider | Push fires off a DB event (kill/restart node = no loss) |
 | **Sun Aug 9** | Week-1 review | 10-sec hook video (command→recall) recorded + shared; integration demo (crypto app or CI) wired | "Oh cool" reaction confirmed by a stranger |
@@ -272,7 +272,7 @@ Local single-node measured: Node ~1,151–2,334 ops/s; Rust ~1,273–1,712 ops/s
 | Day | Focus | Deliverables | Exit gate |
 |---|---|---|---|
 | **Mon Aug 10** | Memory | Dream-weaver consolidation (surprise scoring + patterns); `/api/memory/patterns`, `/analytics`, `/consolidation/weekly` | Agent visibly "gets better" (learning curve data) |
-| **Tue Aug 11** | Self-ops | ccloud memory-ops agent (provision/backup/RBAC, JSON-out); **Cortex MCP server** (capture/recall/ask/approve/note) + `docs/agents/` guide files | ccloud + MCP demonstrably in use in video; Claude + Cursor both recall the same memory |
+| **Tue Aug 11** | Self-ops | ccloud memory-ops agent (provision/backup/RBAC, JSON-out); **CommonMind MCP server** (capture/recall/ask/approve/note) + `docs/agents/` guide files | ccloud + MCP demonstrably in use in video; Claude + Cursor both recall the same memory |
 | **Wed Aug 12** | Integrations | 2+ real integrations (crypto app, CI/deploy, on-call sim); Landing page copy from Part 1 narrative | Landing page tells the "knowledge that quits" story |
 | **Thu Aug 13** | Bench + docs | Multi-node benchmark run; README with real numbers + arch diagram + MIT license | Repo reads like a product, not a prototype |
 | **Fri Aug 14** | Video shoot | Full 3-min video recorded on new cluster; B-roll archive; kill-the-node scene recorded (with fallback) | Video cut in progress, <3:00 |
@@ -320,7 +320,7 @@ Local single-node measured: Node ~1,151–2,334 ops/s; Rust ~1,273–1,712 ops/s
 | "Another notification tool" perception | High | Lead every asset with the knowledge-that-quits frame, not the webhook |
 
 **Open decisions to lock this week:**
-1. Final name (Cortex / Perpetual Cortex / Dreamweaver Cortex / other)
+1. Final name (CommonMind / Perpetual CommonMind / Dreamweaver CommonMind / other)
 2. Which integration to show live (crypto app is the strongest already-built evidence)
 3. Demo face: ops/SRE at 3am (recommended) vs. agency turnover vs. agentic-future
 
@@ -338,7 +338,7 @@ Most teams: a chatbot with a vector table bolted on. Us: **three agents whose ex
 ### 6.2 Technical Implementation
 > *"Quality integration with the CockroachDB tools. Used correctly and safely."*
 
-We use **all four** required tools + Changefeeds, each for its intended purpose: Distributed Vector Indexing (recall + surprise scoring), MCP Server (safe read-only agent introspection with audit), ccloud CLI (a self-managing memory-ops agent with JSON-out + RBAC), Agent Skills (our own `cortex-*` skills), and CDC (event streaming). Atomic writes, idempotency, DLQ, optimistic concurrency (`ifSequence`). Nothing is a compliance checkmark. **Verdict: breadth and depth the field won't match.**
+We use **all four** required tools + Changefeeds, each for its intended purpose: Distributed Vector Indexing (recall + surprise scoring), MCP Server (safe read-only agent introspection with audit), ccloud CLI (a self-managing memory-ops agent with JSON-out + RBAC), Agent Skills (our own `commonmind-*` skills), and CDC (event streaming). Atomic writes, idempotency, DLQ, optimistic concurrency (`ifSequence`). Nothing is a compliance checkmark. **Verdict: breadth and depth the field won't match.**
 
 ### 6.3 Real-World Impact
 > *"How big an impact could it have? Meaningful, not just technically impressive."*
@@ -381,4 +381,4 @@ The submission form also asks us to state *which* tools we used and how, and whi
 
 ---
 
-*Start here this week: scaffold `create-cortex` (Day 1) → capture/recall (Day 2) → record the 10-sec hook video (before anything else is pretty). Every asset speaks the one line: "A brain for your company that never forgets — and never quits."*
+*Start here this week: scaffold `create-commonmind` (Day 1) → capture/recall (Day 2) → record the 10-sec hook video (before anything else is pretty). Every asset speaks the one line: "A brain for your company that never forgets — and never quits."*
