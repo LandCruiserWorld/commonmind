@@ -195,8 +195,20 @@ CREATE TABLE live_activities (
 
 ### 4.2 Memory / vector layer
 
+**Canonical capture table (decided Aug 4).** A captured memory is a `memory_records` row. `notifications` is the *subset* of memory that crossed the alert threshold and needs a human — not the capture table itself. Most memory is silent (see the alert regime), so modelling every memory as a notification would leave the majority of rows carrying null `device_id`, `status`, `delivered_count`, `response_*`, `callback_url` and `expires_at`. An architecture decision should not have a delivery status.
+
+"The memory write *is* the notification" still holds: the memory commits, the changefeed fires, and a `notifications` row is created for the events that need a person.
+
 ```sql
--- Embeddings of notification/incident history for semantic recall
+-- The captured memory itself — what happened
+CREATE TABLE memory_records (
+  id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  entity_type STRING NOT NULL,            -- 'notification' | 'incident' | 'runbook' | 'decision'
+  content     STRING NOT NULL,
+  created_at  TIMESTAMPTZ DEFAULT now()
+);
+
+-- Embeddings of captured memory for semantic recall
 CREATE TABLE memory_embeddings (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   entity_type STRING NOT NULL,            -- 'notification' | 'incident' | 'runbook' | 'decision'
@@ -235,7 +247,7 @@ CREATE TABLE memory_events (
 );
 ```
 
-> **Atomic-write invariant:** writing a notification *and* its embedding happens inside one transaction (`INSERT notifications ...; INSERT memory_embeddings ...`). The dream-weavers and agents only ever observe consistent memory.
+> **Atomic-write invariant:** writing a memory *and* its embedding happens inside one transaction (`INSERT memory_records ...; INSERT memory_embeddings ...`). The dream-weavers and agents only ever observe consistent memory. A `notifications` row is created downstream, for the subset of memory that crosses the alert threshold.
 
 ---
 

@@ -123,6 +123,20 @@ CockroachDB indexes vectors with **C-SPANN**: a hierarchical K-means partition t
 
 > ⚠️ **Contributors:** pgvector syntax (`USING hnsw (...)`) will not run on CockroachDB. Use `CREATE VECTOR INDEX`.
 
+### CockroachDB is not Postgres — read this before you assume anything
+
+This distinction has already cost us one bug, so it's worth being precise.
+
+**CockroachDB is not built on, forked from, or code-derived from PostgreSQL.** It's an independently developed distributed database, written in Go and modelled on Spanner. What it does is implement **the PostgreSQL wire protocol (pgwire v3.0)** and the majority of Postgres *syntax*, deliberately, so existing tooling works.
+
+| | |
+|---|---|
+| **Why we depend on `pg`** | The node-postgres driver speaks pgwire, so it talks to CockroachDB unmodified |
+| **Why the DSN says `postgresql://`** | Same reason — it's the wire protocol's scheme, on CockroachDB's port **26257**, not Postgres' 5432 |
+| **Where compatibility stops** | Anything hard to implement in a distributed system: `CREATE DOMAIN`, range types, XML functions, advisory locks — **and pgvector** |
+
+**The practical rule:** treat Postgres knowledge as a useful prior, never as an authority. When a Postgres answer and a CockroachDB doc disagree, the CockroachDB doc wins. Our `USING hnsw` bug came from exactly this — Postgres-with-pgvector indexes vectors that way, CockroachDB does not implement HNSW at all, and "it's Postgres compatible" made the wrong answer look right.
+
 ```sql
 CREATE VECTOR INDEX memory_embeddings_cspann
   ON memory_embeddings (embedding vector_cosine_ops);

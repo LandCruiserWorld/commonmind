@@ -7,14 +7,32 @@
  */
 
 import { Pool } from 'pg';
+import { loadConfig } from './config.js';
 
 let pool: Pool | null = null;
 
-export function getPool(connStr = process.env.COCKROACH_DB_URL): Pool {
+/**
+ * Connection pool, built from `loadConfig()` so the configured fallback DSN
+ * actually applies.
+ *
+ * Reading `process.env.COCKROACH_DB_URL` directly here would make that fallback
+ * dead code: with the variable unset, `pg` silently falls back to libpq
+ * defaults and dials **localhost:5432** — Postgres' port, not CockroachDB's
+ * 26257 — producing a connection error that points at the wrong problem.
+ */
+export function getPool(connStr = loadConfig().dbUrl): Pool {
   if (!pool) {
     pool = new Pool({ connectionString: connStr });
   }
   return pool;
+}
+
+/** Close and clear the pool. Tests and CLI teardown need this. */
+export async function closePool(): Promise<void> {
+  if (pool) {
+    await pool.end();
+    pool = null;
+  }
 }
 
 /** Run `fn` inside a single transaction and commit (rollback on error). */

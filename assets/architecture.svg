@@ -35,8 +35,8 @@
   <rect x="410" y="160" width="250" height="380" rx="16" fill="#0e2333" filter="url(#shadow)"/>
   <text x="434" y="208" fill="#bfe8ff" font-size="16" font-weight="600">CockroachDB Memory</text>
   <rect x="450" y="228" width="170" height="54" rx="9" fill="#123248" stroke="#1f4a66"/>
-  <text x="470" y="252" fill="#dfefff" font-size="13">notifications</text>
-  <text x="470" y="270" fill="#8fb9d6" font-size="12">transactions</text>
+  <text x="470" y="252" fill="#dfefff" font-size="13">memory_records</text>
+  <text x="470" y="270" fill="#8fb9d6" font-size="12">row + embedding</text>
   <rect x="450" y="294" width="170" height="54" rx="9" fill="#123248" stroke="#1f4a66"/>
   <text x="470" y="318" fill="#dfefff" font-size="13">memory_embeddings</text>
   <text x="470" y="336" fill="#8fb9d6" font-size="12">VECTOR(1024) · C-SPANN</text>

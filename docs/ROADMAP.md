@@ -73,7 +73,7 @@ Two people from today. Gates are binary — met or not met, checked at end of da
 | Day | Owner | Deliverable | Gate |
 |---|---|---|---|
 | **Tue Aug 4** *(today)* | Partner | Dev env; `ccloud` provisions a **multi-node** cluster; `schema.sql` applied to both local and cloud | `SHOW TABLES` returns the memory core on a real cluster |
-| **Tue Aug 4** | Terry | Settle the three open decisions in [`BUILD_LOG.md`](./BUILD_LOG.md) — vector dimension, `getPool()` config wiring, spec-vs-code write path | Decisions written down; no ambiguity for the build |
+| **Tue Aug 4** | ~~Terry~~ | ✅ **Done.** All three decisions settled and recorded: `VECTOR(1024)` Titan v2, `getPool()` wired to config, `memory_records` canonical | Build has no ambiguity left |
 | **Wed Aug 5** | Both | `commonmind capture` + `commonmind ask` against the cloud cluster; Bedrock embeddings wired | **Capture → recall works end-to-end.** Record the 10-second hook video the same hour |
 | **Thu Aug 6** | — | Approval round-trip: request → notification row → decision → agent resumes | Approve/deny survives killing the agent process mid-flight |
 | **Fri Aug 7** | — | CDC changefeed → SNS → SQS → Lambda fanout → web inbox | A push fires from a committed DB row, not from application code |
@@ -115,8 +115,8 @@ These stop the team today. Detail in [`BUILD_LOG.md`](./BUILD_LOG.md).
 | # | Decision | Blocks |
 |---|---|---|
 | ~~1~~ | ~~**Vector dimension**~~ — ✅ **CLOSED Aug 4: `VECTOR(1024)`, Titan v2 default.** v1 rejected (5× price, larger index, not retrieval-optimised); 512/256 deferred as a post-submission optimisation. Rationale in [`BUILD_LOG.md`](./BUILD_LOG.md) | — |
-| **2** | **`getPool()` ignores `loadConfig()`** — unset env dials Postgres' 5432, not 26257 | First connection attempt, with a misleading error |
-| **3** | **Write path** — code writes `memory_records`; the spec writes `notifications` | The schema, both architecture diagrams, and the API contract |
+| ~~2~~ | ~~**`getPool()` config wiring**~~ — ✅ **FIXED Aug 4.** Now defaults to `loadConfig().dbUrl`; `closePool()` added | — |
+| ~~3~~ | ~~**Write path**~~ — ✅ **DECIDED Aug 4: `memory_records` canonical.** Most memory is silent, so notifications are a downstream subset, not the capture table. Spec and diagram converged onto the code | — |
 
 ---
 
