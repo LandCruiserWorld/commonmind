@@ -18,7 +18,7 @@ The core thesis that wins the hackathon:
 
 What makes it novel vs. a plain webhook-to-push tool:
 1. **Memory is the source of truth** — CDC changefeeds off the DB drive the push pipeline; the DB is both state store *and* event source.
-2. **Self-improving consolidation** — background "dream-weaver" agents (Titans/Miras-style surprise scoring, ported from KeenDreams v2) reorganize memory so agents get measurably better over time.
+2. **Self-improving consolidation** — background "dream-weaver" agents (Titans/Miras-style surprise scoring) reorganize memory so agents get measurably better over time.
 3. **Resilience as the demo** — kill the CockroachDB node live; activities survive and keep updating. Multi-region replication = zero data loss.
 4. **All 4 CockroachDB tools + AWS used deeply** — not ticked for compliance.
 
@@ -306,7 +306,7 @@ Activity lifecycle: `active` → updates increment `sequence` → `expired` (aft
 | `/api/memory/similar/:id` | GET | Find similar memories |
 | `/api/consolidation/weekly` | GET | Weekly digest of what agents did |
 
-These mirror KeenDreams v2's 5-phase intelligence system, running on CockroachDB.
+A five-phase intelligence system running on CockroachDB.
 
 ### 5.4 CommonMind MCP server (the universal adapter — no per-app plugins)
 
@@ -355,7 +355,7 @@ Implementations:
 
 ### 6.5 Dream-weaver consolidation workers (Lambda, cron)
 - Periodically: embed new memory events → compute surprise vs. corpus → extract patterns → write `memory_consolidations` atomically.
-- Ported from KeenDreams v2's Titans/Miras surprise-scoring + multi-factor retrieval.
+- Built on Titans/Miras-style surprise scoring + multi-factor retrieval.
 
 ### 6.6 ccloud self-management agent
 - A "memory ops agent" invoked via ccloud CLI (JSON-out mode) to provision/destroy the cluster, take backups, set RBAC. Demonstrates the agent-ready control plane in the video.
@@ -437,7 +437,7 @@ Local single-node CockroachDB v25.2.3, parallel inserts, `ON CONFLICT DO UPDATE`
 1. **Push surface priority:** inbox/PWA only, or push FCM+APNs harder? (Recommend: inbox/PWA + one native screenshot.)
 2. **Language:** TypeScript confirmed; Rust only if we want cold-start numbers in the README.
 3. **Hosting:** Lambda-first for cost/ops; ECS only if the live demo needs consistent sub-50ms API.
-4. **Scope of dream-weavers:** full 5-phase KeenDreams layer, or a lean 2-phase (surprise + patterns) to guarantee ship?
+4. **Scope of dream-weavers:** full five-phase layer, or a lean two-phase (surprise + patterns) to guarantee ship?
 5. **Name:** "CommonMind" / "the Dream-Weaver agent" — confirm final.
 
 ---

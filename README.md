@@ -4,7 +4,9 @@
 
 ![CommonMind](./assets/images/commonmind-cover.png)
 
-**One memory that your people and your agents both write to, and both read from.**
+### An agent whose memory goes offline doesn't degrade gracefully — it stops.
+
+**CommonMind is one memory, shared by your people and your agents, on a database engineered so that never happens.**
 
 </div>
 
@@ -219,7 +221,7 @@ Full DDL in [`src/db/schema.sql`](./src/db/schema.sql). The memory core:
 
 *Sequential primary keys are banned.* `memory_events` uses `unique_rowid()`, not `BIGSERIAL`. A monotonic PK funnels every insert into a single range and creates a write hotspot — the classic CockroachDB anti-pattern, and `memory_events` is our hottest write path. This is the difference between a system that scales horizontally and one that only claims to.
 
-*Vector dimension is `VECTOR(1024)` — Titan v2's native default, decided Aug 4.* The schema originally said 768, carried over from a KeenDreams port where that's Cloudflare Workers AI's `bge-base` size. No Bedrock model emits 768, so it had to move.
+*Vector dimension is `VECTOR(1024)` — Titan v2's native default, decided Aug 4.* The schema originally said 768 — a dimension no Bedrock model emits, so it had to move.
 
 We chose **Amazon Titan Text Embeddings V2 at 1024** over the alternatives:
 

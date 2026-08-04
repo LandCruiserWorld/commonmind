@@ -16,7 +16,7 @@ This document is the *why* and *how-to-win* strategy. The *what-to-build* lives 
 
 This is a 5-layer thesis — each layer separately defensible, together they win multiple judging criteria and — critically — are *all learnable in a 30-second demo*.
 
-**Layer 1 — The Wedge (Onboarding):** capture → recall. "One command remembers everything." This is what users touch first, and it's the KeenDreams proved loop (already built, already integrated with a real crypto-trading app + CLI). It is the most relatable, believable use case on the board.
+**Layer 1 — The Wedge (Onboarding):** capture → recall. "One command remembers everything." This is what users touch first, and it's a proven loop — already integrated with a real crypto-trading app and CLI. It is the most relatable, believable use case on the board.
 
 **Layer 2 — The Agent (Act):** an agent *uses* that memory to decide, runs on your phone via approval and Live Activity. Turns a memory product into an agent product.
 
