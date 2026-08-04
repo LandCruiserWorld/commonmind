@@ -20,6 +20,9 @@ Open this every morning. Tick things off. It's deliberately thin — the reasoni
 > ✅ **Aug 4 evening — the cluster is up and the schema is applied.** The critical path is unblocked. Next gate is Wed Aug 5: capture → recall.
 
 - [ ] **Enable CockroachDB's Managed MCP Server** — Cloud console → cluster → **Connect** → MCP, paste the snippet into your client. Two minutes, read-only, RBAC-checked. *A required tool, and a separate thing from the CommonMind MCP server we build ourselves.* Cloud-only — it cannot run against a local cluster
+- [ ] **Request Bedrock model access for `amazon.titan-embed-text-v2:0` — do this tonight.** Console → **Bedrock → Model access → Manage model access** → enable the Amazon Titan family → submit. **Approval is not always instant, and no IAM policy works until it's granted.** This blocks Wednesday's embed step, so it must not be discovered Wednesday morning
+- [ ] Confirm a **payment method is attached** to the AWS account — Bedrock is not in the free tier (it's pay-per-token, ~$0.02/M for Titan v2, but billing must be active)
+- [ ] Smoke-test Bedrock: one call to `titan-embed-text-v2:0`, confirm **1024 floats** come back
 
 - [x] ~~`ccloud` provisions a **multi-node** cluster~~ ✅ **Aug 4**
 - [x] ~~`CREATE DATABASE commonmind` + apply schema~~ ✅ **Aug 4**

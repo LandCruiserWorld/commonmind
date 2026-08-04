@@ -105,6 +105,18 @@ The CommonMind MCP server was scheduled for **Aug 11**, in week two. Moved to **
 
 Separately, **enabling Cockroach's Managed MCP Server is not a build task** — it is a console toggle (cluster → Connect → MCP), so it moved to the immediate list rather than a scheduled day.
 
+### Bedrock model access is a gate, not a step — noted Aug 4
+
+Surfaced by another hackathon participant hitting `operation not allowed` calling Claude on Bedrock. The same gate applies to us for Titan.
+
+**Bedrock model access is per-model and per-account, and must be explicitly requested** — console → *Bedrock → Model access → Manage model access*. Until it is granted, the API refuses **regardless of IAM policy**, which makes it look like a permissions bug and sends people to the wrong place. Approval is not always instant.
+
+Two adjacent traps worth knowing:
+- **Newer Claude models require a cross-region inference profile**, not the bare model ID — `us.anthropic.claude-…`, not `anthropic.claude-…`. Calling the plain ID throws an error that reads like a permissions failure. Not our path (we use Titan for embeddings), but it is the most common Bedrock confusion.
+- **Bedrock is not in the AWS Free Tier.** It is pay-per-token — Titan v2 at $0.02 per million input tokens is negligible, but the account needs an active payment method or calls can be blocked outright.
+
+Moved to the immediate checklist rather than Wednesday, because discovering an ungranted model request on Wednesday morning costs the wedge gate.
+
 ### Other locked decisions
 - **Language:** TypeScript/Node (bench shows both bottleneck on the DB write path — velocity wins).
 - **Storage:** CockroachDB (Cloud GLOBAL for demo/video; single-node for dev).
