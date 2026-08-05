@@ -4,6 +4,9 @@
   "description": "CockroachDB-as-memory for the agentic workforce. Capture \u00b7 recall \u00b7 act \u2014 reliably, globally, at any scale.",
   "type": "module",
   "license": "Apache-2.0",
+  "bin": {
+    "commonmind": "./dist/cli.js"
+  },
   "engines": {
     "node": ">=20"
   },
@@ -14,6 +17,7 @@
     "lint": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@aws-sdk/client-bedrock-runtime": "^3.1103.0",
     "pg": "^8.13.0"
   },
   "devDependencies": {

@@ -35,3 +35,4 @@ coverage/
 #   npx skills add cockroachlabs/cockroachdb-skills
 .agents/skills/
 .claude/skills/
+.codex/
