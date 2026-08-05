@@ -4,14 +4,36 @@
   "description": "CockroachDB-as-memory for the agentic workforce. Capture \u00b7 recall \u00b7 act \u2014 reliably, globally, at any scale.",
   "type": "module",
   "license": "Apache-2.0",
+  "homepage": "https://commonmind.agent9.dev",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/LandCruiserWorld/commonmind.git"
+  },
+  "bugs": {
+    "url": "https://github.com/LandCruiserWorld/commonmind/issues"
+  },
+  "keywords": [
+    "agent-memory",
+    "ai-agents",
+    "cockroachdb",
+    "vector-search",
+    "semantic-search",
+    "mcp",
+    "aws",
+    "bedrock"
+  ],
   "bin": {
     "commonmind": "./dist/cli.js"
   },
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=20"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "prepublishOnly": "npm run build",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "tsc -p tsconfig.test.json && node --test .test-dist/tests/*.test.js",
     "lint": "tsc -p tsconfig.json --noEmit"

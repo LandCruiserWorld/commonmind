@@ -30,6 +30,12 @@ It owns the build-out by capability, the daily gates, the submission requirement
 
 ---
 
+## Runbooks
+
+- [**PUBLISHING.md**](PUBLISHING.md) — shipping the `commonmind` npm package. Read before your first `npm publish`; the `files` field is load-bearing and easy to break.
+
+---
+
 ## For coding agents
 
 Read [`agents/AGENTS.md`](agents/AGENTS.md) first — it states the invariants you must not break. Then take work from [`CHECKLIST.md`](CHECKLIST.md), never from a schedule in another file.
