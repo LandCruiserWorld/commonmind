@@ -84,7 +84,7 @@ Two people from today. Gates are binary — met or not met, checked at end of da
 
 | Day | Deliverable | Gate |
 |---|---|---|
-| **Mon Aug 10** | Dream-Weaver consolidation; surprise scoring; before/after recall measurement | A learning curve with real numbers, or the claim comes off the site |
+| **Mon Aug 10** | Dream-Weaver consolidation; surprise scoring; before/after recall measurement — spec: [`DREAM_WEAVER_SPEC.md`](DREAM_WEAVER_SPEC.md) | A learning curve with real numbers, or the claim comes off the site |
 | **Tue Aug 11** | MCP server + `docs/agents/` guides; ccloud self-ops agent | Two different CLIs recall the same memory |
 | **Wed Aug 12** | One real integration end-to-end (trading bot is the strongest existing evidence) | An outside system writes and reads memory |
 | **Thu Aug 13** | Multi-node benchmark; real numbers into README; landing-page targets replaced or removed | No unmeasured number remains published |

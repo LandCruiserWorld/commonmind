@@ -493,7 +493,7 @@ This repo is **under active build**. What's true today:
 | ✅ Done | Schema, TypeScript memory core, product bible + JSON-LD, landing page, architecture |
 | 🟡 In build | MCP server, `npm install -g commonmind` front door |
 | ⏳ Next | Capture → recall against a live cluster, approval round-trip, CDC pipeline |
-| ⬜ Later | Dream-weaver consolidation, kill-the-node demo, benchmarks |
+| ⬜ Later | Dream-weaver consolidation ([spec](docs/DREAM_WEAVER_SPEC.md)), kill-the-node demo, benchmarks |
 
 **Performance figures on the landing page are design targets, not measurements.** They will be replaced with benchmarked numbers and the method to reproduce them before submission, or removed. We would rather show one measured number than five aspirational ones — a claim we can't reproduce on demand is a claim a judge can dismantle.
 

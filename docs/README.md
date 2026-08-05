@@ -24,6 +24,7 @@ It owns the build-out by capability, the daily gates, the submission requirement
 | **4** | [DEVELOPER_SPEC.md](DEVELOPER_SPEC.md) | Schema and API contract | Table definitions, endpoints, component design |
 | **5** | [MASTER_DEVELOPER_DOC.md](MASTER_DEVELOPER_DOC.md) | The why, the agents, the judging map | Positioning, the three agents, video shot-list, risk register |
 | **6** | [STRATEGIC_PLAN.md](STRATEGIC_PLAN.md) | Strategy and competitive framing | Why we win, the L1–L4 priority ladder |
+| **7** | [DREAM_WEAVER_SPEC.md](DREAM_WEAVER_SPEC.md) | The Dream-Weaver design only | Mon Aug 10 consolidation work. Capability spec, not a schedule — L4, cuttable |
 
 > ⚠️ The day-by-day schedules inside **MASTER_DEVELOPER_DOC §4** and **STRATEGIC_PLAN §6** are **superseded**. They assume an Aug 3 start the build didn't follow. Both are banner-marked in place. Use the checklist for dates.
 

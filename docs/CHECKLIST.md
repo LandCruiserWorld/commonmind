@@ -98,6 +98,7 @@ Gates are binary. Met or not met, checked end of day. Detail in [`ROADMAP.md` §
 ## Week 2 — differentiate, then freeze
 
 ### Mon Aug 10 — Dream-Weaver
+> Design and definition of done: [`DREAM_WEAVER_SPEC.md`](DREAM_WEAVER_SPEC.md). Read §1 and §2 before starting — the deliverable is a measurement, and it requires Bedrock.
 - [ ] Surprise scoring + pattern extraction
 - [ ] Before/after recall measured on the same question set
 - [ ] **Gate: a real learning curve — or the "improves itself" claim comes off the site**
