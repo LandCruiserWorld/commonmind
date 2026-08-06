@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import test from 'node:test';
 import type { AddressInfo } from 'node:net';
-import { closePool } from '../src/db.js';
+import { closePool, getPool } from '../src/db.js';
 import { createEmbeddingProvider } from '../src/embed.js';
 import { createMcpServer } from '../src/mcp.js';
 import { MemoryRepository } from '../src/memory/repository.js';
@@ -17,6 +17,20 @@ test('approval round-trip, resume, expiry, and MCP capture', { skip: !runIntegra
   const expiresAt = new Date(Date.now() + 60_000);
 
   try {
+    const capturedText = `capture event ${randomUUID()}`;
+    const capturedId = await memories.remember(
+      capturedText,
+      'decision',
+      await createEmbeddingProvider().embed(capturedText),
+    );
+    const capturedEvent = await getPool().query(
+      `SELECT action, payload FROM memory_events WHERE entity_id = $1`,
+      [capturedId],
+    );
+    assert.equal(capturedEvent.rowCount, 1);
+    assert.equal(capturedEvent.rows[0].action, 'created');
+    assert.deepEqual(capturedEvent.rows[0].payload, { content: capturedText });
+
     const opened = await memories.openApproval(body, correlationId, expiresAt);
     const resumed = await memories.openApproval(body, correlationId, expiresAt);
     assert.equal(resumed.id, opened.id);
@@ -30,6 +44,15 @@ test('approval round-trip, resume, expiry, and MCP capture', { skip: !runIntegra
     const embedding = await createEmbeddingProvider().embed(decisionText);
     const decided = await memories.decideApproval(correlationId, 'approved', embedding);
     assert.equal(decided.status, 'approved');
+
+    const decisionEvent = await getPool().query(
+      `SELECT action, payload FROM memory_events WHERE entity_id = $1`,
+      [decided.id],
+    );
+    assert.equal(decisionEvent.rowCount, 1);
+    assert.equal(decisionEvent.rows[0].action, 'approved');
+    assert.equal(decisionEvent.rows[0].payload.correlationId, correlationId);
+    assert.equal(decisionEvent.rows[0].payload.body, body);
 
     const recalled = await memories.recall(embedding);
     assert.ok(recalled.some((memory) => memory.content === decisionText));

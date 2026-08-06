@@ -38,6 +38,7 @@ export class MemoryRepository {
          VALUES ($1, $2, $3::vector)`,
         [entityType, id, JSON.stringify(embedding)],
       );
+      await writeMemoryEvent(client, entityType, id, 'created', { content });
       return id;
     });
   }
@@ -167,9 +168,33 @@ export class MemoryRepository {
          VALUES ('decision', $1, $2::vector)`,
         [memory.rows[0].id, JSON.stringify(embedding)],
       );
+      await writeMemoryEvent(client, 'notification', approval.id, decision, {
+        correlationId: approval.correlationId,
+        body: approval.body,
+        decisionMemoryId: memory.rows[0].id,
+      });
       return approval;
     });
   }
+}
+
+/**
+ * The event log is written in the same transaction as its source mutation.
+ * CDC may therefore publish only committed memory state; it can never observe
+ * an event whose memory row or approval decision was rolled back.
+ */
+async function writeMemoryEvent(
+  client: Pick<ReturnType<typeof getPool>, 'query'>,
+  entityType: MemoryRecord['entityType'],
+  entityId: string,
+  action: 'created' | 'approved' | 'denied',
+  payload: Record<string, string>,
+): Promise<void> {
+  await client.query(
+    `INSERT INTO memory_events (entity_type, entity_id, action, payload, agent)
+     VALUES ($1, $2, $3, $4::jsonb, 'commonmind')`,
+    [entityType, entityId, action, JSON.stringify(payload)],
+  );
 }
 
 async function ensureCliService(client: Pick<ReturnType<typeof getPool>, 'query'>): Promise<string> {
