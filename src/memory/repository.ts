@@ -8,6 +8,18 @@
 import { getPool, withTransaction } from '../db.js';
 import { MemoryRecord } from './types.js';
 
+export type ApprovalStatus = 'pending' | 'approved' | 'denied' | 'expired';
+
+export interface ApprovalRecord {
+  id: string;
+  body: string;
+  correlationId: string;
+  status: ApprovalStatus;
+  expiresAt: Date;
+}
+
+const CLI_SERVICE_TOKEN = 'commonmind-cli';
+
 export class MemoryRepository {
   /**
    * Atomic write: `memory_records` + `memory_embeddings` commit together.
@@ -44,4 +56,143 @@ export class MemoryRepository {
     );
     return res.rows as Array<{ id: string; content: string; score: number }>;
   }
+
+  /** Create an approval once, or return its durable state after a restart. */
+  async openApproval(body: string, correlationId: string, expiresAt: Date): Promise<ApprovalRecord> {
+    return withTransaction(async (client) => {
+      const serviceId = await ensureCliService(client);
+      const inserted = await client.query(
+        `INSERT INTO notifications (
+           service_id, body, idempotency_key, response_type, response_status,
+           correlation_id, expires_at
+         )
+         VALUES ($1, $2, $3, 'approval', 'pending', $3, $4)
+         ON CONFLICT (service_id, idempotency_key) DO NOTHING
+         RETURNING id, body, correlation_id, response_status, expires_at`,
+        [serviceId, body, correlationId, expiresAt],
+      );
+
+      if (inserted.rowCount) return toApprovalRecord(inserted.rows[0]);
+
+      const existing = await client.query(
+        `SELECT id, body, correlation_id, response_status, expires_at
+         FROM notifications
+         WHERE service_id = $1 AND idempotency_key = $2`,
+        [serviceId, correlationId],
+      );
+      const approval = existing.rows[0];
+      if (!approval || approval.correlation_id !== correlationId || approval.body !== body) {
+        throw new Error(`Correlation ID is already in use: ${correlationId}`);
+      }
+      return toApprovalRecord(approval);
+    });
+  }
+
+  /** Expire a pending approval when its persisted deadline has elapsed. */
+  async expirePendingApproval(correlationId: string): Promise<ApprovalRecord | null> {
+    return withTransaction(async (client) => {
+      const serviceId = await ensureCliService(client);
+      await client.query(
+        `UPDATE notifications
+         SET response_status = 'expired', status = 'expired'
+         WHERE service_id = $1
+           AND correlation_id = $2
+           AND response_status = 'pending'
+           AND expires_at <= now()`,
+        [serviceId, correlationId],
+      );
+      const result = await client.query(
+        `SELECT id, body, correlation_id, response_status, expires_at
+         FROM notifications
+         WHERE service_id = $1 AND correlation_id = $2`,
+        [serviceId, correlationId],
+      );
+      return result.rowCount ? toApprovalRecord(result.rows[0]) : null;
+    });
+  }
+
+  /** Read the current durable approval state. */
+  async readApproval(correlationId: string): Promise<ApprovalRecord | null> {
+    return this.expirePendingApproval(correlationId);
+  }
+
+  /** Resolve a live approval and commit the human decision as embedded memory. */
+  async decideApproval(
+    correlationId: string,
+    decision: Extract<ApprovalStatus, 'approved' | 'denied'>,
+    embedding: number[],
+  ): Promise<ApprovalRecord> {
+    return withTransaction(async (client) => {
+      const serviceId = await ensureCliService(client);
+      await client.query(
+        `UPDATE notifications
+         SET response_status = 'expired', status = 'expired'
+         WHERE service_id = $1
+           AND correlation_id = $2
+           AND response_status = 'pending'
+           AND expires_at <= now()`,
+        [serviceId, correlationId],
+      );
+      const resolved = await client.query(
+        `UPDATE notifications
+         SET response_status = $3, response_action = $3
+         WHERE service_id = $1
+           AND correlation_id = $2
+           AND response_status = 'pending'
+           AND expires_at > now()
+         RETURNING id, body, correlation_id, response_status, expires_at`,
+        [serviceId, correlationId, decision],
+      );
+
+      if (!resolved.rowCount) {
+        const current = await client.query(
+          `SELECT id, body, correlation_id, response_status, expires_at
+           FROM notifications
+           WHERE service_id = $1 AND correlation_id = $2`,
+          [serviceId, correlationId],
+        );
+        if (!current.rowCount) throw new Error(`Unknown approval: ${correlationId}`);
+        return toApprovalRecord(current.rows[0]);
+      }
+
+      const approval = toApprovalRecord(resolved.rows[0]);
+      const memory = await client.query(
+        `INSERT INTO memory_records (entity_type, content)
+         VALUES ('decision', $1)
+         RETURNING id`,
+        [`Approval ${approval.correlationId} was ${approval.status}: ${approval.body}`],
+      );
+      await client.query(
+        `INSERT INTO memory_embeddings (entity_type, entity_id, embedding)
+         VALUES ('decision', $1, $2::vector)`,
+        [memory.rows[0].id, JSON.stringify(embedding)],
+      );
+      return approval;
+    });
+  }
+}
+
+async function ensureCliService(client: Pick<ReturnType<typeof getPool>, 'query'>): Promise<string> {
+  const result = await client.query(
+    `INSERT INTO services (title, webhook_token, owner_id)
+     VALUES ('CommonMind CLI', $1, 'local')
+     ON CONFLICT (webhook_token) DO UPDATE SET webhook_token = EXCLUDED.webhook_token
+     RETURNING id`,
+    [CLI_SERVICE_TOKEN],
+  );
+  return result.rows[0].id as string;
+}
+
+function toApprovalRecord(row: Record<string, unknown>): ApprovalRecord {
+  const status = row.response_status;
+  if (status !== 'pending' && status !== 'approved' && status !== 'denied' && status !== 'expired') {
+    throw new Error(`Invalid approval status: ${String(status)}`);
+  }
+  return {
+    id: String(row.id),
+    body: String(row.body),
+    correlationId: String(row.correlation_id),
+    status,
+    expiresAt: new Date(String(row.expires_at)),
+  };
 }
