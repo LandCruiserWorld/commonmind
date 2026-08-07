@@ -6,7 +6,7 @@
  */
 
 import { getPool, withTransaction } from '../db.js';
-import { MemoryRecord } from './types.js';
+import { MemoryRecord, Visibility } from './types.js';
 
 export type ApprovalStatus = 'pending' | 'approved' | 'denied' | 'expired';
 
@@ -43,7 +43,31 @@ export class MemoryRepository {
     });
   }
 
-  /** Semantic recall against the C-SPANN vector index. */
+  /**
+   * Contribute a note to the company brain, atomically with its embedding
+   * (`memory.note`). `visibility: 'public'` grows the shared recall index;
+   * `'private'` stays contributor-only — `recall()` excludes it by default.
+   */
+  async note(content: string, visibility: Visibility, embedding: number[]): Promise<string> {
+    return withTransaction(async (client) => {
+      const res = await client.query(
+        `INSERT INTO memory_records (entity_type, content, visibility)
+         VALUES ('note', $1, $2)
+         RETURNING id`,
+        [content, visibility],
+      );
+      const id = res.rows[0].id as string;
+      await client.query(
+        `INSERT INTO memory_embeddings (entity_type, entity_id, embedding)
+         VALUES ('note', $1, $2::vector)`,
+        [id, JSON.stringify(embedding)],
+      );
+      await writeMemoryEvent(client, 'note', id, 'created', { content, visibility });
+      return id;
+    });
+  }
+
+  /** Semantic recall against the C-SPANN vector index. Excludes private notes — contributor-only. */
   async recall(queryEmbedding: number[], limit = 8): Promise<Array<{ id: string; content: string; score: number }>> {
     const res = await getPool().query(
       `SELECT
@@ -51,6 +75,7 @@ export class MemoryRepository {
 1 - (m.embedding <=> $1::vector) AS score
        FROM memory_embeddings m
        JOIN memory_records r ON r.id = m.entity_id
+       WHERE r.visibility != 'private'
        ORDER BY m.embedding <=> $1::vector
        LIMIT $2`,
       [JSON.stringify(queryEmbedding), limit],

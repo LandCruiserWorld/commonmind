@@ -123,6 +123,25 @@ async function callTool(
     );
     return toolResult(approval);
   }
+  if (name === 'memory.approve') {
+    const correlationId = requiredString(args, 'correlationId');
+    const decision = args.decision;
+    if (decision !== 'approved' && decision !== 'denied') {
+      throw new Error('decision must be "approved" or "denied"');
+    }
+    const approval = await memories.readApproval(correlationId);
+    if (!approval) throw new Error(`Unknown approval: ${correlationId}`);
+    const decisionEmbedding = await embeddings.embed(
+      `Approval ${approval.correlationId} was ${decision}: ${approval.body}`,
+    );
+    return toolResult(await memories.decideApproval(correlationId, decision, decisionEmbedding));
+  }
+  if (name === 'memory.note') {
+    const content = requiredString(args, 'content');
+    const visibility = args.visibility === 'public' ? 'public' : 'private';
+    const id = await memories.note(content, visibility, await embeddings.embed(content));
+    return toolResult({ id, visibility });
+  }
   throw new Error(`Unknown tool: ${name}`);
 }
 
@@ -157,6 +176,30 @@ function tools(): Array<Record<string, unknown>> {
           expiresInSeconds: { type: 'number' },
         },
         required: ['body'],
+      },
+    },
+    {
+      name: 'memory.approve',
+      description: 'Record a human decision on an open approval; resumes the agent and commits the decision as memory.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          correlationId: { type: 'string' },
+          decision: { type: 'string', enum: ['approved', 'denied'] },
+        },
+        required: ['correlationId', 'decision'],
+      },
+    },
+    {
+      name: 'memory.note',
+      description: 'Contribute a note to the company brain. public grows the shared recall index; private is contributor-only.',
+      inputSchema: {
+        type: 'object',
+        properties: {
+          content: { type: 'string' },
+          visibility: { type: 'string', enum: ['public', 'private'] },
+        },
+        required: ['content'],
       },
     },
   ];

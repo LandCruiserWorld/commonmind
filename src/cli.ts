@@ -17,6 +17,18 @@ export async function runCli(args = process.argv.slice(2)): Promise<void> {
     return;
   }
 
+  if (command === 'serve-inbox') {
+    const { serveInbox } = await import(new URL('./inbox/server.js', import.meta.url).href);
+    await serveInbox();
+    return;
+  }
+
+  if (command === 'serve-cdc-bridge') {
+    const { serveBridge } = await import(new URL('./cdc/bridge.js', import.meta.url).href);
+    await serveBridge();
+    return;
+  }
+
   const memories = new MemoryRepository();
 
   try {

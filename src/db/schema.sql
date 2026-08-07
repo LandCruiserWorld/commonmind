@@ -70,10 +70,14 @@ CREATE TABLE IF NOT EXISTS live_activities (
 -- Memory records: the things agents + humans remember
 CREATE TABLE IF NOT EXISTS memory_records (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  entity_type STRING NOT NULL,            -- 'notification' | 'incident' | 'runbook' | 'decision'
+  entity_type STRING NOT NULL,            -- 'notification' | 'incident' | 'runbook' | 'decision' | 'note'
   content     STRING NOT NULL,
+  -- 'public' grows the shared recall index; 'private' is contributor-only (memory.note).
+  visibility  STRING NOT NULL DEFAULT 'public',
   created_at  TIMESTAMPTZ DEFAULT now()
 );
+-- Safe to run against a schema applied before `visibility` existed.
+ALTER TABLE memory_records ADD COLUMN IF NOT EXISTS visibility STRING NOT NULL DEFAULT 'public';
 
 -- Embeddings: VECTOR(1024) indexed by C-SPANN (CockroachDB's distributed vector
 -- index — hierarchical K-means partitions, NOT HNSW; pgvector syntax will not run).

@@ -1,7 +1,7 @@
 {
   "name": "commonmind",
   "version": "0.1.0",
-  "description": "CockroachDB-as-memory for the agentic workforce. Capture \u00b7 recall \u00b7 act \u2014 reliably, globally, at any scale.",
+  "description": "CockroachDB-as-memory for the agentic workforce. Capture · recall · act — reliably, globally, at any scale.",
   "type": "module",
   "license": "Apache-2.0",
   "homepage": "https://commonmind.agent9.dev",
@@ -36,10 +36,13 @@
     "prepublishOnly": "npm run build",
     "check": "tsc -p tsconfig.json --noEmit",
     "test": "tsc -p tsconfig.test.json && node --test .test-dist/tests/*.test.js",
-    "lint": "tsc -p tsconfig.json --noEmit"
+    "lint": "tsc -p tsconfig.json --noEmit",
+    "provision-pipeline": "node scripts/provision-pipeline.mjs"
   },
   "dependencies": {
     "@aws-sdk/client-bedrock-runtime": "^3.1103.0",
+    "@aws-sdk/client-sns": "^3.1105.0",
+    "@aws-sdk/client-sqs": "^3.1105.0",
     "pg": "^8.13.0"
   },
   "devDependencies": {

@@ -6,7 +6,8 @@
  * transaction, so agents and humans never observe partial memory.
  */
 
-export type EntityType = 'notification' | 'incident' | 'runbook' | 'decision';
+export type EntityType = 'notification' | 'incident' | 'runbook' | 'decision' | 'note';
+export type Visibility = 'public' | 'private';
 export type MemoryKind = 'pattern' | 'surprise' | 'digest' | 'insight';
 
 export interface MemoryRecord {
