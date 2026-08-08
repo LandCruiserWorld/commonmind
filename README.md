@@ -411,7 +411,34 @@ Built for the [CockroachDB × AWS Hackathon — Build with Agentic Memory](https
 | **Agent Skills Repo** | `commonmind-query`, `commonmind-approve`, `commonmind-consolidate` |
 | **Changefeeds (CDC)** | *Beyond the required list* — the transactional event stream driving push |
 
-AWS services are in the [Why AWS serverless](#why-aws-serverless) table.
+We exceed the **2-of-4** requirement: **all four** required CockroachDB tools are used, plus changefeeds beyond the list.
+
+### AWS services (requirement: at least one — we use four)
+
+| AWS service | What the agent actually does with it |
+|---|---|
+| **Amazon Bedrock** | Titan Text Embeddings V2 (1024-dim) embeds every capture and query; recall/summarization LLM answers from the memory layer |
+| **AWS Lambda** | Serverless agent execution behind Lambda Function URLs — capture, recall, and approval handlers scale to zero |
+| **Amazon SNS → SQS + DLQ** | Changefeed fanout for the push pipeline, with retry and dead-lettering so no notification is lost |
+| **Amazon S3** | Artifact/document storage — exported memory snapshots and runbook sources |
+
+Full rationale in [Why AWS serverless](#why-aws-serverless).
+
+### Submission requirements checklist (what the judges will verify)
+
+| Devpost requirement | Status | Proof location |
+|---|---|---|
+| Public open-source repo | ✅ | `github.com/LandCruiserWorld/commonmind` (public, Apache-2.0, license visible in About) |
+| All necessary source code | ✅ | `src/` |
+| Clear README documentation | ✅ | this file |
+| Dependencies declared | ✅ | `package.json`, `package-lock.json` |
+| Example configuration | ✅ | `.env.example` |
+| Setup + run instructions | ✅ | [Quickstart](#quickstart) |
+| Functional demo app URL | ✅ | `https://commonmind.agent9.dev` |
+| Video < 3 min, CockroachDB memory layer at work | 🟡 | recording — [BUILD_LOG](docs/BUILD_LOG.md) |
+| **2×** CockroachDB tools (we use **4 + changefeeds**) | ✅ | table above |
+| **1×** AWS service (we use **4**) | ✅ | table above |
+| Architectural diagram | ✅ | `assets/images/aws-serverless-architecture.svg` + [Architecture](#architecture) |
 
 ---
 
