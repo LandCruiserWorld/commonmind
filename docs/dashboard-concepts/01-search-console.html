@@ -1,0 +1,604 @@
+<title>CommonMind — Company Memory</title>
+<style>
+  :root {
+    --ground:#0D1417; --surface:#131D21; --surface-2:#18242A; --line:#22323A;
+    --ink:#E4EDEF; --ink-dim:#8FA3AA; --ink-faint:#5F7278;
+    --accent:#F06A3C; --accent-soft:rgba(240,106,60,.13); --accent-line:rgba(240,106,60,.38);
+    --ok:#46A882; --dead:#C2504A; --agent:#6FA8C7;
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,Georgia,serif;
+    --sans:ui-sans-serif,-apple-system,"Segoe UI",Roboto,system-ui,sans-serif;
+    --mono:ui-monospace,"SF Mono",SFMono-Regular,Menlo,Consolas,monospace;
+    --r:3px;
+  }
+  @media (prefers-color-scheme: light) {
+    :root {
+      --ground:#F5F8F8; --surface:#FFFFFF; --surface-2:#EDF3F3; --line:#D6E1E2;
+      --ink:#0E1A1E; --ink-dim:#5C6E73; --ink-faint:#82969B;
+      --accent:#D4501F; --accent-soft:rgba(212,80,31,.09); --accent-line:rgba(212,80,31,.34);
+      --ok:#2E7D5F; --dead:#A93B35; --agent:#3D7A9B;
+    }
+  }
+  :root[data-theme="light"] {
+    --ground:#F5F8F8; --surface:#FFFFFF; --surface-2:#EDF3F3; --line:#D6E1E2;
+    --ink:#0E1A1E; --ink-dim:#5C6E73; --ink-faint:#82969B;
+    --accent:#D4501F; --accent-soft:rgba(212,80,31,.09); --accent-line:rgba(212,80,31,.34);
+    --ok:#2E7D5F; --dead:#A93B35; --agent:#3D7A9B;
+  }
+  :root[data-theme="dark"] {
+    --ground:#0D1417; --surface:#131D21; --surface-2:#18242A; --line:#22323A;
+    --ink:#E4EDEF; --ink-dim:#8FA3AA; --ink-faint:#5F7278;
+    --accent:#F06A3C; --accent-soft:rgba(240,106,60,.13); --accent-line:rgba(240,106,60,.38);
+    --ok:#46A882; --dead:#C2504A; --agent:#6FA8C7;
+  }
+
+  * { box-sizing:border-box; }
+  body {
+    margin:0; background:var(--ground); color:var(--ink);
+    font-family:var(--sans); font-size:15px; line-height:1.5;
+    -webkit-font-smoothing:antialiased;
+  }
+  h1,h2,h3 { margin:0; text-wrap:balance; }
+  button { font:inherit; color:inherit; cursor:pointer; }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+
+  .label {
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.13em;
+    text-transform:uppercase; color:var(--ink-faint);
+  }
+  .num { font-family:var(--mono); font-variant-numeric:tabular-nums; }
+
+  /* ---------- shell ---------- */
+  .topbar {
+    display:flex; align-items:center; gap:16px; flex-wrap:wrap;
+    padding:14px 20px; border-bottom:1px solid var(--line); background:var(--surface);
+  }
+  .brand { font-family:var(--serif); font-size:19px; letter-spacing:.01em; }
+  .brand b { font-weight:600; }
+  .proto {
+    border:1px solid var(--line); border-radius:99px; padding:3px 9px;
+    color:var(--ink-faint); font-family:var(--mono); font-size:10px; letter-spacing:.09em;
+    text-transform:uppercase;
+  }
+  .spacer { flex:1 1 auto; }
+  .ghost {
+    background:none; border:1px solid var(--line); border-radius:var(--r);
+    padding:6px 11px; font-size:12.5px; color:var(--ink-dim);
+  }
+  .ghost:hover { border-color:var(--ink-faint); color:var(--ink); }
+
+  .app {
+    display:grid; grid-template-columns:206px minmax(0,1fr) 300px;
+    gap:0; min-height:calc(100vh - 57px);
+  }
+  .rail, .side { padding:18px 16px; }
+  .rail { border-right:1px solid var(--line); }
+  .side { border-left:1px solid var(--line); background:var(--surface); }
+  .center { padding:22px 26px 60px; min-width:0; }
+
+  /* ---------- workspace rail ---------- */
+  .rail h2 { margin-bottom:10px; }
+  .ws {
+    display:flex; align-items:baseline; gap:8px; width:100%;
+    background:none; border:0; border-left:2px solid transparent;
+    padding:7px 9px; margin-bottom:1px; border-radius:0 var(--r) var(--r) 0;
+    text-align:left; color:var(--ink-dim); font-size:13.5px;
+  }
+  .ws:hover { background:var(--surface-2); color:var(--ink); }
+  .ws[aria-pressed="true"] {
+    background:var(--surface-2); border-left-color:var(--accent); color:var(--ink); font-weight:500;
+  }
+  .ws .ct { margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--ink-faint); }
+
+  .scope-note {
+    margin-top:14px; padding:10px; border:1px dashed var(--line); border-radius:var(--r);
+    font-size:11.5px; line-height:1.45; color:var(--ink-faint);
+  }
+  .scope-note code { font-family:var(--mono); font-size:10.5px; color:var(--ink-dim); }
+
+  /* ---------- search ---------- */
+  .ask { font-family:var(--serif); font-size:clamp(21px,2.6vw,27px); margin-bottom:14px; }
+  .searchwrap { position:relative; display:flex; align-items:center; }
+  .searchwrap input {
+    width:100%; background:var(--surface); color:var(--ink);
+    border:1px solid var(--line); border-radius:var(--r);
+    padding:13px 15px; font:inherit; font-size:15px;
+  }
+  .searchwrap input:focus { border-color:var(--accent-line); outline:none; }
+  .searchwrap input::placeholder { color:var(--ink-faint); }
+  .chips { display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 4px; }
+  .chip {
+    background:var(--surface-2); border:1px solid var(--line); border-radius:99px;
+    padding:5px 11px; font-size:12px; color:var(--ink-dim);
+  }
+  .chip:hover { border-color:var(--accent-line); color:var(--ink); }
+
+  .meta-row {
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    margin:20px 0 12px; padding-bottom:9px; border-bottom:1px solid var(--line);
+  }
+
+  /* ---------- results ---------- */
+  .results { display:flex; flex-direction:column; gap:11px; }
+  .card {
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--r);
+    padding:14px 15px;
+  }
+  .card-head { display:flex; align-items:center; gap:9px; margin-bottom:7px; flex-wrap:wrap; }
+  .who {
+    display:inline-flex; align-items:center; gap:5px;
+    font-family:var(--mono); font-size:10.5px; letter-spacing:.07em; text-transform:uppercase;
+  }
+  .dot { width:6px; height:6px; border-radius:50%; flex:none; }
+  .who.human .dot { background:var(--ink-dim); }
+  .who.human { color:var(--ink-dim); }
+  .who.agentic .dot { background:var(--agent); }
+  .who.agentic { color:var(--agent); }
+  .from {
+    font-size:11px; color:var(--ink-faint); border:1px solid var(--line);
+    border-radius:99px; padding:2px 8px;
+  }
+  .from.cross { color:var(--accent); border-color:var(--accent-line); background:var(--accent-soft); }
+  .when { margin-left:auto; font-family:var(--mono); font-size:11px; color:var(--ink-faint); }
+  .card p { margin:0; font-size:14.5px; }
+  .card .why {
+    margin-top:9px; padding-top:9px; border-top:1px solid var(--line);
+    font-size:12.5px; color:var(--ink-dim);
+  }
+  details.prov { margin-top:9px; }
+  details.prov summary {
+    cursor:pointer; font-family:var(--mono); font-size:11px; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--ink-faint); list-style:none;
+  }
+  details.prov summary::-webkit-details-marker { display:none; }
+  details.prov summary:hover { color:var(--accent); }
+  details.prov ul { margin:8px 0 0; padding-left:16px; font-size:12.5px; color:var(--ink-dim); }
+  details.prov li { margin-bottom:3px; }
+
+  .recur {
+    border-left:2px solid var(--accent); background:var(--accent-soft);
+  }
+  .recur .banner {
+    font-family:var(--serif); font-size:16px; color:var(--ink); margin-bottom:5px;
+  }
+  .empty { color:var(--ink-faint); font-size:14px; padding:26px 0; }
+
+  /* ---------- side ---------- */
+  .side section { margin-bottom:24px; }
+  .side h2 { margin-bottom:9px; }
+  .appr {
+    background:var(--ground); border:1px solid var(--accent-line); border-radius:var(--r);
+    padding:12px; margin-bottom:9px;
+  }
+  .appr p { margin:0 0 4px; font-size:13.5px; }
+  .appr .sub { font-size:12px; color:var(--ink-dim); margin-bottom:10px; }
+  .btns { display:flex; gap:6px; }
+  .btn {
+    flex:1; border:1px solid var(--line); background:var(--surface-2);
+    border-radius:var(--r); padding:6px; font-size:12.5px; color:var(--ink-dim);
+  }
+  .btn.go { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+  .btn.go:hover { filter:brightness(1.08); }
+  .btn:hover { color:var(--ink); }
+  .sent {
+    font-family:var(--mono); font-size:11px; color:var(--ok);
+    display:flex; align-items:center; gap:6px;
+  }
+
+  .nodes { display:flex; flex-direction:column; gap:5px; }
+  .node {
+    display:flex; align-items:center; gap:8px; padding:7px 9px;
+    background:var(--ground); border:1px solid var(--line); border-radius:var(--r);
+    font-family:var(--mono); font-size:11.5px;
+  }
+  .node .st { width:7px; height:7px; border-radius:50%; background:var(--ok); flex:none; }
+  .node.down { opacity:.55; border-color:var(--dead); }
+  .node.down .st { background:var(--dead); }
+  .node .rg { margin-left:auto; color:var(--ink-faint); font-size:10.5px; }
+  .node.down .rg { color:var(--dead); }
+  .kill {
+    width:100%; margin-top:9px; background:none; border:1px solid var(--line);
+    border-radius:var(--r); padding:7px; font-size:12px; color:var(--ink-dim);
+  }
+  .kill:hover { border-color:var(--dead); color:var(--dead); }
+
+  .ticker { display:flex; flex-direction:column; gap:6px; max-height:200px; overflow-y:auto; }
+  .tick {
+    font-size:12.5px; color:var(--ink-dim); padding:7px 9px;
+    border:1px solid var(--line); border-radius:var(--r); background:var(--ground);
+  }
+  .tick .who { margin-bottom:3px; }
+  .tick.fresh { animation:land .5s ease-out; border-color:var(--accent-line); }
+  @keyframes land { from { opacity:0; transform:translateY(-5px); } to { opacity:1; transform:none; } }
+
+  .toast {
+    position:fixed; left:50%; bottom:26px; transform:translateX(-50%);
+    background:var(--surface); border:1px solid var(--accent-line); border-left:2px solid var(--accent);
+    border-radius:var(--r); padding:11px 16px; font-size:13.5px; max-width:min(92vw,460px);
+    box-shadow:0 6px 26px rgba(0,0,0,.28); z-index:20;
+  }
+  .toast .label { display:block; margin-bottom:3px; color:var(--accent); }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration:.01ms !important; transition-duration:.01ms !important; }
+  }
+  @media (max-width: 1080px) {
+    .app { grid-template-columns:1fr; }
+    .rail { border-right:0; border-bottom:1px solid var(--line); }
+    .side { border-left:0; border-top:1px solid var(--line); }
+    .rail nav { display:flex; flex-wrap:wrap; gap:4px; }
+    .ws { width:auto; border-left:0; border-bottom:2px solid transparent; border-radius:var(--r); }
+    .ws[aria-pressed="true"] { border-left-color:transparent; border-bottom-color:var(--accent); }
+    .ws .ct { margin-left:6px; }
+  }
+</style>
+
+<div class="topbar">
+  <span class="brand"><b>CommonMind</b></span>
+  <span class="proto">Prototype · fixture data</span>
+  <span class="spacer"></span>
+  <button class="ghost" id="theme">Theme</button>
+</div>
+
+<div class="app">
+  <aside class="rail">
+    <h2 class="label">Workspaces</h2>
+    <nav id="rail"></nav>
+    <div class="scope-note">
+      Scope is the vector index prefix. “All projects” searches
+      <code>space_id IN (…)</code> over every workspace you can see — never unconstrained,
+      so the index is always used.
+    </div>
+  </aside>
+
+  <main class="center">
+    <h1 class="ask" id="ask">What does the company know?</h1>
+    <div class="searchwrap">
+      <input id="q" type="search" autocomplete="off"
+             placeholder="Ask in your own words — “why did our asset downloads break?”"
+             aria-label="Search company memory">
+    </div>
+    <div class="chips" id="chips"></div>
+
+    <div class="meta-row">
+      <span class="label" id="resultLabel">Recent</span>
+      <span class="spacer"></span>
+      <span class="label" id="timing"></span>
+    </div>
+    <div class="results" id="results"></div>
+  </main>
+
+  <aside class="side">
+    <section>
+      <h2 class="label">Needs you</h2>
+      <div id="approvals"></div>
+    </section>
+
+    <section>
+      <h2 class="label">Cluster</h2>
+      <div class="nodes" id="nodes"></div>
+      <button class="kill" id="kill">Kill a node</button>
+    </section>
+
+    <section>
+      <h2 class="label">Landing now</h2>
+      <div class="ticker" id="ticker"></div>
+    </section>
+  </aside>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var SPACES = [
+    { id:"all",     name:"All projects" },
+    { id:"trading", name:"Trading Bot" },
+    { id:"light",   name:"Lighthouse Game" },
+    { id:"core",    name:"CommonMind Core" }
+  ];
+
+  var MEM = [
+    { space:"trading", who:"agent", actor:"phantom-pilot", when:"Aug 4",
+      text:"Blocked ATR — liquidity was pulled 40 seconds after mint. Added to the permanent denylist.",
+      concepts:["rug","token","risk","blocked","liquidity"] },
+    { space:"trading", who:"agent", actor:"phantom-pilot", when:"Aug 3",
+      text:"Raised the slippage guard to 1.2% after three failed fills on JTO.",
+      concepts:["slippage","fills","risk","token"] },
+    { space:"trading", who:"human", actor:"terry", when:"Jul 28",
+      text:"Never quote returns from trades.jsonl — it disagrees with the chain by 282 fills.",
+      concepts:["reporting","trust","data","risk"] },
+    { space:"light", who:"human", actor:"terry", when:"Jul 30",
+      text:"Moved the renderer to WebGPU. TSL nodes replace the hand-written GLSL for the water.",
+      concepts:["render","graphics","decision"] },
+    { space:"light", who:"agent", actor:"build-agent", when:"Jun 12",
+      text:"Model streaming failed in production — the CDN stripped range requests. Fixed by serving with Accept-Ranges.",
+      concepts:["cdn","download","asset","streaming","outage","range"] },
+    { space:"light", who:"human", actor:"terry", when:"Jun 9",
+      text:"Fog volume needs a depth prepass or the lamp bleeds through the cliff geometry.",
+      concepts:["render","graphics"] },
+    { space:"core", who:"human", actor:"terry", when:"Aug 3",
+      text:"Chose CockroachDB over Postgres with pgvector — the row and its embedding commit in one transaction.",
+      concepts:["database","decision","architecture"] },
+    { space:"core", who:"agent", actor:"claude-code", when:"Aug 5",
+      text:"Schema applied to the cloud cluster. All 8 tables verified.",
+      concepts:["database","schema"] },
+    { space:"core", who:"agent", actor:"claude-code", when:"Aug 5",
+      text:"Embeddings are defaulting to the local provider — semantic recall needs EMBED_PROVIDER=bedrock.",
+      concepts:["embedding","bedrock","risk","config"] },
+    { space:"trading", who:"agent", actor:"phantom-pilot", when:"Jul 2",
+      text:"Asset price feed stalled — the provider dropped partial-content responses under load.",
+      concepts:["cdn","download","asset","outage","range"] }
+  ];
+
+  var CANNED = [
+    { q:"why did our asset downloads break", concepts:["cdn","download","asset","range","outage"] },
+    { q:"what did we decide about the database", concepts:["database","decision","architecture"] },
+    { q:"what have we blocked and why", concepts:["blocked","risk","token","rug"] }
+  ];
+
+  var RECUR = {
+    concepts:["cdn","download","asset","range","outage"],
+    title:"This has happened twice, in two different projects",
+    body:"Both times a provider dropped range requests under load, and both times the fix was to serve with Accept-Ranges.",
+    sources:["Lighthouse Game · Jun 12 · build-agent","Trading Bot · Jul 2 · phantom-pilot"]
+  };
+
+  var scope = "all", lastQuery = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+  var esc = function (s) {
+    return String(s).replace(/[&<>"]/g, function (c) {
+      return { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c];
+    });
+  };
+
+  function inScope(m) { return scope === "all" || m.space === scope; }
+  function spaceName(id) {
+    for (var i = 0; i < SPACES.length; i++) if (SPACES[i].id === id) return SPACES[i].name;
+    return id;
+  }
+
+  /* ---- rail ---- */
+  function drawRail() {
+    var html = "";
+    for (var i = 0; i < SPACES.length; i++) {
+      var s = SPACES[i];
+      var n = s.id === "all" ? MEM.length : MEM.filter(function (m) { return m.space === s.id; }).length;
+      html += '<button class="ws" data-s="' + s.id + '" aria-pressed="' + (s.id === scope) + '">' +
+              esc(s.name) + '<span class="ct num">' + n + '</span></button>';
+    }
+    $("rail").innerHTML = html;
+    Array.prototype.forEach.call($("rail").querySelectorAll(".ws"), function (b) {
+      b.addEventListener("click", function () {
+        scope = b.getAttribute("data-s");
+        $("ask").textContent = scope === "all"
+          ? "What does the company know?"
+          : "What does " + spaceName(scope) + " know?";
+        drawRail(); render();
+      });
+    });
+  }
+
+  /* ---- chips ---- */
+  function drawChips() {
+    var html = "";
+    for (var i = 0; i < CANNED.length; i++) {
+      html += '<button class="chip" data-i="' + i + '">' + esc(CANNED[i].q) + "</button>";
+    }
+    $("chips").innerHTML = html;
+    Array.prototype.forEach.call($("chips").querySelectorAll(".chip"), function (b) {
+      b.addEventListener("click", function () {
+        var c = CANNED[+b.getAttribute("data-i")];
+        $("q").value = c.q; runSearch(c.q);
+      });
+    });
+  }
+
+  /* ---- search ---- */
+  function score(m, concepts) {
+    var hit = 0;
+    for (var i = 0; i < concepts.length; i++) if (m.concepts.indexOf(concepts[i]) !== -1) hit++;
+    return hit / concepts.length;
+  }
+
+  function runSearch(text) {
+    text = (text || "").trim().toLowerCase();
+    if (!text) { lastQuery = null; render(); return; }
+    var concepts = null;
+    for (var i = 0; i < CANNED.length; i++) {
+      if (CANNED[i].q.toLowerCase().indexOf(text) === 0 || text.indexOf(CANNED[i].q.toLowerCase()) === 0) {
+        concepts = CANNED[i].concepts; break;
+      }
+    }
+    if (!concepts) {
+      concepts = [];
+      var words = text.split(/\s+/);
+      MEM.forEach(function (m) {
+        m.concepts.forEach(function (c) {
+          if (words.indexOf(c) !== -1 && concepts.indexOf(c) === -1) concepts.push(c);
+        });
+      });
+      if (!concepts.length) {
+        MEM.forEach(function (m) {
+          if (m.text.toLowerCase().indexOf(text) !== -1) {
+            m.concepts.forEach(function (c) { if (concepts.indexOf(c) === -1) concepts.push(c); });
+          }
+        });
+      }
+    }
+    lastQuery = { text:text, concepts:concepts };
+    render();
+  }
+
+  /* ---- render ---- */
+  function card(m, sc) {
+    var cross = lastQuery && scope === "all" && sc > 0;
+    return '<article class="card">' +
+      '<div class="card-head">' +
+        '<span class="who ' + (m.who === "agent" ? "agentic" : "human") + '">' +
+          '<span class="dot"></span>' + esc(m.who === "agent" ? m.actor : m.actor) +
+        "</span>" +
+        '<span class="from' + (cross ? " cross" : "") + '">' + esc(spaceName(m.space)) + "</span>" +
+        '<span class="when">' + esc(m.when) + "</span>" +
+      "</div>" +
+      "<p>" + esc(m.text) + "</p>" +
+      '<details class="prov"><summary>Where this came from</summary><ul>' +
+        "<li>" + esc(spaceName(m.space)) + " · captured by " + esc(m.actor) + " · " + esc(m.when) + "</li>" +
+        "<li>Row and embedding committed in one transaction</li>" +
+      "</ul></details>" +
+    "</article>";
+  }
+
+  function render() {
+    var pool = MEM.filter(inScope), out = "", t0 = performance.now();
+
+    if (!lastQuery) {
+      $("resultLabel").textContent = "Recent in " + spaceName(scope);
+      $("timing").textContent = "";
+      pool.slice(0, 6).forEach(function (m) { out += card(m, 0); });
+      $("results").innerHTML = out || '<p class="empty">Nothing captured here yet.</p>';
+      return;
+    }
+
+    var scored = pool.map(function (m) { return { m:m, s:score(m, lastQuery.concepts) }; })
+                     .filter(function (r) { return r.s > 0; })
+                     .sort(function (a, b) { return b.s - a.s; });
+
+    var showRecur = lastQuery.concepts.filter(function (c) {
+      return RECUR.concepts.indexOf(c) !== -1;
+    }).length >= 3 && scope === "all";
+
+    if (showRecur) {
+      out += '<article class="card recur">' +
+        '<div class="banner">' + esc(RECUR.title) + "</div>" +
+        "<p>" + esc(RECUR.body) + "</p>" +
+        '<details class="prov"><summary>See both times</summary><ul>' +
+          RECUR.sources.map(function (s) { return "<li>" + esc(s) + "</li>"; }).join("") +
+        "</ul></details></article>";
+    }
+
+    scored.slice(0, 5).forEach(function (r) { out += card(r.m, r.s); });
+
+    if (!scored.length) {
+      out += '<p class="empty">I didn\'t find much for that. Try different words, or widen the scope to all projects.</p>';
+    }
+
+    $("resultLabel").textContent = scored.length
+      ? scored.length + " related in " + spaceName(scope)
+      : "No strong match";
+    $("timing").textContent = (Math.round((performance.now() - t0) * 100) / 100).toFixed(2) + " ms";
+    $("results").innerHTML = out;
+  }
+
+  /* ---- approvals (SNS) ---- */
+  var approvals = [
+    { id:"a1", text:"Raise the position cap on JTO to $2,500.",
+      sub:"Requested by phantom-pilot · needs a human" }
+  ];
+  function drawApprovals() {
+    if (!approvals.length) {
+      $("approvals").innerHTML = '<p class="empty" style="padding:6px 0;font-size:12.5px">Nothing waiting on you.</p>';
+      return;
+    }
+    $("approvals").innerHTML = approvals.map(function (a) {
+      return '<div class="appr" data-a="' + a.id + '">' +
+        "<p>" + esc(a.text) + "</p>" +
+        '<div class="sub">' + esc(a.sub) + "</div>" +
+        '<div class="btns">' +
+          '<button class="btn go" data-act="ok">Approve</button>' +
+          '<button class="btn" data-act="no">Decline</button>' +
+        "</div></div>";
+    }).join("");
+    Array.prototype.forEach.call($("approvals").querySelectorAll(".btn"), function (b) {
+      b.addEventListener("click", function () {
+        var ok = b.getAttribute("data-act") === "ok";
+        var box = b.closest(".appr");
+        box.innerHTML = '<p>' + esc(approvals[0].text) + "</p>" +
+          '<div class="sent"><span>' + (ok ? "Approved" : "Declined") +
+          " — the agent has resumed</span></div>";
+        toast("Delivered by SNS",
+          "The decision was written to CockroachDB. The changefeed pushed it to SNS, and the agent picked it up. No polling anywhere.");
+        approvals = [];
+      });
+    });
+  }
+
+  /* ---- cluster ---- */
+  var nodes = [
+    { id:"n1", rg:"us-east-1", up:true },
+    { id:"n2", rg:"us-west-2", up:true },
+    { id:"n3", rg:"eu-west-1", up:true }
+  ];
+  function drawNodes() {
+    $("nodes").innerHTML = nodes.map(function (n) {
+      return '<div class="node' + (n.up ? "" : " down") + '">' +
+        '<span class="st"></span><span>' + esc(n.id) + "</span>" +
+        '<span class="rg">' + (n.up ? esc(n.rg) : "lost") + "</span></div>";
+    }).join("");
+    var live = nodes.filter(function (n) { return n.up; }).length;
+    $("kill").disabled = live <= 2;
+    $("kill").textContent = live <= 2 ? "Quorum floor reached" : "Kill a node";
+    $("kill").style.opacity = live <= 2 ? ".45" : "1";
+  }
+  $("kill").addEventListener("click", function () {
+    for (var i = nodes.length - 1; i >= 0; i--) {
+      if (nodes[i].up) {
+        nodes[i].up = false;
+        drawNodes();
+        render();
+        toast("Node " + nodes[i].id + " is gone",
+          "Recall never stopped. CockroachDB re-replicated the ranges and the search you just ran still returns — that is the whole point.");
+        return;
+      }
+    }
+  });
+
+  /* ---- live ticker ---- */
+  var INBOUND = [
+    { who:"agent", actor:"phantom-pilot", text:"Skipped a fill — spread widened past the guard." },
+    { who:"human", actor:"kousik", text:"Capture and recall verified against the cloud cluster." },
+    { who:"agent", actor:"build-agent", text:"Nightly asset bake finished. No regressions." },
+    { who:"agent", actor:"claude-code", text:"Consolidated 4 memories into one pattern." }
+  ];
+  var tickIdx = 0;
+  function pushTick() {
+    var m = INBOUND[tickIdx % INBOUND.length]; tickIdx++;
+    var el = document.createElement("div");
+    el.className = "tick fresh";
+    el.innerHTML = '<div class="who ' + (m.who === "agent" ? "agentic" : "human") + '">' +
+      '<span class="dot"></span>' + esc(m.actor) + "</div>" + esc(m.text);
+    $("ticker").prepend(el);
+    while ($("ticker").children.length > 5) $("ticker").lastChild.remove();
+    setTimeout(function () { el.classList.remove("fresh"); }, 600);
+  }
+
+  /* ---- toast ---- */
+  var toastTimer = null;
+  function toast(label, body) {
+    var old = document.querySelector(".toast");
+    if (old) old.remove();
+    var el = document.createElement("div");
+    el.className = "toast";
+    el.setAttribute("role", "status");
+    el.innerHTML = '<span class="label">' + esc(label) + "</span>" + esc(body);
+    document.body.appendChild(el);
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { el.remove(); }, 6500);
+  }
+
+  /* ---- theme ---- */
+  $("theme").addEventListener("click", function () {
+    var cur = document.documentElement.getAttribute("data-theme");
+    if (!cur) {
+      cur = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    }
+    document.documentElement.setAttribute("data-theme", cur === "dark" ? "light" : "dark");
+  });
+
+  $("q").addEventListener("input", function () { runSearch($("q").value); });
+
+  drawRail(); drawChips(); drawApprovals(); drawNodes(); render();
+  pushTick();
+  setInterval(pushTick, 5200);
+})();
+</script>
