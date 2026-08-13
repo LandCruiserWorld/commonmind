@@ -1,3 +1,4 @@
+import 'dotenv/config';
 /**
  * Context configuration.
  * Loads env vars with safe defaults. Secrets come from the environment,

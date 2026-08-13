@@ -9,10 +9,49 @@
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
 import { getPool } from '../db.js';
+import { loadConfig } from '../config.js';
+import { createEmbeddingProvider } from '../embed.js';
+import { MemoryRepository } from '../memory/repository.js';
 
 export function createInboxServer(): Server {
   return createServer(async (request: IncomingMessage, response: ServerResponse) => {
     const path = request.url?.split('?')[0];
+if (path === '/api/memory/capture' && request.method === 'POST') {
+      const auth = request.headers.authorization ?? '';
+      if (auth !== `Bearer ${loadConfig().apiToken}`) {
+        response.writeHead(401, { 'Content-Type': 'application/json' }).end('{"error":"unauthorized"}');
+        return;
+      }
+
+      let raw = '';
+      for await (const chunk of request) raw += chunk;
+
+      let dream: Record<string, unknown>;
+      try {
+        dream = JSON.parse(raw);
+      } catch {
+        response.writeHead(400, { 'Content-Type': 'application/json' }).end('{"error":"invalid json"}');
+        return;
+      }
+
+      // KeenDreams dreams carry the episode text under one of these keys;
+      // fall back to the whole payload so nothing is silently dropped.
+      const content =
+        typeof dream.lesson === 'string' ? dream.lesson :
+        typeof dream.content === 'string' ? dream.content :
+        typeof dream.text === 'string' ? dream.text :
+        JSON.stringify(dream);
+
+      try {
+        const embedding = await createEmbeddingProvider().embed(content);
+        const id = await new MemoryRepository().remember(content, 'decision', embedding);
+        response.writeHead(201, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, id }));
+      } catch (err) {
+        console.error('capture_failed', err);
+        response.writeHead(500, { 'Content-Type': 'application/json' }).end('{"error":"capture failed"}');
+      }
+      return;
+    }
 
     if (path === '/api/notifications' && request.method === 'GET') {
       const rows = await getPool().query(
