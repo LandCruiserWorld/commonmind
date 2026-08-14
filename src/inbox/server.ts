@@ -16,38 +16,13 @@ import { MemoryRepository } from '../memory/repository.js';
 export function createInboxServer(): Server {
   return createServer(async (request: IncomingMessage, response: ServerResponse) => {
     const path = request.url?.split('?')[0];
-if (path === '/api/memory/capture' && request.method === 'POST') {
+
+    if (path === '/api/memory/capture' && request.method === 'POST') {
       const auth = request.headers.authorization ?? '';
       if (auth !== `Bearer ${loadConfig().apiToken}`) {
         response.writeHead(401, { 'Content-Type': 'application/json' }).end('{"error":"unauthorized"}');
         return;
       }
-if (path === '/api/memory/search' && request.method === 'GET') {
-      const auth = request.headers.authorization ?? '';
-      if (auth !== `Bearer ${loadConfig().apiToken}`) {
-        response.writeHead(401, { 'Content-Type': 'application/json' }).end('{"error":"unauthorized"}');
-        return;
-      }
-
-      const params = new URL(request.url ?? '/', 'http://localhost').searchParams;
-      const query = params.get('q') ?? params.get('query') ?? '';
-      const limit = Number(params.get('limit') ?? params.get('top_k') ?? '3');
-
-      if (!query) {
-        response.writeHead(400, { 'Content-Type': 'application/json' }).end('{"error":"missing q"}');
-        return;
-      }
-
-      try {
-        const embedding = await createEmbeddingProvider().embed(query);
-        const results = await new MemoryRepository().recall(embedding, limit);
-        response.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ results }));
-      } catch (err) {
-        console.error('search_failed', err);
-        response.writeHead(500, { 'Content-Type': 'application/json' }).end('{"error":"search failed"}');
-      }
-      return;
-    }
 
       let raw = '';
       for await (const chunk of request) raw += chunk;
@@ -75,6 +50,33 @@ if (path === '/api/memory/search' && request.method === 'GET') {
       } catch (err) {
         console.error('capture_failed', err);
         response.writeHead(500, { 'Content-Type': 'application/json' }).end('{"error":"capture failed"}');
+      }
+      return;
+    }
+
+    if (path === '/api/memory/search' && request.method === 'GET') {
+      const auth = request.headers.authorization ?? '';
+      if (auth !== `Bearer ${loadConfig().apiToken}`) {
+        response.writeHead(401, { 'Content-Type': 'application/json' }).end('{"error":"unauthorized"}');
+        return;
+      }
+
+      const params = new URL(request.url ?? '/', 'http://localhost').searchParams;
+      const query = params.get('q') ?? params.get('query') ?? '';
+      const limit = Number(params.get('limit') ?? params.get('top_k') ?? '3');
+
+      if (!query) {
+        response.writeHead(400, { 'Content-Type': 'application/json' }).end('{"error":"missing q"}');
+        return;
+      }
+
+      try {
+        const embedding = await createEmbeddingProvider().embed(query);
+        const results = await new MemoryRepository().recall(embedding, limit);
+        response.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ results }));
+      } catch (err) {
+        console.error('search_failed', err);
+        response.writeHead(500, { 'Content-Type': 'application/json' }).end('{"error":"search failed"}');
       }
       return;
     }
