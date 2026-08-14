@@ -22,6 +22,32 @@ if (path === '/api/memory/capture' && request.method === 'POST') {
         response.writeHead(401, { 'Content-Type': 'application/json' }).end('{"error":"unauthorized"}');
         return;
       }
+if (path === '/api/memory/search' && request.method === 'GET') {
+      const auth = request.headers.authorization ?? '';
+      if (auth !== `Bearer ${loadConfig().apiToken}`) {
+        response.writeHead(401, { 'Content-Type': 'application/json' }).end('{"error":"unauthorized"}');
+        return;
+      }
+
+      const params = new URL(request.url ?? '/', 'http://localhost').searchParams;
+      const query = params.get('q') ?? params.get('query') ?? '';
+      const limit = Number(params.get('limit') ?? params.get('top_k') ?? '3');
+
+      if (!query) {
+        response.writeHead(400, { 'Content-Type': 'application/json' }).end('{"error":"missing q"}');
+        return;
+      }
+
+      try {
+        const embedding = await createEmbeddingProvider().embed(query);
+        const results = await new MemoryRepository().recall(embedding, limit);
+        response.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ results }));
+      } catch (err) {
+        console.error('search_failed', err);
+        response.writeHead(500, { 'Content-Type': 'application/json' }).end('{"error":"search failed"}');
+      }
+      return;
+    }
 
       let raw = '';
       for await (const chunk of request) raw += chunk;
@@ -77,7 +103,7 @@ export async function serveInbox(port = Number(process.env.COMMONMIND_INBOX_PORT
   const server = createInboxServer();
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
-    server.listen(port, '127.0.0.1', resolve);
+    server.listen(port, '0.0.0.0', resolve);
   });
   console.error(`CommonMind inbox listening at http://127.0.0.1:${port}/`);
   await new Promise<void>((resolve) => server.once('close', resolve));
