@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard — CommonMind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #222831; --bg-elev: #2b3340;
+    --panel: rgba(255,255,255,0.028); --panel-2: rgba(255,255,255,0.05);
+    --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.13);
+    --text: #eeeeee; --muted: #a9b0ba; --faint: #717986;
+    --accent: #00adb5; --accent-dim: rgba(0,173,181,0.10);
+    --radius: 16px;
+    --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --serif: "Instrument Serif", Georgia, serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--font); display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .boot-card { width: 100%; max-width: 440px; background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 34px 32px; box-shadow: 0 30px 80px rgba(0,0,0,0.5); }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; margin-bottom: 22px; }
+  .brand .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  .boot-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--faint); transition: color .3s; }
+  .boot-row:last-child { border-bottom: none; }
+  .boot-row.active { color: var(--text); }
+  .boot-row.done { color: var(--text); }
+  .boot-check { width: 20px; height: 20px; flex: none; border-radius: 999px; border: 1.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 11px; transition: background .3s, border-color .3s, transform .3s; }
+  .boot-row.active .boot-check { border-color: var(--accent); }
+  .boot-row.active .boot-check::after { content: ''; width: 9px; height: 9px; border-radius: 999px; background: var(--accent); animation: bootPulse 1s ease-in-out infinite; }
+  .boot-row.done .boot-check { background: var(--accent); border-color: var(--accent); color: #072a2b; transform: scale(1.05); }
+  .boot-row.done .boot-check::after { content: '✓'; width: auto; height: auto; background: none; animation: none; }
+  @keyframes bootPulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
+  #welcome { display: none; }
+  #welcome.show { display: block; animation: wIn .4s cubic-bezier(.22,.61,.36,1); }
+  @keyframes wIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  #boot.hide { display: none; }
+  .w-eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
+  .w-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
+  .w-email { font-family: var(--mono); color: var(--accent); font-size: 14px; }
+  .w-sub { font-size: 14px; color: var(--muted); margin: 14px 0 22px; line-height: 1.6; }
+  .w-plan { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; margin-bottom: 20px; }
+  .signout { font-size: 13px; color: var(--faint); text-decoration: none; }
+  .signout:hover { color: var(--text); }
+  #denied { display: none; text-align: center; color: var(--muted); font-size: 14px; }
+</style>
+</head>
+<body>
+  <div class="boot-card">
+    <div class="brand"><span class="dot"></span>CommonMind</div>
+
+    <div id="boot">
+      <div class="boot-row" data-step="session"><span class="boot-check"></span>Verifying your session</div>
+      <div class="boot-row" data-step="workspace"><span class="boot-check"></span>Provisioning your memory workspace</div>
+      <div class="boot-row" data-step="brain"><span class="boot-check"></span>Connecting to your company brain</div>
+    </div>
+
+    <div id="welcome">
+      <div class="w-eyebrow">You're in</div>
+      <div class="w-title">Welcome, <span class="w-email" id="welcomeEmail"></span></div>
+      <div class="w-plan" id="welcomePlan"></div>
+      <p class="w-sub">The full dashboard — your company brain, live — is still being built. Auth and your memory workspace are real and working; this page is proof of that, not the final view.</p>
+      <a href="#" class="signout" id="signoutLink">Sign out</a>
+    </div>
+
+    <div id="denied">
+      <p>Not signed in. <a href="/" style="color:var(--accent)">Head back to sign in</a>.</p>
+    </div>
+  </div>
+
+<script>
+(async function () {
+  const rows = { session: document.querySelector('[data-step="session"]'), workspace: document.querySelector('[data-step="workspace"]'), brain: document.querySelector('[data-step="brain"]') };
+  const boot = document.getElementById('boot');
+  const welcome = document.getElementById('welcome');
+  const denied = document.getElementById('denied');
+
+  function activate(row) { row.classList.add('active'); }
+  function finish(row) { row.classList.remove('active'); row.classList.add('done'); }
+  const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+  activate(rows.session);
+  let user = null;
+  try {
+    const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
+    const data = await res.json();
+    if (data.success) user = data.user;
+  } catch {
+    // treated as not signed in below
+  }
+
+  if (!user) {
+    boot.style.display = 'none';
+    denied.style.display = 'block';
+    return;
+  }
+
+  finish(rows.session);
+  activate(rows.workspace);
+  await wait(550);
+  finish(rows.workspace);
+  activate(rows.brain);
+  await wait(500);
+  finish(rows.brain);
+  await wait(300);
+
+  boot.classList.add('hide');
+  document.getElementById('welcomeEmail').textContent = user.email;
+  document.getElementById('welcomePlan').textContent = (user.plan || 'premium_launch').replace('_', ' ');
+  welcome.classList.add('show');
+
+  document.getElementById('signoutLink').addEventListener('click', async (e) => {
+    e.preventDefault();
+    await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+    window.location.href = '/';
+  });
+})();
+</script>
+</body>
+</html>

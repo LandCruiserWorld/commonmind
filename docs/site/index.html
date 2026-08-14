@@ -101,12 +101,12 @@
   "buildLog": [
     {"id":"redesign","title":"Landing page · premium redesign","state":"done","date":"Aug 4"},
     {"id":"bible","title":"Product bible (10 principles) + machine-readable spec","state":"done","date":"Aug 4"},
-    {"id":"mcp","title":"CommonMind MCP server (universal adapter)","state":"todo","date":"Aug 11"},
+    {"id":"mcp","title":"CommonMind MCP server (universal adapter)","state":"done","date":"Aug 7"},
     {"id":"cli","title":"create-commonmind scaffold + CLI","state":"todo","date":"Aug 6"},
-    {"id":"recall","title":"Capture → recall end-to-end","state":"todo","date":"Aug 9"},
-    {"id":"trading","title":"Trading bot on Raspberry Pi + Tailscale","state":"todo","date":"Aug 12"},
+    {"id":"recall","title":"Capture → recall end-to-end","state":"done","date":"Aug 14"},
+    {"id":"trading","title":"Trading bot on Raspberry Pi + Tailscale","state":"wip","date":"Aug 14"},
     {"id":"ocean","title":"Ocean Dreams integration","state":"todo","date":"Aug 14"},
-    {"id":"agents","title":"Agents layer + resilience","state":"todo","date":"Aug 16"},
+    {"id":"agents","title":"Agents layer + resilience","state":"wip","date":"Aug 16"},
     {"id":"video","title":"Demo video + kill-the-node","state":"todo","date":"Aug 17"},
     {"id":"submit","title":"Hackathon submission","state":"todo","date":"Aug 18"}
   ]
@@ -380,6 +380,43 @@
   .reveal { opacity: 0; transform: translateY(20px); transition: opacity .7s cubic-bezier(.22,.61,.36,1), transform .7s cubic-bezier(.22,.61,.36,1); }
   .reveal.in { opacity: 1; transform: none; }
   @media (prefers-reduced-motion: reduce) { .reveal { opacity: 1; transform: none; transition: none; } }
+
+  /* Onboarding wizard */
+  .wiz-overlay { position: fixed; inset: 0; z-index: 999; display: none; align-items: center; justify-content: center; padding: 24px; background: rgba(14,17,21,0.72); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); opacity: 0; transition: opacity .25s ease; }
+  .wiz-overlay.open { display: flex; opacity: 1; }
+  .wiz-card { width: 100%; max-width: 460px; background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: var(--radius); box-shadow: 0 30px 80px rgba(0,0,0,0.5); padding: 34px 32px 28px; transform: translateY(10px) scale(.98); opacity: 0; transition: transform .3s cubic-bezier(.22,.61,.36,1), opacity .3s ease; position: relative; }
+  .wiz-overlay.open .wiz-card { transform: none; opacity: 1; }
+  .wiz-close { position: absolute; top: 18px; right: 18px; width: 30px; height: 30px; border-radius: 999px; border: 1px solid var(--border); background: transparent; color: var(--faint); font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: color .15s, border-color .15s; }
+  .wiz-close:hover { color: var(--text); border-color: var(--border-strong); }
+  .wiz-eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 10px; }
+  .wiz-title { font-size: 24px; font-weight: 700; letter-spacing: -.01em; margin-bottom: 6px; }
+  .wiz-sub { font-size: 14px; color: var(--muted); margin-bottom: 22px; }
+  .wiz-dots { display: flex; gap: 6px; margin-bottom: 24px; }
+  .wiz-dots span { height: 4px; flex: 1; border-radius: 999px; background: var(--border-strong); overflow: hidden; }
+  .wiz-dots span i { display: block; height: 100%; width: 0%; background: var(--accent); border-radius: 999px; transition: width .5s cubic-bezier(.22,.61,.36,1); }
+  .wiz-dots span.on i { width: 100%; }
+  .wiz-row { display: flex; gap: 13px; align-items: flex-start; padding: 12px 13px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; background: var(--panel); transition: border-color .3s, background .3s; }
+  .wiz-row.done { border-color: rgba(0,173,181,0.35); background: var(--accent-dim); }
+  .wiz-row .wiz-ico { width: 30px; height: 30px; flex: none; border-radius: 9px; background: var(--panel-2); display: flex; align-items: center; justify-content: center; font-size: 14px; transition: background .3s, transform .3s; }
+  .wiz-row.done .wiz-ico { background: var(--accent); color: #072a2b; transform: scale(1.05); }
+  .wiz-row h5 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
+  .wiz-row p { font-size: 12.5px; color: var(--faint); line-height: 1.5; }
+  .wiz-form { margin-top: 22px; }
+  .wiz-input { width: 100%; box-sizing: border-box; background: #1c2129; border: 1px solid var(--border-strong); border-radius: 11px; padding: 13px 15px; color: var(--text); font-size: 14.5px; font-family: var(--font); outline: none; transition: border-color .15s; }
+  .wiz-input:focus { border-color: var(--accent); }
+  .wiz-form .btn { width: 100%; margin-top: 12px; justify-content: center; }
+  .wiz-fine { font-size: 12px; color: var(--faint); text-align: center; margin-top: 14px; }
+  .wiz-fine a { color: var(--muted); }
+  .wiz-panel { display: none; }
+  .wiz-panel.active { display: block; animation: wizIn .35s cubic-bezier(.22,.61,.36,1); }
+  @keyframes wizIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+  .wiz-mail-pulse { width: 64px; height: 64px; margin: 6px auto 22px; border-radius: 999px; background: var(--accent-dim); display: flex; align-items: center; justify-content: center; font-size: 26px; position: relative; }
+  .wiz-mail-pulse::before { content: ''; position: absolute; inset: -8px; border-radius: 999px; border: 1px solid rgba(0,173,181,0.35); animation: wizPulse 1.8s ease-out infinite; }
+  @keyframes wizPulse { 0% { transform: scale(.85); opacity: .9; } 100% { transform: scale(1.35); opacity: 0; } }
+  .wiz-sent-email { font-family: var(--mono); color: var(--accent); }
+  .wiz-error { display: none; font-size: 12.5px; color: var(--red); margin-top: 10px; }
+  .wiz-error.show { display: block; }
+  @media (prefers-reduced-motion: reduce) { .wiz-card, .wiz-overlay, .wiz-panel.active, .wiz-mail-pulse::before { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
@@ -716,7 +753,7 @@
 </section>
 
 <section id="pricing" class="wrap">
-  <div class="sec"><div class="sec-label">Pricing</div><h2>Open source forever. Scale when your brain does.</h2><p class="sub">Run CommonMind free on your own infrastructure — your memory, your control. Or let us host it on serverless AWS with a 99% uptime guarantee, billed per employee.</p></div>
+  <div class="sec"><div class="sec-label">Pricing</div><h2>Open source forever. Scale when your brain does.</h2><p class="sub">Run CommonMind free forever on your own infrastructure — your memory, your control. Or let us host it on serverless AWS with a 99% uptime guarantee — free for a limited time while we're in launch.</p></div>
   <div class="grid grid-3 price-grid">
     <div class="card price featured">
       <span class="featured-tag">Open source</span>
@@ -724,15 +761,16 @@
       <ul><li>All memory types — capture, recall, act, consolidate</li><li>Core integrations (CLIs, MCP server, web inbox)</li><li>Self-hosted on your own CockroachDB</li><li>Community support</li></ul>
       <a href="#start" class="btn btn-primary btn-block">Start free</a>
     </div>
-    <div class="card price">
-      <div class="for-who">Premium</div><div class="amt">$20<small> / employee / mo</small></div>
-      <ul><li>Everything in Open Source, plus:</li><li>Managed on serverless AWS (Lambda + Bedrock + CockroachDB)</li><li>99% uptime · monitored · supported</li><li>Self-serve setup &amp; onboarding</li><li>2+ employees · solo founders welcome at same rate</li></ul>
-      <a href="#start" class="btn btn-ghost btn-block">Start for free</a>
+    <div class="card price featured">
+      <span class="featured-tag">Free for launch</span>
+      <div class="for-who">Premium</div><div class="amt"><span style="text-decoration:line-through;color:var(--faint);font-weight:500;font-size:17px;margin-right:8px;">$20/employee/mo</span>Free<small> · limited time</small></div>
+      <ul><li>Everything in Open Source, plus:</li><li>Managed on serverless AWS (Lambda + Bedrock + CockroachDB)</li><li>99% uptime · monitored · supported</li><li>Self-serve setup &amp; onboarding</li><li>No card required — cutting-edge memory on resilient AWS + CockroachDB infrastructure, on us</li></ul>
+      <a href="#start" class="btn btn-primary btn-block">Start for free</a>
     </div>
     <div class="card price">
       <div class="for-who">Enterprise</div><div class="amt">Custom</div>
       <ul><li>Everything in Premium, plus:</li><li>On-premise / VPC deployment</li><li>Custom SLAs &amp; 24/7 support</li><li>SSO &amp; advanced security</li><li>Dedicated engineer</li></ul>
-      <a href="#start" class="btn btn-ghost btn-block">Contact sales</a>
+      <a href="mailto:terry@agent9.dev?subject=CommonMind%20Enterprise" class="btn btn-ghost btn-block">Contact sales</a>
     </div>
   </div>
 </section>
@@ -752,14 +790,14 @@
 <section id="log" class="wrap">
   <div class="sec"><div class="sec-label">Build log · living</div><h2>Progress, tracked here so agents and humans stay aligned.</h2><p class="sub">This section is updated as we build — the page is the bible, the log is the current verse.</p></div>
   <div class="log">
-    <div class="log-item"><span class="log-state wip">In build</span><div><h4>Landing page · premium redesign</h4><p>Refined dark theme, editorial type, live neural-network field, interactive memory map, full mobile pass.</p></div><span class="date">Aug 3</span></div>
-    <div class="log-item"><span class="log-state wip">In build</span><div><h4>Product bible (10 principles) + machine-readable spec</h4><p>Embedded JSON-LD so agents building the app can read the immutable truths and stay on track.</p></div><span class="date">Aug 3</span></div>
-    <div class="log-item"><span class="log-state wip">In build</span><div><h4>Fresh MCP server (universal adapter)</h4><p>Baked into the spec: one CommonMind MCP server (capture · recall · ask · approve · note) covers Claude, Cursor, Codex, opencode, Copilot — no per-app plugins.</p></div><span class="date">Aug 3</span></div>
+    <div class="log-item"><span class="log-state done">Done</span><div><h4>Landing page · premium redesign</h4><p>Refined dark theme, editorial type, live neural-network field, interactive memory map, full mobile pass.</p></div><span class="date">Aug 3</span></div>
+    <div class="log-item"><span class="log-state done">Done</span><div><h4>Product bible (10 principles) + machine-readable spec</h4><p>Embedded JSON-LD so agents building the app can read the immutable truths and stay on track.</p></div><span class="date">Aug 3</span></div>
+    <div class="log-item"><span class="log-state done">Done</span><div><h4>Fresh MCP server (universal adapter)</h4><p>One CommonMind MCP server (capture · recall · ask · approve · note) covers Claude, Cursor, Codex, opencode — no per-app plugins.</p></div><span class="date">Aug 7</span></div>
     <div class="log-item"><span class="log-state todo">Next</span><div><h4>create-commonmind scaffold + CLI</h4><p>npm install -g commonmind → local CockroachDB + save / ask / ask --approval surface.</p></div><span class="date">—</span></div>
-    <div class="log-item"><span class="log-state todo">Next</span><div><h4>Capture → recall end-to-end</h4><p>10-second "oh cool" moment on local CockroachDB, then the hook video.</p></div><span class="date">—</span></div>
-    <div class="log-item"><span class="log-state todo">Later</span><div><h4>Trading bot on Raspberry Pi + Tailscale</h4><p>Wire the Solana platform on real hardware — the Swiss Army Knife proof.</p></div><span class="date">—</span></div>
+    <div class="log-item"><span class="log-state done">Done</span><div><h4>Capture → recall end-to-end</h4><p>Atomic write, embedding, and semantic recall — live over the CLI and HTTP API, against a real cluster.</p></div><span class="date">Aug 14</span></div>
+    <div class="log-item"><span class="log-state wip">In build</span><div><h4>Trading bot on Raspberry Pi + Tailscale</h4><p>Live — the Solana bot's trade memory now runs through CommonMind, recall proven against real trade history.</p></div><span class="date">Aug 14</span></div>
     <div class="log-item"><span class="log-state todo">Later</span><div><h4>Ocean Dreams integration</h4><p>The creature remembers player behavior across sessions — a demo that visibly "gets" your memory.</p></div><span class="date">—</span></div>
-    <div class="log-item"><span class="log-state todo">Later</span><div><h4>Agents layer + resilience</h4><p>Operator agent, approvals, CDC → SNS → push, kill-the-node.</p></div><span class="date">—</span></div>
+    <div class="log-item"><span class="log-state wip">In build</span><div><h4>Agents layer + resilience</h4><p>Approvals and CDC → SNS → push are live; kill-the-node capture is next.</p></div><span class="date">—</span></div>
   </div>
 </section>
 
@@ -1051,5 +1089,39 @@
     animate();
   }
 </script>
+
+<div class="wiz-overlay" id="wizOverlay" role="dialog" aria-modal="true" aria-labelledby="wizTitle">
+  <div class="wiz-card">
+    <button class="wiz-close" id="wizClose" aria-label="Close">✕</button>
+
+    <div class="wiz-panel active" id="wizPanelRequest">
+      <div class="wiz-eyebrow">Onboarding · 10 seconds</div>
+      <div class="wiz-title" id="wizTitle">Get CommonMind running</div>
+      <p class="wiz-sub">Here's exactly what happens when you sign up.</p>
+      <div class="wiz-dots"><span class="on"><i></i></span><span><i></i></span><span><i></i></span></div>
+
+      <div class="wiz-row"><div class="wiz-ico">📧</div><div><h5>We email you a link</h5><p>No password to create. Click it and you're signed in.</p></div></div>
+      <div class="wiz-row"><div class="wiz-ico">⚡</div><div><h5>Your memory spins up</h5><p>An isolated workspace on CockroachDB + AWS — ready before you finish reading this.</p></div></div>
+      <div class="wiz-row"><div class="wiz-ico">🧠</div><div><h5>You land in your dashboard</h5><p>Live data, immediately. Free during launch.</p></div></div>
+
+      <form class="wiz-form" id="wizForm">
+        <input class="wiz-input" type="email" id="wizEmail" placeholder="you@company.com" required autocomplete="email" />
+        <button type="submit" class="btn btn-primary" id="wizSubmit">Send my magic link →</button>
+        <p class="wiz-error" id="wizError">Something went wrong — try again in a moment.</p>
+      </form>
+      <p class="wiz-fine">No card, no password. <a href="#pricing">See pricing</a></p>
+    </div>
+
+    <div class="wiz-panel" id="wizPanelSent">
+      <div class="wiz-mail-pulse">📬</div>
+      <div class="wiz-title" style="text-align:center">Check your email</div>
+      <p class="wiz-sub" style="text-align:center">We sent a link to <span class="wiz-sent-email" id="wizSentEmail"></span>. Click it — it expires in 15 minutes.</p>
+      <p class="wiz-fine"><a href="#" id="wizBack">Use a different email</a></p>
+    </div>
+  </div>
+</div>
+
+<script src="/js/auth.js"></script>
+<script src="/js/wizard.js"></script>
 </body>
 </html>
