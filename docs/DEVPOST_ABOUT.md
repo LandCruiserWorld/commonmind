@@ -20,14 +20,13 @@ We noticed both failures are actually one failure. If the memory is genuinely sh
 
 **CommonMind is shared memory for humans and agents** — transactional, distributed, and engineered not to go down. One memory core, four unrelated products prove it isn't a feature.
 
-The core loop is **capture → recall → act (with human approval) → improve**:
+The core loop is **capture → recall → act (with human approval)**:
 
 1. **Capture** — an agent or person records what happened. The row *and* its embedding commit in one CockroachDB transaction.
-2. **Recall** — semantic search over everything captured, via CockroachDB's C-SPANN vector index. Milliseconds, in-database.
+2. **Recall** — semantic search over everything captured, via CockroachDB's C-SPANN vector index — measured end-to-end at a 213ms median, not estimated.
 3. **Act** — the agent does safe work autonomously and stops for a human on consequential decisions. A push is a *doorbell, not a notice*: the human asks back, redirects, and decides — and the exchange itself becomes memory.
-4. **Improve** — a background consolidation worker scores novelty and reorganises memory so recall measurably gets better over time.
 
-Concretely, on a Solana trading bot running on a Raspberry Pi over Tailscale, CommonMind records every trade's rationale, answers "why did we buy this in March?" in milliseconds, pings the owner's phone before a risky entry, and keeps its context when a database node is killed on camera.
+Concretely, on a live Solana trading bot, CommonMind now holds the bot's real trade memory — recall correctly surfaces the actual invalidation exits when asked about a losing position, not a canned demo query. A background consolidation worker that reorganises memory over time (principle #9, "memory improves itself") is designed and specified but not built — we'd rather say that plainly than claim a learning curve nobody can see.
 
 ### What it is not
 
