@@ -26,3 +26,19 @@ CREATE TABLE IF NOT EXISTS auth_tokens (
 
 CREATE INDEX IF NOT EXISTS idx_auth_tokens_token ON auth_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_auth_tokens_user ON auth_tokens(user_id);
+
+-- Project keys: how something that isn't a browser (a game server, a Worker,
+-- a CLI) authenticates as a given account. Resolves to the same owner_id a
+-- session cookie would, so the memory bridge treats both identically.
+CREATE TABLE IF NOT EXISTS project_tokens (
+    id           TEXT PRIMARY KEY,
+    user_id      TEXT NOT NULL REFERENCES users(id),
+    name         TEXT NOT NULL,             -- e.g. "Ocean Dreams"
+    token        TEXT UNIQUE NOT NULL,      -- shown once at creation, never again
+    created_at   TEXT DEFAULT (datetime('now')),
+    last_used_at TEXT,
+    revoked_at   TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_project_tokens_token ON project_tokens(token);
+CREATE INDEX IF NOT EXISTS idx_project_tokens_user ON project_tokens(user_id);

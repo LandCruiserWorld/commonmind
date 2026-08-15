@@ -13,14 +13,17 @@
     --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.13);
     --text: #eeeeee; --muted: #a9b0ba; --faint: #717986;
     --accent: #00adb5; --accent-dim: rgba(0,173,181,0.10);
+    --red: #f26d6d; --red-dim: rgba(242,109,109,0.1);
     --radius: 16px;
     --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     --serif: "Instrument Serif", Georgia, serif;
     --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--font); display: flex; align-items: center; justify-content: center; padding: 24px; }
-  .boot-card { width: 100%; max-width: 440px; background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 34px 32px; box-shadow: 0 30px 80px rgba(0,0,0,0.5); }
+  body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--text); font-family: var(--font); display: flex; flex-direction: column; align-items: center; padding: 48px 24px; }
+  .col { width: 100%; max-width: 560px; display: flex; flex-direction: column; gap: 20px; }
+
+  .card { width: 100%; background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 30px 30px; box-shadow: 0 30px 80px rgba(0,0,0,0.5); }
   .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; margin-bottom: 22px; }
   .brand .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
   .boot-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--faint); transition: color .3s; }
@@ -33,22 +36,59 @@
   .boot-row.done .boot-check { background: var(--accent); border-color: var(--accent); color: #072a2b; transform: scale(1.05); }
   .boot-row.done .boot-check::after { content: '✓'; width: auto; height: auto; background: none; animation: none; }
   @keyframes bootPulse { 0%,100% { opacity: .4; } 50% { opacity: 1; } }
-  #welcome { display: none; }
-  #welcome.show { display: block; animation: wIn .4s cubic-bezier(.22,.61,.36,1); }
+
+  .reveal-block { display: none; }
+  .reveal-block.show { display: block; animation: wIn .4s cubic-bezier(.22,.61,.36,1); }
   @keyframes wIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
   #boot.hide { display: none; }
+
   .w-eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); margin-bottom: 8px; }
   .w-title { font-size: 22px; font-weight: 700; margin-bottom: 6px; }
   .w-email { font-family: var(--mono); color: var(--accent); font-size: 14px; }
-  .w-sub { font-size: 14px; color: var(--muted); margin: 14px 0 22px; line-height: 1.6; }
-  .w-plan { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; margin-bottom: 20px; }
-  .signout { font-size: 13px; color: var(--faint); text-decoration: none; }
+  .w-sub { font-size: 14px; color: var(--muted); margin: 14px 0 4px; line-height: 1.6; }
+  .w-plan { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); background: var(--panel-2); border: 1px solid var(--border); border-radius: 999px; padding: 5px 12px; margin: 14px 0 0; }
+  .signout { font-size: 13px; color: var(--faint); text-decoration: none; display: inline-block; margin-top: 20px; }
   .signout:hover { color: var(--text); }
   #denied { display: none; text-align: center; color: var(--muted); font-size: 14px; }
+
+  .card h2 { font-size: 16px; margin: 0 0 4px; }
+  .card .sub { font-size: 13px; color: var(--muted); margin: 0 0 20px; line-height: 1.6; }
+
+  .proj-row { display: flex; align-items: center; gap: 12px; padding: 13px 0; border-bottom: 1px solid var(--border); }
+  .proj-row:last-of-type { border-bottom: none; }
+  .proj-name { font-weight: 600; font-size: 14px; }
+  .proj-meta { font-family: var(--mono); font-size: 12px; color: var(--faint); margin-top: 3px; }
+  .proj-actions { margin-left: auto; display: flex; gap: 8px; flex: none; }
+  .mini-btn { font-family: var(--font); font-size: 12.5px; font-weight: 600; padding: 7px 12px; border-radius: 8px; border: 1px solid var(--border-strong); background: var(--panel-2); color: var(--text); cursor: pointer; }
+  .mini-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .mini-btn.danger:hover { border-color: var(--red); color: var(--red); }
+
+  .key-box { font-family: var(--mono); font-size: 12.5px; background: #1c2129; border: 1px solid var(--border-strong); border-radius: 9px; padding: 10px 12px; margin-top: 8px; word-break: break-all; color: var(--accent); display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .key-box button { flex: none; }
+  /* Higher specificity than the bare .reveal-block rule below, so a
+     collapsed key-box stays collapsed instead of showing empty. */
+  div.key-box.reveal-block { display: none; }
+  div.key-box.reveal-block.show { display: flex; }
+
+  .new-proj { display: flex; gap: 8px; margin-top: 4px; }
+  .new-proj input { flex: 1; background: #1c2129; border: 1px solid var(--border-strong); border-radius: 9px; padding: 10px 12px; color: var(--text); font-size: 13.5px; font-family: var(--font); outline: none; }
+  .new-proj input:focus { border-color: var(--accent); }
+  .new-proj button { flex: none; background: var(--accent); color: #072a2b; border: none; border-radius: 9px; padding: 10px 16px; font-weight: 700; font-size: 13.5px; cursor: pointer; }
+  .new-proj button:disabled { opacity: .5; cursor: default; }
+
+  .new-key-reveal { background: var(--accent-dim); border: 1px solid rgba(0,173,181,0.35); border-radius: 10px; padding: 14px; margin-top: 14px; }
+  .new-key-reveal p { margin: 0 0 8px; font-size: 12.5px; color: var(--muted); }
+  .new-key-reveal a { color: var(--accent); }
+
+  .empty { font-size: 13px; color: var(--faint); padding: 8px 0 18px; }
+  .err { font-size: 12.5px; color: var(--red); margin-top: 8px; display: none; }
+  .err.show { display: block; }
 </style>
 </head>
 <body>
-  <div class="boot-card">
+<div class="col">
+
+  <div class="card">
     <div class="brand"><span class="dot"></span>CommonMind</div>
 
     <div id="boot">
@@ -57,11 +97,12 @@
       <div class="boot-row" data-step="brain"><span class="boot-check"></span>Connecting to your company brain</div>
     </div>
 
-    <div id="welcome">
+    <div id="welcome" class="reveal-block">
       <div class="w-eyebrow">You're in</div>
       <div class="w-title">Welcome, <span class="w-email" id="welcomeEmail"></span></div>
+      <p class="w-sub">The full company-brain view is still being built. Auth and your memory workspace are real and working — and below, you can actually connect a project to it.</p>
       <div class="w-plan" id="welcomePlan"></div>
-      <p class="w-sub">The full dashboard — your company brain, live — is still being built. Auth and your memory workspace are real and working; this page is proof of that, not the final view.</p>
+      <br>
       <a href="#" class="signout" id="signoutLink">Sign out</a>
     </div>
 
@@ -70,12 +111,33 @@
     </div>
   </div>
 
+  <div class="card reveal-block" id="projectsCard">
+    <h2>Your projects</h2>
+    <p class="sub">Connect anything — a game, a spreadsheet, an app — with a key scoped to your account. No install required on their end. <a href="/connect/" style="color:var(--accent)">How to connect →</a></p>
+
+    <div id="projList"></div>
+    <p class="empty" id="projEmpty" style="display:none">No projects connected yet — add one below.</p>
+
+    <div class="new-proj">
+      <input type="text" id="newProjName" placeholder="Project name — e.g. Ocean Dreams" maxlength="80" />
+      <button id="newProjBtn">Create</button>
+    </div>
+    <p class="err" id="newProjErr"></p>
+    <div class="new-key-reveal reveal-block" id="newKeyBox">
+      <p>Your key for <b id="newKeyName"></b> — you can view it again anytime from the list above.</p>
+      <div class="key-box"><span id="newKeyValue"></span><button class="mini-btn" id="newKeyCopy">Copy</button></div>
+    </div>
+  </div>
+
+</div>
+
 <script>
 (async function () {
   const rows = { session: document.querySelector('[data-step="session"]'), workspace: document.querySelector('[data-step="workspace"]'), brain: document.querySelector('[data-step="brain"]') };
   const boot = document.getElementById('boot');
   const welcome = document.getElementById('welcome');
   const denied = document.getElementById('denied');
+  const projectsCard = document.getElementById('projectsCard');
 
   function activate(row) { row.classList.add('active'); }
   function finish(row) { row.classList.remove('active'); row.classList.add('done'); }
@@ -87,9 +149,7 @@
     const res = await fetch('/api/auth/me', { credentials: 'same-origin' });
     const data = await res.json();
     if (data.success) user = data.user;
-  } catch {
-    // treated as not signed in below
-  }
+  } catch {}
 
   if (!user) {
     boot.style.display = 'none';
@@ -110,12 +170,106 @@
   document.getElementById('welcomeEmail').textContent = user.email;
   document.getElementById('welcomePlan').textContent = (user.plan || 'premium_launch').replace('_', ' ');
   welcome.classList.add('show');
+  projectsCard.classList.add('show');
 
   document.getElementById('signoutLink').addEventListener('click', async (e) => {
     e.preventDefault();
     await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
     window.location.href = '/';
   });
+
+  loadProjects();
+
+  async function loadProjects() {
+    const list = document.getElementById('projList');
+    const empty = document.getElementById('projEmpty');
+    const res = await fetch('/api/projects', { credentials: 'same-origin' });
+    const data = await res.json();
+    const projects = (data && data.projects) || [];
+    list.innerHTML = '';
+    empty.style.display = projects.length ? 'none' : 'block';
+    for (const p of projects) list.appendChild(projectRow(p));
+  }
+
+  function projectRow(p) {
+    const row = document.createElement('div');
+    row.className = 'proj-row';
+    const used = p.last_used_at ? `last used ${p.last_used_at}` : 'never used yet';
+    row.innerHTML = `
+      <div>
+        <div class="proj-name">${escapeHtml(p.name)}</div>
+        <div class="proj-meta">cm_···${escapeHtml(p.last4)} · ${escapeHtml(used)}</div>
+        <div class="key-box reveal-block" id="reveal-${p.id}"><span></span><button class="mini-btn">Copy</button></div>
+      </div>
+      <div class="proj-actions">
+        <button class="mini-btn" data-action="show">Show key</button>
+        <button class="mini-btn danger" data-action="revoke">Revoke</button>
+      </div>`;
+
+    row.querySelector('[data-action="show"]').addEventListener('click', async (e) => {
+      const box = row.querySelector('.key-box');
+      if (box.classList.contains('show')) { box.classList.remove('show'); return; }
+      const res = await fetch(`/api/projects/${p.id}`, { credentials: 'same-origin' });
+      const data = await res.json();
+      if (!data.token) return;
+      box.querySelector('span').textContent = data.token;
+      box.querySelector('button').onclick = () => copyText(data.token, box.querySelector('button'));
+      box.classList.add('show');
+    });
+
+    row.querySelector('[data-action="revoke"]').addEventListener('click', async () => {
+      if (!confirm(`Revoke the key for "${p.name}"? Anything using it stops working immediately.`)) return;
+      await fetch(`/api/projects/${p.id}`, { method: 'DELETE', credentials: 'same-origin' });
+      loadProjects();
+    });
+
+    return row;
+  }
+
+  document.getElementById('newProjBtn').addEventListener('click', async () => {
+    const input = document.getElementById('newProjName');
+    const btn = document.getElementById('newProjBtn');
+    const err = document.getElementById('newProjErr');
+    const name = input.value.trim();
+    err.classList.remove('show');
+    if (!name) return;
+
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/projects', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Could not create project');
+
+      input.value = '';
+      document.getElementById('newKeyName').textContent = data.name;
+      document.getElementById('newKeyValue').textContent = data.token;
+      document.getElementById('newKeyCopy').onclick = () => copyText(data.token, document.getElementById('newKeyCopy'));
+      document.getElementById('newKeyBox').classList.add('show');
+      loadProjects();
+    } catch (e) {
+      err.textContent = e.message;
+      err.classList.add('show');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+
+  function copyText(text, btn) {
+    navigator.clipboard.writeText(text).then(() => {
+      const original = btn.textContent;
+      btn.textContent = 'Copied';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    });
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
 })();
 </script>
 </body>
