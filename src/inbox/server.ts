@@ -5,6 +5,10 @@
  * `notifications` straight from CockroachDB and polls; it does not receive
  * pushes from the fanout worker directly, so it stays up even if the fanout
  * Lambda is gone — it just shows rows however far delivery got.
+ *
+ * Also serves the memory HTTP surface: POST /api/memory/capture and
+ * GET /api/memory/search, both bearer-authed. Tenancy arrives as the
+ * X-CommonMind-Owner header so request bodies stay identical across backends.
  */
 
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http';
@@ -12,6 +16,15 @@ import { getPool } from '../db.js';
 import { loadConfig } from '../config.js';
 import { createEmbeddingProvider } from '../embed.js';
 import { MemoryRepository } from '../memory/repository.js';
+
+/**
+ * Tenant for this request. Absent or blank means unowned — self-hosted and
+ * pre-multi-tenant callers keep working unchanged.
+ */
+function ownerOf(request: IncomingMessage): string | null {
+  const header = request.headers['x-commonmind-owner'];
+  return typeof header === 'string' && header.trim() ? header.trim() : null;
+}
 
 export function createInboxServer(): Server {
   return createServer(async (request: IncomingMessage, response: ServerResponse) => {
@@ -23,6 +36,8 @@ export function createInboxServer(): Server {
         response.writeHead(401, { 'Content-Type': 'application/json' }).end('{"error":"unauthorized"}');
         return;
       }
+
+      const ownerId = ownerOf(request);
 
       let raw = '';
       for await (const chunk of request) raw += chunk;
@@ -45,7 +60,7 @@ export function createInboxServer(): Server {
 
       try {
         const embedding = await createEmbeddingProvider().embed(content);
-        const id = await new MemoryRepository().remember(content, 'decision', embedding);
+        const id = await new MemoryRepository().remember(content, 'decision', embedding, ownerId);
         response.writeHead(201, { 'Content-Type': 'application/json' }).end(JSON.stringify({ ok: true, id }));
       } catch (err) {
         console.error('capture_failed', err);
@@ -61,6 +76,8 @@ export function createInboxServer(): Server {
         return;
       }
 
+      const ownerId = ownerOf(request);
+
       const params = new URL(request.url ?? '/', 'http://localhost').searchParams;
       const query = params.get('q') ?? params.get('query') ?? '';
       const limit = Number(params.get('limit') ?? params.get('top_k') ?? '3');
@@ -72,7 +89,7 @@ export function createInboxServer(): Server {
 
       try {
         const embedding = await createEmbeddingProvider().embed(query);
-        const results = await new MemoryRepository().recall(embedding, limit);
+        const results = await new MemoryRepository().recall(embedding, limit, ownerId);
         response.writeHead(200, { 'Content-Type': 'application/json' }).end(JSON.stringify({ results }));
       } catch (err) {
         console.error('search_failed', err);

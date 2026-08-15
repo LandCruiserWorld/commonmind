@@ -74,10 +74,21 @@ CREATE TABLE IF NOT EXISTS memory_records (
   content     STRING NOT NULL,
   -- 'public' grows the shared recall index; 'private' is contributor-only (memory.note).
   visibility  STRING NOT NULL DEFAULT 'public',
+  owner_id    STRING,                     -- tenant wall; NULL = unowned/self-hosted
   created_at  TIMESTAMPTZ DEFAULT now()
 );
 -- Safe to run against a schema applied before `visibility` existed.
 ALTER TABLE memory_records ADD COLUMN IF NOT EXISTS visibility STRING NOT NULL DEFAULT 'public';
+-- Tenant wall. NULL owner_id means "unowned" — pre-multi-tenant rows and
+-- self-hosted single-tenant installs, both of which stay globally visible.
+ALTER TABLE memory_records ADD COLUMN IF NOT EXISTS owner_id STRING;
+-- Tenant wall for the hosted cluster. NULL owner_id means "unowned" —
+-- pre-multi-tenant rows and self-hosted single-tenant installs — and stays
+-- visible to every caller. Nullable by design: adding NOT NULL here would
+-- orphan existing memory on upgrade.
+ALTER TABLE memory_records ADD COLUMN IF NOT EXISTS owner_id STRING;
+CREATE INDEX IF NOT EXISTS memory_records_owner_idx ON memory_records (owner_id);
+CREATE INDEX IF NOT EXISTS memory_records_owner_idx ON memory_records (owner_id);
 
 -- Embeddings: VECTOR(1024) indexed by C-SPANN (CockroachDB's distributed vector
 -- index — hierarchical K-means partitions, NOT HNSW; pgvector syntax will not run).
