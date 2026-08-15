@@ -37,6 +37,44 @@ export async function onRequestGet(context) {
   });
 
   const body = await upstream.text();
+
+  // Log real activity, and check whether the top hit was captured by a
+  // *different* project — a real, provable cross-project connection, not
+  // an inferred one. Only meaningful when a project (not the dashboard's
+  // own session) is the one asking.
+  if (user.projectId && upstream.ok) {
+    let topHitId = null;
+    try {
+      topHitId = JSON.parse(body)?.results?.[0]?.id ?? null;
+    } catch {}
+
+    context.waitUntil(
+      (async () => {
+        let hitProjectId = null;
+        let hitMemoryId = null;
+        if (topHitId) {
+          const origin = await env.DB.prepare(
+            `SELECT project_id FROM project_activity
+             WHERE action = 'capture' AND memory_id = ? AND project_id != ?
+             LIMIT 1`,
+          )
+            .bind(topHitId, user.projectId)
+            .first();
+          if (origin) {
+            hitProjectId = origin.project_id;
+            hitMemoryId = topHitId;
+          }
+        }
+        await env.DB.prepare(
+          `INSERT INTO project_activity (id, project_id, action, hit_project_id, hit_memory_id)
+           VALUES (?, ?, 'search', ?, ?)`,
+        )
+          .bind(crypto.randomUUID(), user.projectId, hitProjectId, hitMemoryId)
+          .run();
+      })().catch(() => {}),
+    );
+  }
+
   return new Response(body, {
     status: upstream.status,
     headers: { 'Content-Type': 'application/json' },

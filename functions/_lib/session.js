@@ -18,7 +18,7 @@ export async function requireUser(request, env) {
     // a session token passed the same way a browser fetch would.
     if (bearer.startsWith('cm_')) {
       const project = await env.DB.prepare(
-        `SELECT u.id, u.email, u.plan
+        `SELECT u.id, u.email, u.plan, pt.id AS projectId, pt.name AS projectName
          FROM project_tokens pt
          JOIN users u ON pt.user_id = u.id
          WHERE pt.token = ? AND pt.revoked_at IS NULL`,

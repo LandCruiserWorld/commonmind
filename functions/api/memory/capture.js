@@ -51,6 +51,24 @@ export async function onRequestPost(context) {
   });
 
   const body = await upstream.text();
+
+  // Log real activity for the network map — only when a project (not the
+  // dashboard's own session) did the capturing, and only on real success.
+  if (user.projectId && upstream.ok) {
+    let memoryId = null;
+    try {
+      memoryId = JSON.parse(body)?.id ?? null;
+    } catch {}
+    context.waitUntil(
+      env.DB.prepare(
+        'INSERT INTO project_activity (id, project_id, action, memory_id) VALUES (?, ?, ?, ?)',
+      )
+        .bind(crypto.randomUUID(), user.projectId, 'capture', memoryId)
+        .run()
+        .catch(() => {}),
+    );
+  }
+
   return new Response(body, {
     status: upstream.status,
     headers: { 'Content-Type': 'application/json' },

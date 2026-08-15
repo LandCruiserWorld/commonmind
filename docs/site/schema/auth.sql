@@ -42,3 +42,22 @@ CREATE TABLE IF NOT EXISTS project_tokens (
 
 CREATE INDEX IF NOT EXISTS idx_project_tokens_token ON project_tokens(token);
 CREATE INDEX IF NOT EXISTS idx_project_tokens_user ON project_tokens(user_id);
+
+-- Every capture/search made through a project key, logged here — this is
+-- what makes the network map real instead of decorative. memory_id is
+-- CockroachDB's id for a capture (nullable for searches, which don't create
+-- one); hit_memory_id is filled in when a search returns a memory that was
+-- captured under a *different* project's key — a real, provable cross-
+-- project connection, not an inferred or fabricated one.
+CREATE TABLE IF NOT EXISTS project_activity (
+    id             TEXT PRIMARY KEY,
+    project_id     TEXT NOT NULL REFERENCES project_tokens(id),
+    action         TEXT NOT NULL,        -- 'capture' | 'search'
+    memory_id      TEXT,                 -- set on capture
+    hit_project_id TEXT,                 -- set on search, if the top hit came from a different project
+    hit_memory_id  TEXT,
+    created_at     TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_project_activity_project ON project_activity(project_id);
+CREATE INDEX IF NOT EXISTS idx_project_activity_memory ON project_activity(memory_id);
