@@ -187,7 +187,7 @@ Everything else follows from it.
 
 **Why not a queue-first design?** Because the changefeed *is* the queue, and it's transactional. Publishing to a queue from application code reintroduces the dual-write problem: a row committed but its event lost, or an event emitted for a transaction that rolled back. CDC off the committed row makes that class of bug unrepresentable.
 
-**And the one weak spot, stated plainly.** Lambda cold starts run 100 ms–1 s+. The `<50ms` recall figure is a **database-side** measurement, not end-to-end through a cold function. That gets measured properly and republished, or the claim comes off — tracked in [`CHECKLIST.md`](./docs/CHECKLIST.md).
+**Measured, not modeled.** The `<50ms` figure was a database-side estimate, never reproduced end-to-end — so it's gone. In its place, 15 real recall requests and 10 real capture requests through the actual deployed path (browser → Cloudflare edge → Cloudflare Tunnel → CockroachDB): recall runs **170–308ms** (median 213ms), capture **286–330ms** warm, ~700ms on a cold start. Slower than the old claim, and real — which is the whole point of the honesty policy below.
 
 ---
 
@@ -515,12 +515,12 @@ This repo is **under active build**. What's true today:
 
 | | |
 |---|---|
-| ✅ Done | Schema, TypeScript memory core, product bible + JSON-LD, landing page, architecture, MCP server (capture · recall · ask · approve · note), approval round-trip, CDC → SNS → SQS pipeline, capture → recall against a live cluster (CLI + HTTP) |
+| ✅ Done | Schema, TypeScript memory core, product bible + JSON-LD, landing page, architecture, MCP server (capture · recall · ask · approve · note), approval round-trip, CDC → SNS → SQS pipeline, capture → recall against a live cluster (CLI + HTTP), account auth + self-serve project keys, real network-map dashboard, end-to-end latency measured |
 | 🟡 In build | `npm install -g commonmind` front door, trading-bot integration (live on the platform, not yet demo-recorded), kill-the-node capture |
-| ⏳ Next | Multi-node benchmark numbers, demo video |
-| ⬜ Later | Dream-weaver consolidation ([spec](docs/DREAM_WEAVER_SPEC.md)), Ocean Dreams integration |
+| ⏳ Next | Multi-node resilience benchmark, demo video |
+| ⬜ Later | Dream-weaver consolidation ([spec](docs/DREAM_WEAVER_SPEC.md)) |
 
-**Performance figures on the landing page are design targets, not measurements.** They will be replaced with benchmarked numbers and the method to reproduce them before submission, or removed. We would rather show one measured number than five aspirational ones — a claim we can't reproduce on demand is a claim a judge can dismantle.
+**Performance figures on the landing page are measurements, not design targets** — the `<50ms` estimate is gone, replaced by 15 real recall requests and 10 real capture requests against the actual deployed path (see [Why AWS serverless](#why-aws-serverless)). We would rather show one measured number than five aspirational ones — a claim we can't reproduce on demand is a claim a judge can dismantle.
 
 ---
 
