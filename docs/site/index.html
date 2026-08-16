@@ -224,7 +224,9 @@
   @media (max-width: 560px) { .grid-2, .grid-4, .grid-3 { grid-template-columns: 1fr; } }
   .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; transition: border-color .18s, transform .18s, background .18s; }
   .card:hover { border-color: var(--border-strong); transform: translateY(-3px); background: var(--panel-2); }
-  .card .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-dim); border: 1px solid rgba(0,173,181,0.18); margin-bottom: 18px; font-size: 20px; }
+  .card .ic { width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-dim); border: 1px solid rgba(0,173,181,0.18); margin-bottom: 18px; }
+  .ic-svg { width: 21px; height: 21px; stroke: var(--accent); fill: none; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .ic-svg.solid { fill: var(--accent); stroke: none; }
   .card h3 { font-size: 17px; margin-bottom: 10px; letter-spacing: -.01em; }
   .card p { color: var(--muted); font-size: 14.5px; }
   .card code { display: block; font-family: var(--mono); font-size: 12.5px; background: #2b333f; border: 1px solid var(--border); border-radius: 9px; padding: 11px 13px; margin: 14px 0 4px; color: var(--accent); overflow-x: auto; white-space: nowrap; }
@@ -233,7 +235,8 @@
 
   .bridge-grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 28px; align-items: stretch; margin-top: 44px; }
   .pillar { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 30px; }
-  .pillar .ic { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-dim); margin-bottom: 16px; font-size: 22px; }
+  .pillar .ic { width: 46px; height: 46px; border-radius: 12px; display: grid; place-items: center; background: var(--accent-dim); margin-bottom: 16px; }
+  .pillar .ic .ic-svg { width: 22px; height: 22px; }
   .pillar h3 { font-size: 18px; margin-bottom: 10px; }
   .pillar p { color: var(--muted); font-size: 15px; }
   .pillar .flows { margin-top: 18px; display: flex; flex-direction: column; gap: 9px; }
@@ -261,7 +264,11 @@
   .ix-screen { background: #0f0f13; border-radius: 24px; height: 100%; overflow: hidden; display: flex; flex-direction: column; padding: 16px 14px; gap: 12px; font-size: 12px; }
   .ix-card { background: var(--panel-2); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
   .ix-card .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-  .ix-card .src { font-weight: 600; font-size: 12px; }
+  .ix-card .src { font-weight: 600; font-size: 12px; display: inline-flex; align-items: center; gap: 7px; }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; }
+  .status-dot.live { background: var(--accent); animation: dotPulse 1.6s ease-in-out infinite; }
+  .status-dot.done { background: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+  @keyframes dotPulse { 0%,100% { opacity: 1; } 50% { opacity: .35; } }
   .ix-card .time { color: var(--faint); font-size: 10.5px; }
   .ix-card .body { color: var(--text); font-weight: 600; font-size: 12.5px; line-height: 1.45; }
   .ix-card .meta { color: var(--faint); font-size: 11px; margin-top: 4px; }
@@ -297,7 +304,8 @@
   .gx-legend .sw { width: 9px; height: 9px; border-radius: 50%; display: inline-block; }
   .gx-copy { display: flex; flex-direction: column; gap: 20px; }
   .gx-row { display: flex; gap: 16px; }
-  .gx-row .n { min-width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; background: var(--accent-dim); border: 1px solid rgba(0,173,181,0.2); font-size: 19px; }
+  .gx-row .n { min-width: 44px; height: 44px; border-radius: 13px; display: grid; place-items: center; background: var(--accent-dim); border: 1px solid rgba(0,173,181,0.2); }
+  .gx-row .n .ic-svg { width: 21px; height: 21px; }
   .gx-row h4 { font-size: 16px; margin-bottom: 3px; }
   .gx-row p { font-size: 14px; color: var(--muted); }
 
@@ -397,8 +405,10 @@
   .wiz-dots span.on i { width: 100%; }
   .wiz-row { display: flex; gap: 13px; align-items: flex-start; padding: 12px 13px; border: 1px solid var(--border); border-radius: 12px; margin-bottom: 10px; background: var(--panel); transition: border-color .3s, background .3s; }
   .wiz-row.done { border-color: rgba(0,173,181,0.35); background: var(--accent-dim); }
-  .wiz-row .wiz-ico { width: 30px; height: 30px; flex: none; border-radius: 9px; background: var(--panel-2); display: flex; align-items: center; justify-content: center; font-size: 14px; transition: background .3s, transform .3s; }
-  .wiz-row.done .wiz-ico { background: var(--accent); color: #072a2b; transform: scale(1.05); }
+  .wiz-row .wiz-ico { width: 30px; height: 30px; flex: none; border-radius: 9px; background: var(--panel-2); display: flex; align-items: center; justify-content: center; transition: background .3s, transform .3s; }
+  .wiz-row .wiz-ico .ic-svg { width: 16px; height: 16px; stroke: var(--muted); transition: stroke .3s; }
+  .wiz-row.done .wiz-ico { background: var(--accent); transform: scale(1.05); }
+  .wiz-row.done .wiz-ico .ic-svg { stroke: #072a2b; }
   .wiz-row h5 { font-size: 14px; font-weight: 600; margin-bottom: 2px; }
   .wiz-row p { font-size: 12.5px; color: var(--faint); line-height: 1.5; }
   .wiz-form { margin-top: 22px; }
@@ -410,16 +420,50 @@
   .wiz-panel { display: none; }
   .wiz-panel.active { display: block; animation: wizIn .35s cubic-bezier(.22,.61,.36,1); }
   @keyframes wizIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
-  .wiz-mail-pulse { width: 64px; height: 64px; margin: 6px auto 22px; border-radius: 999px; background: var(--accent-dim); display: flex; align-items: center; justify-content: center; font-size: 26px; position: relative; }
+  .wiz-mail-pulse { width: 64px; height: 64px; margin: 6px auto 22px; border-radius: 999px; background: var(--accent-dim); display: flex; align-items: center; justify-content: center; position: relative; }
+  .wiz-mail-pulse .ic-svg { width: 26px; height: 26px; stroke: var(--accent); animation: wizFloat 2.6s ease-in-out infinite; }
   .wiz-mail-pulse::before { content: ''; position: absolute; inset: -8px; border-radius: 999px; border: 1px solid rgba(0,173,181,0.35); animation: wizPulse 1.8s ease-out infinite; }
+  @keyframes wizFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
   @keyframes wizPulse { 0% { transform: scale(.85); opacity: .9; } 100% { transform: scale(1.35); opacity: 0; } }
   .wiz-sent-email { font-family: var(--mono); color: var(--accent); }
   .wiz-error { display: none; font-size: 12.5px; color: var(--red); margin-top: 10px; }
   .wiz-error.show { display: block; }
-  @media (prefers-reduced-motion: reduce) { .wiz-card, .wiz-overlay, .wiz-panel.active, .wiz-mail-pulse::before { animation: none !important; transition: none !important; } }
+  @media (prefers-reduced-motion: reduce) { .wiz-card, .wiz-overlay, .wiz-panel.active, .wiz-mail-pulse::before, .wiz-mail-pulse .ic-svg { animation: none !important; transition: none !important; } }
 </style>
 </head>
 <body>
+<svg style="position:absolute;width:0;height:0;overflow:hidden" aria-hidden="true">
+  <defs>
+    <g id="ic-install"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="M7 9.5l3 2.5-3 2.5"/><line x1="12.5" y1="15" x2="16.5" y2="15"/></g>
+    <g id="ic-connect"><path d="M9 3v4M15 3v4M6 7h12v5a6 6 0 0 1-12 0V7z"/><line x1="12" y1="18" x2="12" y2="21"/></g>
+    <g id="ic-search"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="15.3" y1="15.3" x2="20" y2="20"/></g>
+    <g id="ic-approve"><rect x="7" y="2" width="10" height="20" rx="2.5"/><path d="M9.3 12.2l2.1 2.1 3.8-4.3"/></g>
+    <g id="ic-globe"><circle cx="12" cy="12" r="9"/><line x1="3" y1="12" x2="21" y2="12"/><path d="M12 3c3 2.8 3 15.2 0 18M12 3c-3 2.8-3 15.2 0 18"/></g>
+    <g id="ic-lock"><rect x="5" y="11" width="14" height="9" rx="2.2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/><circle cx="12" cy="15.4" r="1.15" fill="currentColor" stroke="none"/></g>
+    <g id="ic-nodes"><circle cx="6" cy="17.3" r="2.3"/><circle cx="18" cy="17.3" r="2.3"/><circle cx="12" cy="5.7" r="2.5"/><path d="M12 8.2l-4.1 6.8M12 8.2l4.1 6.8M8.4 17.3h7.2"/></g>
+    <g id="ic-link"><rect x="2.3" y="9.3" width="10" height="5.6" rx="2.8" transform="rotate(-20 7.3 12.1)"/><rect x="11.7" y="9.1" width="10" height="5.6" rx="2.8" transform="rotate(-20 16.7 11.9)"/></g>
+    <g id="ic-cube"><path d="M12 3.2l7.8 4.4v9L12 21l-7.8-4.4v-9L12 3.2z"/><path d="M12 12v9M12 12l7.8-4.4M12 12L4.2 7.6"/></g>
+    <g id="ic-bot"><rect x="5" y="8.5" width="14" height="10.5" rx="3"/><circle cx="9.6" cy="13.7" r="1.15" fill="currentColor" stroke="none"/><circle cx="14.4" cy="13.7" r="1.15" fill="currentColor" stroke="none"/><line x1="12" y1="8.5" x2="12" y2="5.2"/><circle cx="12" cy="3.8" r="1.1"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="16" y1="19" x2="16" y2="21"/></g>
+    <g id="ic-person"><circle cx="12" cy="7.8" r="3.4"/><path d="M5.3 20c1-4.2 3.9-6.3 6.7-6.3s5.7 2.1 6.7 6.3"/></g>
+    <g id="ic-shield"><path d="M12 3.2l7 3.1v5.9c0 5-3.2 7.9-7 9-3.8-1.1-7-4-7-9V6.3l7-3.1z"/><path d="M8.8 12.1l2.2 2.2 4.2-4.7"/></g>
+    <g id="ic-cluster"><circle cx="6" cy="17.3" r="2.2"/><circle cx="18" cy="17.3" r="2.2" stroke-dasharray="2.2 2.2"/><circle cx="12" cy="5.7" r="2.2"/><path d="M12 7.9l-4.7 7.5M12 7.9l4.7 7.5M8.2 17.3h7.6"/></g>
+    <g id="ic-expand"><line x1="3" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="21" y2="12"/><path d="M6 9l-3 3 3 3M18 9l3 3-3 3"/></g>
+    <g id="ic-check-circle"><circle cx="12" cy="12" r="9"/><path d="M8 12.3l2.6 2.6L16.2 9"/></g>
+    <g id="ic-pin"><path d="M12 21s7-7.3 7-12.2A7 7 0 1 0 5 8.8C5 13.7 12 21 12 21z"/><circle cx="12" cy="8.8" r="2.4"/></g>
+    <g id="ic-database"><ellipse cx="12" cy="6" rx="7" ry="2.6"/><path d="M5 6v6c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6V6"/><path d="M5 12v6c0 1.4 3.1 2.6 7 2.6s7-1.2 7-2.6v-6"/></g>
+    <g id="ic-bell"><path d="M12 3.3a5 5 0 0 0-5 5v3.3c0 1-.4 2-1.2 2.7l-1.3 1.2h15l-1.3-1.2c-.8-.7-1.2-1.7-1.2-2.7V8.3a5 5 0 0 0-5-5z"/><path d="M10 18.5a2 2 0 0 0 4 0"/></g>
+    <g id="ic-chat"><rect x="3.5" y="5" width="17" height="11.5" rx="3"/><path d="M8 16.5l-3.2 3v-3"/><circle cx="9" cy="10.7" r=".9" fill="currentColor" stroke="none"/><circle cx="12" cy="10.7" r=".9" fill="currentColor" stroke="none"/><circle cx="15" cy="10.7" r=".9" fill="currentColor" stroke="none"/></g>
+    <g id="ic-brain"><path d="M9.3 4.3a3 3 0 0 0-2.9 3.1 3 3 0 0 0-.9 5.7A3.1 3.1 0 0 0 8 17.9a3 3 0 0 0 4-2.8V6.9a3 3 0 0 0-2.7-2.6z"/><path d="M14.7 4.3a3 3 0 0 1 2.9 3.1 3 3 0 0 1 .9 5.7A3.1 3.1 0 0 1 16 17.9a3 3 0 0 1-4-2.8"/></g>
+    <g id="ic-megaphone"><path d="M3 10v4h3l6.5 4.2V5.8L6 10H3z"/><path d="M15.3 9a4.3 4.3 0 0 1 0 6"/><path d="M17.8 6.7a7.7 7.7 0 0 1 0 10.6"/></g>
+    <g id="ic-code"><path d="M8.5 8L4 12l4.5 4"/><path d="M15.5 8L20 12l-4.5 4"/></g>
+    <g id="ic-exchange"><path d="M4 8h13"/><path d="M13.3 4.3l3.7 3.7-3.7 3.7"/><path d="M20 16H7"/><path d="M10.7 19.7L7 16l3.7-3.7"/></g>
+    <g id="ic-controller"><path d="M6.5 9h11a4 4 0 0 1 4 4.4l-.4 3a2.6 2.6 0 0 1-4.7 1.3l-1-1.4H9.6l-1 1.4a2.6 2.6 0 0 1-4.7-1.3l-.4-3A4 4 0 0 1 6.5 9z"/><line x1="8" y1="12.2" x2="8" y2="15.2"/><line x1="6.5" y1="13.7" x2="9.5" y2="13.7"/><circle cx="17" cy="12.5" r=".9" fill="currentColor" stroke="none"/><circle cx="15" cy="14.5" r=".9" fill="currentColor" stroke="none"/></g>
+    <g id="ic-key"><circle cx="8" cy="8" r="3.4"/><line x1="10.4" y1="10.4" x2="18.5" y2="18.5"/><line x1="15.3" y1="15.3" x2="17.3" y2="13.3"/><line x1="17.4" y1="17.4" x2="19.4" y2="15.4"/></g>
+    <g id="ic-pulse"><path d="M3 12h4l1.8-6 3.4 12 2-9.5 1.3 3.5H21"/></g>
+    <g id="ic-envelope"><rect x="3" y="5" width="18" height="14" rx="2.2"/><path d="M4 6.5l8 6.3 8-6.3"/></g>
+    <g id="ic-bolt"><path d="M13 2.2L4.6 13.6h5.6L9.4 21.8l8.6-11.6h-5.7l1.7-8z" stroke-linejoin="round"/></g>
+  </defs>
+</svg>
 <canvas id="neuro"></canvas>
 <div class="fade"></div>
 
@@ -452,7 +496,7 @@
         <div class="notch"></div>
         <div class="ix-screen">
           <div class="ix-card">
-            <div class="top"><span class="src">🤖 Deploy Agent</span><span class="time">just now</span></div>
+            <div class="top"><span class="src"><span class="status-dot live"></span>Deploy Agent</span><span class="time">just now</span></div>
             <div class="body">Deploy commit 8e7fc2a to production?</div>
             <div class="meta">run #184 · risk: low · smoke tests pending</div>
             <div class="ix-btns"><span class="bx ok">Approve</span><span class="bx no">Wait</span></div>
@@ -464,7 +508,7 @@
           </div>
           <div class="ix-input"><span>Reply — ask anything, or approve…</span><span class="caret"></span></div>
           <div class="ix-card" style="opacity:.85">
-            <div class="top"><span class="src">✅ Deploy Agent</span><span class="time">+4m</span></div>
+            <div class="top"><span class="src"><span class="status-dot done"></span>Deploy Agent</span><span class="time">+4m</span></div>
             <div class="body">Shipped · 2m 11s · smoke green. Saved to memory.</div>
           </div>
         </div>
@@ -513,10 +557,10 @@
     <p class="sub">The front door is a command you already know — <strong>npm</strong>. No database setup, no cloud account, no signup. And it plugs into the CLIs you already live in.</p>
   </div>
   <div class="grid grid-4" style="margin-top:40px;">
-    <div class="card"><div class="ic">🧱</div><h3>Install</h3><p>The universal one-liner. Sets up CommonMind + a local CockroachDB, zero accounts.</p><code>$ npm install -g commonmind</code></div>
-    <div class="card"><div class="ic">🔌</div><h3>Connect your CLIs</h3><p>One MCP server covers them all — Claude, Cursor, Codex, opencode — no per-app plugins.</p><code>$ commonmind connect --claude</code></div>
-    <div class="card"><div class="ic">🔍</div><h3>Ask</h3><p>Semantic recall of everything it captured — in milliseconds.</p><code>$ commonmind ask "how did I fix auth?"</code></div>
-    <div class="card"><div class="ic">📲</div><h3>Act</h3><p>Agents do the safe work; you approve the milestones from your phone.</p><code>$ commonmind ask --approval "deploy?"</code></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-install"/></svg></div><h3>Install</h3><p>The universal one-liner. Sets up CommonMind + a local CockroachDB, zero accounts.</p><code>$ npm install -g commonmind</code></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-connect"/></svg></div><h3>Connect your CLIs</h3><p>One MCP server covers them all — Claude, Cursor, Codex, opencode — no per-app plugins.</p><code>$ commonmind connect --claude</code></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-search"/></svg></div><h3>Ask</h3><p>Semantic recall of everything it captured — in milliseconds.</p><code>$ commonmind ask "how did I fix auth?"</code></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-approve"/></svg></div><h3>Act</h3><p>Agents do the safe work; you approve the milestones from your phone.</p><code>$ commonmind ask --approval "deploy?"</code></div>
   </div>
 
   <div style="text-align:center;margin-top:46px;">
@@ -537,8 +581,8 @@
       <span class="ln"><span class="p"></span><span class="cmd">commonmind ask "what did Acme reject last quarter?"</span></span>
       <span class="ln"><span class="out ok">→  "April deck — tone too casual" <span class="dim">(recorded by Agent · similarity 0.94)</span></span></span>
       <span class="ln"><span class="p"></span><span class="cmd">commonmind ask --approval "send revised deck to Acme?"</span></span>
-      <span class="ln"><span class="out ok">🤖 agent request → 📱 pinged 1 phone · waiting on your call…<span class="blink"></span></span></span>
-      <span class="ln"><span class="out ok">✅ you approved · decision stored · agent resumes</span></span>
+      <span class="ln"><span class="out ok">→  agent request queued · phone pinged · waiting on your call…<span class="blink"></span></span></span>
+      <span class="ln"><span class="out ok">✔ you approved · decision stored · agent resumes</span></span>
     </div>
   </div>
 </section>
@@ -558,11 +602,11 @@
         <div class="gx-legend"><span class="k"><span class="sw" style="background:var(--accent)"></span> shared memory</span><span class="k"><span class="sw" style="background:var(--faint);border:1px dashed var(--faint)"></span> yours only</span><span class="k"><span class="sw" style="background:#9d8cff"></span> AI agent</span></div>
       </div>
       <div class="gx-copy">
-        <div class="gx-row"><div class="n">🌐</div><div><h4>Public — grows the company index</h4><p>Contribute to the shared brain. Visible to teammates and agents, searchable by everyone — a crowdsourced datastore of what your company knows.</p></div></div>
-        <div class="gx-row"><div class="n">🔒</div><div><h4>Private — yours, and kept</h4><p>Contribute quietly. Retained for you, never added to the company index. Your footprint stays yours.</p></div></div>
-        <div class="gx-row"><div class="n">🤖</div><div><h4>People and agents, together</h4><p>Employees and their dedicated AI agents feed the same brain — a deploy agent recalls the last rollout, a support agent remembers every ticket, and both enrich what the whole company knows.</p></div></div>
-        <div class="gx-row"><div class="n">🔗</div><div><h4>Relations, not rows</h4><p>Memories connect to memories. The graph shows what depends on what, and who — or which agent — knows it, so nothing important goes quiet.</p></div></div>
-        <div class="gx-row"><div class="n">🧠</div><div><h4>Built on Three.js</h4><p>An interactive constellation you can fly through — click a node to open the memory behind it. Visuals like this are why the demo feels alive.</p></div></div>
+        <div class="gx-row"><div class="n"><svg class="ic-svg"><use href="#ic-globe"/></svg></div><div><h4>Public — grows the company index</h4><p>Contribute to the shared brain. Visible to teammates and agents, searchable by everyone — a crowdsourced datastore of what your company knows.</p></div></div>
+        <div class="gx-row"><div class="n"><svg class="ic-svg"><use href="#ic-lock"/></svg></div><div><h4>Private — yours, and kept</h4><p>Contribute quietly. Retained for you, never added to the company index. Your footprint stays yours.</p></div></div>
+        <div class="gx-row"><div class="n"><svg class="ic-svg"><use href="#ic-nodes"/></svg></div><div><h4>People and agents, together</h4><p>Employees and their dedicated AI agents feed the same brain — a deploy agent recalls the last rollout, a support agent remembers every ticket, and both enrich what the whole company knows.</p></div></div>
+        <div class="gx-row"><div class="n"><svg class="ic-svg"><use href="#ic-link"/></svg></div><div><h4>Relations, not rows</h4><p>Memories connect to memories. The graph shows what depends on what, and who — or which agent — knows it, so nothing important goes quiet.</p></div></div>
+        <div class="gx-row"><div class="n"><svg class="ic-svg"><use href="#ic-cube"/></svg></div><div><h4>Built on Three.js</h4><p>An interactive constellation you can fly through — click a node to open the memory behind it. Visuals like this are why the demo feels alive.</p></div></div>
       </div>
     </div>
   </div>
@@ -576,13 +620,13 @@
   </div>
   <div class="bridge-grid">
     <div class="pillar">
-      <div class="ic">🤖</div><h3>What your agents are doing</h3>
+      <div class="ic"><svg class="ic-svg"><use href="#ic-bot"/></svg></div><h3>What your agents are doing</h3>
       <p>A constant stream of micro-events: tools called, files changed, steps attempted, context switched.</p>
       <div class="flows"><span class="flow">tool · deploy_184 · build ✓</span><span class="flow">tool · migrator · 0.32s</span><span class="flow">sub-step · retry (2)</span><span class="flow">context · switched → api</span></div>
     </div>
     <div class="gap"><div class="ring">THE<br/>BRIDGE</div><span style="font-size:12px">signal, not spam</span></div>
     <div class="pillar">
-      <div class="ic">🧍</div><h3>What the human needs to know</h3>
+      <div class="ic"><svg class="ic-svg"><use href="#ic-person"/></svg></div><h3>What the human needs to know</h3>
       <p>Only the moments that cross a decision — started, needs you, finished differently.</p>
       <div class="flows"><span class="flow" style="color:var(--accent)">→ START · deploy 184</span><span class="flow" style="color:var(--amber)">➜ NEEDS YOU · approve?</span><span class="flow" style="color:var(--accent)">✓ DONE · shipped · 2m</span></div>
     </div>
@@ -596,12 +640,12 @@
     <p class="sub">An agent whose memory goes offline doesn't degrade gracefully — it stops. So CommonMind stores its memory in the database designed to survive: <strong>resilient, globally consistent, and SQL-familiar.</strong></p>
   </div>
   <div class="grid grid-3" style="margin-top:40px">
-    <div class="card"><div class="ic">🛡</div><h3>Never loses your memory</h3><p>Data is automatically replicated across multiple nodes for high availability and failover. Hardware failure or maintenance won't take your agents' memory away.</p></div>
-    <div class="card"><div class="ic">🌍</div><h3>Resilient to the kill-the-node test</h3><p>Survives disk, machine, rack, and even datacenter failures with minimal latency disruption and no manual intervention — which is why principle #10 is committed to on camera.</p></div>
-    <div class="card"><div class="ic">↔️</div><h3>Scales horizontally</h3><p>As your workforce of agents grows, add nodes. Captures, recalls, and the memory graph scale without a drop in performance.</p></div>
-    <div class="card"><div class="ic">✓</div><h3>Strongly consistent, always</h3><p>ACID transactions over a transactional and strongly-consistent store — every copy across nodes reflects the same state, so agents and humans never see contradictory memory.</p></div>
-    <div class="card"><div class="ic">📍</div><h3>Multi-region & geo-partitioning</h3><p>Reads near your agents for low latency, meets data-sovereignty requirements, and survives regional outages — an extra layer of data safety.</p></div>
-    <div class="card"><div class="ic">🧩</div><h3>SQL you already know</h3><p>PostgreSQL wire protocol and most Postgres syntax. Your engineers and your tools migrate onto CommonMind without learning a new language.</p></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-shield"/></svg></div><h3>Never loses your memory</h3><p>Data is automatically replicated across multiple nodes for high availability and failover. Hardware failure or maintenance won't take your agents' memory away.</p></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-cluster"/></svg></div><h3>Resilient to the kill-the-node test</h3><p>Survives disk, machine, rack, and even datacenter failures with minimal latency disruption and no manual intervention — which is why principle #10 is committed to on camera.</p></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-expand"/></svg></div><h3>Scales horizontally</h3><p>As your workforce of agents grows, add nodes. Captures, recalls, and the memory graph scale without a drop in performance.</p></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-check-circle"/></svg></div><h3>Strongly consistent, always</h3><p>ACID transactions over a transactional and strongly-consistent store — every copy across nodes reflects the same state, so agents and humans never see contradictory memory.</p></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-pin"/></svg></div><h3>Multi-region & geo-partitioning</h3><p>Reads near your agents for low latency, meets data-sovereignty requirements, and survives regional outages — an extra layer of data safety.</p></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-database"/></svg></div><h3>SQL you already know</h3><p>PostgreSQL wire protocol and most Postgres syntax. Your engineers and your tools migrate onto CommonMind without learning a new language.</p></div>
   </div>
 </section>
 
@@ -627,9 +671,9 @@
     <p class="sub">The push is the doorbell. The <strong>thread</strong> is the room. You ask back, redirect, and decide — and the whole exchange is stored transactionally, so the agent recalls it next time. That decision log <strong>is the company brain</strong>: attributable, auditable, and alive.</p>
   </div>
   <div class="grid grid-3" style="margin-top:40px">
-    <div class="card"><div class="ic">🚪</div><h3>The doorbell</h3><p>An agent pings you only on a milestone — a decision it shouldn't make alone. Everything else is recorded silently.</p></div>
-    <div class="card"><div class="ic">💬</div><h3>Ask back</h3><p>"What does it need me for?", "what if I say no?" — the thread answers from real context, not a canned prompt.</p></div>
-    <div class="card"><div class="ic">🧠</div><h3>It remembers</h3><p>Approve, edit, or deny. The exchange is committed to memory — the next milestone is decided faster, and the brain grows.</p></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-bell"/></svg></div><h3>The doorbell</h3><p>An agent pings you only on a milestone — a decision it shouldn't make alone. Everything else is recorded silently.</p></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-chat"/></svg></div><h3>Ask back</h3><p>"What does it need me for?", "what if I say no?" — the thread answers from real context, not a canned prompt.</p></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-brain"/></svg></div><h3>It remembers</h3><p>Approve, edit, or deny. The exchange is committed to memory — the next milestone is decided faster, and the brain grows.</p></div>
   </div>
 </section>
 
@@ -641,7 +685,7 @@
       <p class="sub">The memory layer is universal — proven by live integrations on the <strong>same CockroachDB core:</strong> a marketing agency, a dev team, a trading platform on a Raspberry Pi, and a game where the creature remembers you.</p>
     </div>
     <div class="use-tabs">
-      <span class="use-tab active">📣 Marketing agency</span><span class="use-tab">🧑‍💻 Coding sessions</span><span class="use-tab">💱 Trading</span><span class="use-tab">🎮 Ocean Dreams</span>
+      <span class="use-tab active">Marketing agency</span><span class="use-tab">Coding sessions</span><span class="use-tab">Trading</span><span class="use-tab">Ocean Dreams</span>
     </div>
 
     <div class="case" id="case-agency">
@@ -737,8 +781,8 @@
       <h2>One shared brain. Know it's actually being used.</h2>
       <p class="sub">Everyone logs into the same brain — and a healthy brain is one that's used. We surface who and what is actively contributing, so nothing important goes silent.</p>
       <div class="grid grid-2" style="margin-top:34px;">
-        <div class="card"><div class="ic">🔐</div><h3>Multi-tenant & RBAC</h3><p>Org namespaces, per-user audit, roles. Who did what — revocable, attributable.</p></div>
-        <div class="card"><div class="ic">🫀</div><h3>Brain health</h3><p>A pulse dashboard: people, agents, and systems actively feeding memory — so nothing important goes quiet.</p></div>
+        <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-key"/></svg></div><h3>Multi-tenant & RBAC</h3><p>Org namespaces, per-user audit, roles. Who did what — revocable, attributable.</p></div>
+        <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-pulse"/></svg></div><h3>Brain health</h3><p>A pulse dashboard: people, agents, and systems actively feeding memory — so nothing important goes quiet.</p></div>
       </div>
     </div>
     <div class="dash">
@@ -819,7 +863,7 @@
 </script>
 <script>
   const tabs = document.querySelectorAll('.use-tab');
-  const cases = {'📣 Marketing agency':'case-agency','🧑‍💻 Coding sessions':'case-coding','💱 Trading':'case-trading','🎮 Ocean Dreams':'case-game'};
+  const cases = {'Marketing agency':'case-agency','Coding sessions':'case-coding','Trading':'case-trading','Ocean Dreams':'case-game'};
   tabs.forEach(t => t.addEventListener('click', () => {
     tabs.forEach(x => x.classList.remove('active')); t.classList.add('active');
     Object.values(cases).forEach(id => document.getElementById(id).style.display = 'none');
@@ -1101,9 +1145,9 @@
       <p class="wiz-sub">Here's exactly what happens when you sign up.</p>
       <div class="wiz-dots"><span class="on"><i></i></span><span><i></i></span><span><i></i></span></div>
 
-      <div class="wiz-row"><div class="wiz-ico">📧</div><div><h5>We email you a link</h5><p>No password to create. Click it and you're signed in.</p></div></div>
-      <div class="wiz-row"><div class="wiz-ico">⚡</div><div><h5>Your memory spins up</h5><p>An isolated workspace on CockroachDB + AWS — ready before you finish reading this.</p></div></div>
-      <div class="wiz-row"><div class="wiz-ico">🧠</div><div><h5>You land in your dashboard</h5><p>Live data, immediately. Free during launch.</p></div></div>
+      <div class="wiz-row"><div class="wiz-ico"><svg class="ic-svg"><use href="#ic-envelope"/></svg></div><div><h5>We email you a link</h5><p>No password to create. Click it and you're signed in.</p></div></div>
+      <div class="wiz-row"><div class="wiz-ico"><svg class="ic-svg"><use href="#ic-bolt"/></svg></div><div><h5>Your memory spins up</h5><p>An isolated workspace on CockroachDB + AWS — ready before you finish reading this.</p></div></div>
+      <div class="wiz-row"><div class="wiz-ico"><svg class="ic-svg"><use href="#ic-brain"/></svg></div><div><h5>You land in your dashboard</h5><p>Live data, immediately. Free during launch.</p></div></div>
 
       <form class="wiz-form" id="wizForm">
         <input class="wiz-input" type="email" id="wizEmail" placeholder="you@company.com" required autocomplete="email" />
@@ -1114,7 +1158,7 @@
     </div>
 
     <div class="wiz-panel" id="wizPanelSent">
-      <div class="wiz-mail-pulse">📬</div>
+      <div class="wiz-mail-pulse"><svg class="ic-svg"><use href="#ic-envelope"/></svg></div>
       <div class="wiz-title" style="text-align:center">Check your email</div>
       <p class="wiz-sub" style="text-align:center">We sent a link to <span class="wiz-sent-email" id="wizSentEmail"></span>. Click it — it expires in 15 minutes.</p>
       <p class="wiz-fine"><a href="#" id="wizBack">Use a different email</a></p>

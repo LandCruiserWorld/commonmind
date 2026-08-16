@@ -61,3 +61,21 @@ CREATE TABLE IF NOT EXISTS project_activity (
 
 CREATE INDEX IF NOT EXISTS idx_project_activity_project ON project_activity(project_id);
 CREATE INDEX IF NOT EXISTS idx_project_activity_memory ON project_activity(memory_id);
+
+-- Explicit, user-controlled sharing between two of their own projects.
+-- Isolated is the default: without a row here, a project's search only
+-- ever sees memories captured under its own key. A link makes recall
+-- mutual between the pair — the user opts in per project, not a global
+-- switch. (project_a, project_b) is stored with the lower id first so a
+-- pair only ever has one row regardless of which side created the link.
+CREATE TABLE IF NOT EXISTS project_links (
+    id         TEXT PRIMARY KEY,
+    project_a  TEXT NOT NULL REFERENCES project_tokens(id),
+    project_b  TEXT NOT NULL REFERENCES project_tokens(id),
+    user_id    TEXT NOT NULL REFERENCES users(id),
+    created_at TEXT DEFAULT (datetime('now')),
+    UNIQUE(project_a, project_b)
+);
+
+CREATE INDEX IF NOT EXISTS idx_project_links_a ON project_links(project_a);
+CREATE INDEX IF NOT EXISTS idx_project_links_b ON project_links(project_b);

@@ -71,6 +71,20 @@ export async function onRequestGet(context) {
   const edges = edgeRows.map((e) => ({ from: e.from_id, to: e.to_id, count: e.n }));
   const totalMemories = projects.reduce((sum, p) => sum + p.memories, 0);
 
+  // Explicit, user-turned-on sharing — distinct from `edges` above, which
+  // are organically *detected* overlap. A link means the user deliberately
+  // connected these two projects; the map draws it as a standing thread,
+  // not something that only appears on hover.
+  const { results: linkRows } = await env.DB.prepare(
+    `SELECT project_a, project_b FROM project_links
+     WHERE user_id = ?
+       AND project_a IN (SELECT id FROM project_tokens WHERE user_id = ? AND revoked_at IS NULL)
+       AND project_b IN (SELECT id FROM project_tokens WHERE user_id = ? AND revoked_at IS NULL)`,
+  )
+    .bind(session.id, session.id, session.id)
+    .all();
+  const links = linkRows.map((l) => ({ from: l.project_a, to: l.project_b }));
+
   // Real recent activity — what the "moving right now" feed replays as
   // pulses on load. Every row here really happened; nothing is decorative.
   const { results: recent } = await env.DB.prepare(
@@ -89,6 +103,7 @@ export async function onRequestGet(context) {
       core: { memories: totalMemories },
       projects,
       edges,
+      links,
       recentActivity: recent,
     },
     200,
