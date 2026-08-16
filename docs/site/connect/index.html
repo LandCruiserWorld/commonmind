@@ -1,0 +1,216 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Connect a project — CommonMind</title>
+<meta name="description" content="Add CommonMind memory to any app, game, or spreadsheet — no install required." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #222831; --bg-elev: #2b3340;
+    --panel: rgba(255,255,255,0.028); --panel-2: rgba(255,255,255,0.05);
+    --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.13);
+    --text: #eeeeee; --muted: #a9b0ba; --faint: #717986;
+    --accent: #00adb5; --accent-dim: rgba(0,173,181,0.10);
+    --radius: 16px;
+    --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --serif: "Instrument Serif", Georgia, serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 56px 24px 100px; }
+
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; margin-bottom: 40px; text-decoration: none; color: var(--text); width: fit-content; }
+  .brand .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+
+  .eyebrow { font-family: var(--mono); font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  h1 { font-size: 38px; letter-spacing: -.01em; margin: 0 0 14px; text-wrap: balance; }
+  h1 em { font-family: var(--serif); font-style: italic; font-weight: 400; color: var(--accent); }
+  .lead { font-size: 16px; color: var(--muted); max-width: 56ch; margin: 0 0 44px; }
+
+  .hero-box { background: var(--accent-dim); border: 1px solid rgba(0,173,181,0.32); border-radius: var(--radius); padding: 26px 26px; margin-bottom: 48px; }
+  .hero-box .tag { display: inline-block; font-family: var(--mono); font-size: 11px; letter-spacing: .07em; text-transform: uppercase; color: var(--accent); background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 999px; margin-bottom: 14px; }
+  .hero-box h2 { font-size: 19px; margin: 0 0 10px; }
+  .hero-box p { font-size: 14.5px; color: var(--muted); margin: 0 0 16px; line-height: 1.65; }
+  .prompt-box { background: #1c2129; border: 1px solid var(--border-strong); border-radius: 10px; padding: 14px 16px; font-family: var(--mono); font-size: 12.5px; color: var(--text); line-height: 1.65; white-space: pre-wrap; max-height: 220px; overflow-y: auto; }
+  .prompt-box .fill { color: var(--accent); }
+  .key-input { width: 100%; box-sizing: border-box; background: #1c2129; border: 1px solid var(--border-strong); border-radius: 9px; padding: 10px 13px; color: var(--text); font-family: var(--mono); font-size: 13px; outline: none; margin-bottom: 12px; }
+  .key-input:focus { border-color: var(--accent); }
+  .key-input::placeholder { color: var(--faint); }
+  .copy-btn { margin-top: 12px; background: var(--accent); color: #072a2b; border: none; border-radius: 9px; padding: 10px 18px; font-weight: 700; font-size: 13.5px; cursor: pointer; font-family: var(--font); }
+  .copy-btn:hover { filter: brightness(1.08); }
+
+  h3 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; font-weight: 700; }
+  .step { display: flex; gap: 16px; margin-bottom: 40px; }
+  .step .num { font-family: var(--mono); font-size: 14px; color: var(--accent); background: var(--panel); border: 1px solid var(--border); border-radius: 9px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; flex: none; }
+  .step .body { flex: 1; min-width: 0; }
+  .step h2 { font-size: 18px; margin: 0 0 8px; }
+  .step p { font-size: 14.5px; color: var(--muted); margin: 0 0 12px; line-height: 1.65; }
+  .step a.btn { display: inline-block; background: var(--accent); color: #072a2b; font-weight: 700; font-size: 13.5px; padding: 9px 16px; border-radius: 9px; text-decoration: none; }
+
+  pre { background: #1c2129; border: 1px solid var(--border-strong); border-radius: 10px; padding: 16px 18px; overflow-x: auto; margin: 0 0 10px; }
+  code { font-family: var(--mono); font-size: 12.8px; line-height: 1.7; color: var(--text); }
+  .comment { color: var(--faint); }
+  .str { color: var(--accent); }
+
+  .tabs { display: flex; gap: 6px; margin-bottom: 14px; flex-wrap: wrap; }
+  .tab { font-family: var(--mono); font-size: 12px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border); color: var(--faint); background: transparent; }
+  .tab.on { color: var(--accent); border-color: rgba(0,173,181,0.4); background: var(--accent-dim); }
+
+  .divider { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+  details { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px 24px; margin-bottom: 14px; }
+  details summary { cursor: pointer; font-weight: 600; font-size: 14.5px; list-style: none; display: flex; align-items: center; justify-content: space-between; }
+  details summary::-webkit-details-marker { display: none; }
+  details summary::after { content: '+'; color: var(--faint); font-size: 18px; }
+  details[open] summary::after { content: '–'; }
+  details .inner { margin-top: 16px; }
+  details p { font-size: 13.5px; color: var(--muted); line-height: 1.65; margin: 0 0 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { text-align: left; font-family: var(--mono); font-size: 11px; letter-spacing: .05em; text-transform: uppercase; color: var(--faint); font-weight: 600; padding: 8px 10px; border-bottom: 1px solid var(--border-strong); }
+  td { padding: 8px 10px; border-bottom: 1px solid var(--border); color: var(--muted); vertical-align: top; }
+  td code, td .mono { font-family: var(--mono); font-size: 12px; color: var(--text); }
+
+  footer.end { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--border); font-size: 13px; color: var(--faint); }
+  footer.end a { color: var(--accent); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <a href="/" class="brand"><span class="dot"></span>CommonMind</a>
+
+  <div class="eyebrow">Connect a project</div>
+  <h1>Give <em>anything</em> a memory.</h1>
+  <p class="lead">A game, a spreadsheet, an internal tool, a Zapier flow — anything that can make a web request can save to and recall from your CommonMind account. No install, no MCP, no code required on your end if you'd rather have an AI do it.</p>
+
+  <div class="hero-box">
+    <span class="tag">Easiest path</span>
+    <h2>Have an AI assistant wire it up for you</h2>
+    <p>Works in Claude Code, Cursor, ChatGPT, or any AI coding tool — paste the copied text below to it. It's self-contained: the AI doesn't need this page, just this.</p>
+
+    <input type="text" id="keyInput" class="key-input" placeholder="Paste your key here first (optional) — cm_..." />
+
+    <div class="prompt-box" id="promptPreview"></div>
+    <button class="copy-btn" id="copyPromptBtn">Copy prompt</button>
+  </div>
+
+  <div class="step">
+    <div class="num">1</div>
+    <div class="body">
+      <h2>Get a key</h2>
+      <p>Every project gets its own key, tied to your account. Create one, name it after the project, and you're set — you can view it again anytime, no need to save it somewhere else first.</p>
+      <a href="/dashboard/" class="btn">Get your key →</a>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="num">2</div>
+    <div class="body">
+      <h2>Save something</h2>
+      <p>Whenever something worth remembering happens — a decision, a player's choice, a customer's preference — send it over. This works from a Google Sheet, a game server, or any app; pick whichever matches what you're building.</p>
+
+      <div class="tabs">
+        <span class="tab on">Google Sheets / Apps Script</span>
+        <span class="tab">Any app (JavaScript)</span>
+      </div>
+
+      <pre><code><span class="comment">// Apps Script — Extensions → Apps Script, in any Google Sheet</span>
+function saveMemory(text) {
+  UrlFetchApp.fetch(<span class="str">'https://commonmind.agent9.dev/api/memory/capture'</span>, {
+    method: <span class="str">'post'</span>,
+    contentType: <span class="str">'application/json'</span>,
+    headers: { Authorization: <span class="str">'Bearer cm_your_key_here'</span> },
+    payload: JSON.stringify({ content: text })
+  });
+}
+
+<span class="comment">// example: saveMemory("Client prefers short, no-jargon copy")</span></code></pre>
+    </div>
+  </div>
+
+  <div class="step">
+    <div class="num">3</div>
+    <div class="body">
+      <h2>Recall it later</h2>
+      <p>Ask a question in plain language — it comes back ranked by how relevant it is, not just keyword matches.</p>
+      <pre><code><span class="comment">// same idea, any language — this example in plain JavaScript</span>
+const res = await fetch(
+  <span class="str">'https://commonmind.agent9.dev/api/memory/search?q=what+did+the+client+say'</span>,
+  { headers: { Authorization: <span class="str">'Bearer cm_your_key_here'</span> } }
+);
+const { results } = await res.json();
+<span class="comment">// results[0].content, results[0].score — best match first</span></code></pre>
+    </div>
+  </div>
+
+  <hr class="divider" />
+
+  <details>
+    <summary>Technical reference</summary>
+    <div class="inner">
+      <p>For anyone wiring this up by hand rather than pasting the page to an AI — the two endpoints in full.</p>
+      <table>
+        <tr><th>Action</th><th>Request</th><th>Body / params</th></tr>
+        <tr><td>Save a memory</td><td><code>POST /api/memory/capture</code></td><td><span class="mono">{ "content": "..." }</span></td></tr>
+        <tr><td>Recall memories</td><td><code>GET /api/memory/search?q=...&limit=3</code></td><td><span class="mono">q</span> required, <span class="mono">limit</span> optional</td></tr>
+      </table>
+      <p style="margin-top:14px">Both require <span class="mono">Authorization: Bearer cm_your_key</span>. Base URL: <span class="mono">https://commonmind.agent9.dev</span>. Responses are JSON; a missing or revoked key returns <span class="mono">401</span>.</p>
+    </div>
+  </details>
+
+  <footer class="end">
+    Lost or leaked a key? <a href="/dashboard/">Revoke it from your dashboard</a> — whatever was using it stops working immediately, nothing else is affected.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  const keyInput = document.getElementById('keyInput');
+  const preview = document.getElementById('promptPreview');
+  const copyBtn = document.getElementById('copyPromptBtn');
+
+  function buildPrompt() {
+    const key = keyInput.value.trim() || 'cm_your_key_here';
+    return `I want to add memory to my project using CommonMind — save things that happen, and recall them later by asking in plain language.
+
+My API key: ${key}
+
+Two endpoints, base URL https://commonmind.agent9.dev — both need "Authorization: Bearer ${key}":
+
+Save a memory:
+  POST /api/memory/capture
+  Content-Type: application/json
+  Body: {"content": "text to remember"}
+
+Recall memories:
+  GET /api/memory/search?q=<question>&limit=3
+  Response: {"results": [{"content": "...", "score": 0.94}, ...]} — best match first
+
+Please write the integration code for my project. Ask me what language or platform I'm using if it's not obvious from context, and where in my code these calls should go.
+
+Important: put this key in an environment variable or secrets file, not directly in any file that might get committed to version control.`;
+  }
+
+  function render() {
+    preview.textContent = buildPrompt();
+  }
+
+  keyInput.addEventListener('input', render);
+  render();
+
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(buildPrompt()).then(() => {
+      const original = copyBtn.textContent;
+      copyBtn.textContent = 'Copied ✓';
+      setTimeout(() => { copyBtn.textContent = original; }, 1600);
+    });
+  });
+})();
+</script>
+</body>
+</html>

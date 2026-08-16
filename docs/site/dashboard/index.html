@@ -1,0 +1,699 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dashboard — CommonMind</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --bg:#222831; --deep:#1b2028; --elev:#2b3340;
+    --panel:rgba(255,255,255,.03); --panel2:rgba(255,255,255,.06);
+    --bd:rgba(255,255,255,.07); --bd2:rgba(255,255,255,.14);
+    --tx:#eeeeee; --mu:#a9b0ba; --fa:#717986;
+    --ac:#00adb5; --acd:rgba(0,173,181,.10); --acl:rgba(0,173,181,.34);
+    --am:#e6b93c; --rd:#f26d6d;
+    --f:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    --m:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+    --s:"Instrument Serif",Georgia,serif;
+    --r:16px; --rs:10px;
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--f);font-size:14.5px;
+    line-height:1.55;-webkit-font-smoothing:antialiased;overflow:hidden;}
+  h1,h2,h3{margin:0;font-weight:500;}p{margin:0;}
+  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;}
+  :focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:6px;}
+  .eb{font-family:var(--m);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--fa);}
+  .num{font-family:var(--m);font-variant-numeric:tabular-nums;}
+
+  /* ---- boot sequence (shown first, over everything) ---- */
+  #bootScreen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:24px;}
+  #bootScreen.hide{display:none;}
+  .boot-card{width:100%;max-width:440px;background:var(--elev);border:1px solid var(--bd2);border-radius:var(--r);padding:30px;box-shadow:0 30px 80px rgba(0,0,0,.5);}
+  .brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;margin-bottom:22px;}
+  .brand .dot{width:8px;height:8px;border-radius:999px;background:var(--ac);box-shadow:0 0 12px var(--ac);}
+  .boot-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--bd);font-size:14px;color:var(--fa);transition:color .3s;}
+  .boot-row:last-child{border-bottom:none;}
+  .boot-row.active{color:var(--tx);}
+  .boot-row.done{color:var(--tx);}
+  .boot-check{width:20px;height:20px;flex:none;border-radius:999px;border:1.5px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:11px;transition:background .3s,border-color .3s,transform .3s;}
+  .boot-row.active .boot-check{border-color:var(--ac);}
+  .boot-row.active .boot-check::after{content:'';width:9px;height:9px;border-radius:999px;background:var(--ac);animation:bootPulse 1s ease-in-out infinite;}
+  .boot-row.done .boot-check{background:var(--ac);border-color:var(--ac);color:#072a2b;transform:scale(1.05);}
+  .boot-row.done .boot-check::after{content:'✓';width:auto;height:auto;background:none;animation:none;}
+  @keyframes bootPulse{0%,100%{opacity:.4;}50%{opacity:1;}}
+  #denied{display:none;text-align:center;color:var(--mu);font-size:14px;}
+
+  /* ---- app shell ---- */
+  #app{display:none;}
+  #app.show{display:block;}
+  .shell{display:grid;grid-template-rows:auto 1fr;height:100vh;}
+  .bar{display:flex;align-items:center;gap:22px;padding:16px 26px;border-bottom:1px solid var(--bd);background:var(--deep);}
+  .logo{font-family:var(--s);font-size:23px;}
+  .logo b{color:var(--ac);font-weight:400;}
+  .scale{display:flex;gap:26px;margin-left:8px;}
+  .scale div{display:flex;flex-direction:column;gap:1px;}
+  .scale .v{font-family:var(--m);font-size:15px;}
+  .scale .l{font-size:10.5px;color:var(--fa);}
+  .grow{flex:1;}
+  .ask{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--bd);
+    border-radius:99px;padding:9px 18px;min-width:230px;color:var(--fa);font-size:13.5px;}
+  .ask:hover{border-color:var(--bd2);color:var(--mu);}
+  .ask .k{margin-left:auto;font-family:var(--m);font-size:10.5px;}
+  .connect-btn{display:flex;align-items:center;gap:6px;background:var(--ac);color:#072a2b;border-radius:99px;padding:9px 16px;font-weight:700;font-size:13px;}
+  .ib{width:36px;height:36px;border-radius:99px;background:var(--panel);border:1px solid var(--bd);color:var(--mu);}
+  .ib:hover{color:var(--tx);border-color:var(--bd2);}
+
+  .body{display:grid;grid-template-columns:minmax(0,1fr) 320px;min-height:0;}
+  .stage{position:relative;min-width:0;}
+  canvas{display:block;width:100%;height:100%;}
+  .stage-h{position:absolute;top:24px;left:28px;pointer-events:none;}
+  .stage-h h1{font-family:var(--s);font-size:29px;letter-spacing:-.01em;}
+  .stage-h p{font-size:13px;color:var(--fa);margin-top:3px;max-width:340px;}
+  .legend{position:absolute;bottom:22px;left:28px;display:flex;gap:18px;font-size:11px;color:var(--fa);flex-wrap:wrap;max-width:70%;}
+  .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+  .legend i.ln{width:16px;height:2px;border-radius:2px;}
+  .tip{position:absolute;pointer-events:none;background:var(--elev);border:1px solid var(--bd2);border-radius:var(--rs);
+    padding:10px 13px;font-size:12.5px;color:var(--mu);opacity:0;transition:opacity .13s;box-shadow:0 10px 30px rgba(0,0,0,.3);max-width:250px;}
+  .tip b{display:block;color:var(--tx);font-weight:500;margin-bottom:2px;font-size:13.5px;}
+  .tip.on{opacity:1;}
+  .empty-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;pointer-events:none;}
+  .empty-hint.hide{display:none;}
+  .empty-hint p{color:var(--fa);font-size:14px;max-width:280px;text-align:center;}
+  .empty-hint button{pointer-events:auto;}
+
+  .side{background:var(--deep);border-left:1px solid var(--bd);overflow-y:auto;padding:22px 20px 40px;}
+  .side h2{font-family:var(--s);font-size:19px;margin-bottom:2px;}
+  .side .lead{font-size:12.5px;color:var(--fa);margin-bottom:18px;}
+  .ins{background:var(--panel);border:1px solid var(--bd);border-radius:var(--r);padding:16px 17px;margin-bottom:11px;}
+  .ins.hi{border-color:var(--acl);background:var(--acd);}
+  .ins.warn{border-color:rgba(230,185,60,.3);background:rgba(230,185,60,.08);}
+  .ins .top{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+  .ins .top .eb{color:var(--ac);}
+  .ins.warn .top .eb{color:var(--am);}
+  .ins p{font-size:13.5px;}
+  .flow{display:flex;flex-direction:column;gap:0;margin-top:6px;}
+  .fl{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--bd);}
+  .fl:last-child{border-bottom:0;}
+  .dot2{width:24px;height:24px;border-radius:8px;flex:none;display:grid;place-items:center;font-family:var(--m);font-size:10px;background:var(--panel2);color:var(--mu);border:1px solid var(--bd2);}
+  .fl p{font-size:13px;}
+  .fl .s{font-size:11px;color:var(--fa);margin-top:2px;}
+
+  .scrim{position:fixed;inset:0;background:rgba(12,16,21,.55);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .22s;z-index:40;}
+  .scrim.on{opacity:1;pointer-events:auto;}
+  .draw{position:fixed;top:0;right:0;bottom:0;width:min(94vw,480px);background:var(--bg);border-left:1px solid var(--bd2);
+    transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:41;display:flex;flex-direction:column;}
+  .draw.on{transform:none;}
+  .dh{padding:24px 26px 18px;border-bottom:1px solid var(--bd);position:relative;}
+  .dh .eb{display:block;margin-bottom:6px;}
+  .dh h2{font-family:var(--s);font-size:26px;}
+  .dh p{font-size:13.5px;color:var(--mu);margin-top:6px;}
+  .dstats{display:flex;gap:22px;margin-top:16px;}
+  .dstats .v{font-family:var(--m);font-size:16px;}
+  .dstats .l{font-size:10.5px;color:var(--fa);}
+  .dbody{flex:1;overflow-y:auto;padding:20px 26px 40px;}
+  .dbody .eb{display:block;margin:20px 0 10px;}
+  .close{position:absolute;top:22px;right:22px;width:32px;height:32px;border-radius:99px;background:var(--panel2);color:var(--mu);}
+  .close:hover{color:var(--tx);}
+  .key-box{font-family:var(--m);font-size:12px;background:#1c2129;border:1px solid var(--bd2);border-radius:9px;padding:10px 12px;margin-top:8px;word-break:break-all;color:var(--ac);display:flex;align-items:center;justify-content:space-between;gap:10px;}
+  div.key-box.hidden-block{display:none;}
+  div.key-box.hidden-block.show{display:flex;}
+  .mini-btn{font-family:var(--f);font-size:12.5px;font-weight:600;padding:8px 13px;border-radius:8px;border:1px solid var(--bd2);background:var(--panel2);color:var(--tx);cursor:pointer;margin-right:8px;margin-top:12px;}
+  .mini-btn:hover{border-color:var(--ac);color:var(--ac);}
+  .mini-btn.danger:hover{border-color:var(--rd);color:var(--rd);}
+  .share-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);}
+  .share-row:last-child{border-bottom:0;}
+  .share-row .sn{font-size:13.5px;}
+  .share-row .sd{font-family:var(--m);font-size:11px;color:var(--fa);margin-top:2px;}
+  .switch{position:relative;width:38px;height:22px;border-radius:11px;background:var(--panel2);border:1px solid var(--bd2);cursor:pointer;flex:none;transition:background .15s,border-color .15s;}
+  .switch .dot{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--fa);transition:transform .15s,background .15s;}
+  .switch.on{background:var(--acd);border-color:var(--acl);}
+  .switch.on .dot{transform:translateX(16px);background:var(--ac);}
+  .switch[disabled]{opacity:.5;cursor:default;}
+  .share-empty{color:var(--fa);font-size:12.5px;padding:4px 0 2px;}
+
+  .pal-s{position:fixed;inset:0;background:rgba(12,16,21,.55);backdrop-filter:blur(4px);display:none;place-items:start center;padding-top:15vh;z-index:60;}
+  .pal-s.on{display:grid;}
+  .pal{width:min(92vw,600px);background:var(--elev);border:1px solid var(--bd2);border-radius:var(--r);overflow:hidden;box-shadow:0 26px 80px rgba(0,0,0,.4);}
+  .pal input{width:100%;background:none;border:0;outline:none;color:var(--tx);font:inherit;font-size:16.5px;padding:19px 22px;border-bottom:1px solid var(--bd);}
+  .pal .out{max-height:44vh;overflow-y:auto;padding:8px;}
+  .pal .it{padding:12px 14px;border-radius:10px;}
+  .pal .it p{font-size:13.5px;margin-top:3px;}
+  .pal .score{font-family:var(--m);font-size:10.5px;color:var(--ac);}
+  .pal .ft{padding:11px 22px;border-top:1px solid var(--bd);font-size:11.5px;color:var(--fa);}
+
+  .new-proj-form{display:none;}
+  .new-proj-form.on{display:block;padding:16px 26px;border-bottom:1px solid var(--bd);background:var(--panel);}
+  .new-proj-form input{width:100%;background:#1c2129;border:1px solid var(--bd2);border-radius:9px;padding:10px 12px;color:var(--tx);font-size:13.5px;font-family:var(--f);outline:none;margin-bottom:10px;}
+  .new-proj-form input:focus{border-color:var(--ac);}
+  .new-proj-form button{background:var(--ac);color:#072a2b;border:none;border-radius:9px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;}
+
+  @media (max-width:1000px){.body{grid-template-columns:1fr;}.side{display:none;}}
+</style>
+</head>
+<body>
+
+<div id="bootScreen">
+  <div class="boot-card">
+    <div class="brand"><span class="dot"></span>CommonMind</div>
+    <div id="boot">
+      <div class="boot-row" data-step="session"><span class="boot-check"></span>Verifying your session</div>
+      <div class="boot-row" data-step="workspace"><span class="boot-check"></span>Provisioning your memory workspace</div>
+      <div class="boot-row" data-step="brain"><span class="boot-check"></span>Connecting to your company brain</div>
+    </div>
+    <div id="denied"><p>Not signed in. <a href="/" style="color:var(--ac)">Head back to sign in</a>.</p></div>
+  </div>
+</div>
+
+<div id="app">
+  <div class="shell">
+    <div class="bar">
+      <div class="logo">Common<b>Mind</b></div>
+      <div class="scale">
+        <div><span class="v num" id="sMem">0</span><span class="l">memories</span></div>
+        <div><span class="v num" id="sProj">0</span><span class="l">projects</span></div>
+      </div>
+      <div class="grow"></div>
+      <button class="ask" id="askBtn">Ask the company brain<span class="k">⌘K</span></button>
+      <button class="connect-btn" id="connectBtn">+ Connect a project</button>
+      <button class="ib" id="signoutBtn" title="Sign out">⏻</button>
+    </div>
+
+    <div class="new-proj-form" id="newProjForm">
+      <input type="text" id="newProjName" placeholder="Project name — e.g. Ocean Dreams" maxlength="80" />
+      <button id="newProjSubmit">Create</button>
+      <span style="font-size:12px;color:var(--fa);margin-left:10px">or use <a href="/connect/" style="color:var(--ac)">the full connect guide →</a></span>
+    </div>
+
+    <div class="body">
+      <div class="stage" id="stage">
+        <canvas id="cv"></canvas>
+        <div class="stage-h">
+          <h1>Your company brain</h1>
+          <p id="stageSub">Every project you connect writes to one memory. Real data only — nothing here is a mockup.</p>
+        </div>
+        <div class="legend">
+          <span><i style="background:#00adb5"></i>Project</span>
+          <span><i class="ln" style="background:rgba(0,173,181,.55)"></i>Capture &amp; recall</span>
+          <span><i class="ln" style="background:#7fd6dc"></i>Hover a project to see what the brain linked it to</span>
+        </div>
+        <div class="tip" id="tip"></div>
+        <div class="empty-hint" id="emptyHint">
+          <p>No projects connected yet. The brain is real — it just doesn't know about anything until you connect a project.</p>
+          <button class="connect-btn" id="emptyConnectBtn">+ Connect your first project</button>
+        </div>
+      </div>
+
+      <aside class="side">
+        <h2>What the map is telling you</h2>
+        <p class="lead">Read off the shape, not off a report.</p>
+        <div id="insights"></div>
+        <span class="eb">Moving right now</span>
+        <div class="flow" id="flow"></div>
+      </aside>
+    </div>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<aside class="draw" id="draw" aria-hidden="true">
+  <div class="dh">
+    <button class="close" id="dclose">✕</button>
+    <span class="eb">Project</span>
+    <h2 id="dName"></h2>
+    <p id="dDesc"></p>
+    <div class="dstats" id="dStats"></div>
+  </div>
+  <div class="dbody" id="dBody"></div>
+</aside>
+
+<div class="pal-s" id="palS">
+  <div class="pal">
+    <input id="pq" placeholder="Ask in your own words…" aria-label="Ask the company brain">
+    <div class="out" id="pout"></div>
+    <div class="ft">Real semantic recall, scored — not a keyword match · esc to close</div>
+  </div>
+</div>
+
+<script>
+(function(){
+"use strict";
+var $=function(i){return document.getElementById(i);};
+var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});};
+var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ============== boot sequence ============== */
+(async function boot(){
+  var rows={session:document.querySelector('[data-step="session"]'),workspace:document.querySelector('[data-step="workspace"]'),brain:document.querySelector('[data-step="brain"]')};
+  function activate(r){r.classList.add("active");}
+  function finish(r){r.classList.remove("active");r.classList.add("done");}
+  var wait=function(ms){return new Promise(function(r){setTimeout(r,ms);});};
+
+  activate(rows.session);
+  var user=null;
+  try{
+    var res=await fetch("/api/auth/me",{credentials:"same-origin"});
+    var data=await res.json();
+    if(data.success) user=data.user;
+  }catch(e){}
+
+  if(!user){
+    $("boot").style.display="none";
+    $("denied").style.display="block";
+    return;
+  }
+
+  finish(rows.session);
+  activate(rows.workspace);
+  await wait(reduce?0:500);
+  finish(rows.workspace);
+  activate(rows.brain);
+  await wait(reduce?0:450);
+  finish(rows.brain);
+  await wait(reduce?0:250);
+
+  $("bootScreen").classList.add("hide");
+  $("app").classList.add("show");
+  initApp();
+})();
+
+/* ============== app ============== */
+function initApp(){
+
+var HUB={id:"brain",n:"CommonMind Core",d:"One transactional memory. Every connected project records here; every recall comes from here.",mem:0,r:56};
+var PROJ=[], EDGES=[], LINKS=[], RECENT=[];
+
+function byId(id){for(var i=0;i<PROJ.length;i++) if(PROJ[i].id===id) return PROJ[i];}
+
+async function loadNetwork(){
+  var res=await fetch("/api/network",{credentials:"same-origin"});
+  var d=await res.json();
+  HUB.mem=d.core.memories||0;
+  $("sMem").textContent=HUB.mem.toLocaleString();
+  $("sProj").textContent=(d.projects||[]).length;
+
+  PROJ=(d.projects||[]).map(function(p,i){
+    var n=Math.max((d.projects||[]).length,1);
+    return {
+      id:p.id, n:p.name,
+      d:"Connected "+relTime(p.connectedAt)+".",
+      mem:p.memories||0, searches:p.searches||0,
+      lastActive:p.lastActive, connectedAt:p.connectedAt,
+      ang:-Math.PI/2 + (i/n)*Math.PI*2,
+      r:22+Math.min(18,Math.sqrt(p.memories||0)*2),
+      flow: isRecent(p.lastActive) ? 1 : 0
+    };
+  });
+  EDGES=d.edges||[];
+  LINKS=d.links||[];
+  RECENT=d.recentActivity||[];
+
+  $("emptyHint").classList.toggle("hide", PROJ.length>0);
+  renderInsights();
+  renderFlow();
+  if(!reduce) replayRecent();
+}
+
+function isRecent(ts){ if(!ts) return false; return (Date.now()-Date.parse(ts+"Z"))<1000*60*60*24*3; }
+function relTime(ts){
+  if(!ts) return "recently";
+  var ms=Date.now()-Date.parse(ts+"Z");
+  var m=Math.floor(ms/60000);
+  if(m<1) return "just now";
+  if(m<60) return m+"m ago";
+  var h=Math.floor(m/60); if(h<24) return h+"h ago";
+  return Math.floor(h/24)+"d ago";
+}
+
+/* ---------- canvas (adapted from the network-map concept — no actor
+   layer, since no real per-person/agent data exists yet; everything
+   drawn here traces to a real project_activity row) ---------- */
+var cv=$("cv"),ctx=cv.getContext("2d"),W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+var pulses=[],hover=null,CX=0,CY=0,RAD=0,flash={};
+
+function size(){
+  var b=$("stage").getBoundingClientRect();
+  W=b.width;H=b.height;
+  cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
+  CX=W/2;CY=H/2+8;RAD=Math.min(W,H)*0.30;
+}
+function hubPos(t){return {x:CX+Math.sin(t*.00018)*5,y:CY+Math.cos(t*.00015)*4};}
+function projPos(p,t){
+  var a=p.ang+Math.sin(t*.00012+p.ang)*.02;
+  var h=hubPos(t);
+  return {x:h.x+Math.cos(a)*RAD, y:h.y+Math.sin(a)*RAD*.82};
+}
+
+function draw(t){
+  ctx.clearRect(0,0,W,H);
+  var AC="0,173,181", AM="230,185,60", XC="127,214,220";
+  var h=hubPos(t);
+
+  PROJ.forEach(function(p){
+    var P=projPos(p,t);
+    var al=.16+p.flow*.35;
+    var g=ctx.createLinearGradient(P.x,P.y,h.x,h.y);
+    g.addColorStop(0,"rgba("+AC+","+al*.7+")");
+    g.addColorStop(1,"rgba("+AC+","+al*1.7+")");
+    ctx.strokeStyle=g;ctx.lineWidth=1.2+p.flow*1.4;
+    ctx.beginPath();ctx.moveTo(P.x,P.y);ctx.lineTo(h.x,h.y);ctx.stroke();
+  });
+
+  // Explicit, user-turned-on sharing — a standing thread, always visible,
+  // distinct from the dashed hover-only lines below (which are organically
+  // *detected* overlap, not something anyone deliberately switched on).
+  LINKS.forEach(function(l){
+    var a=byId(l.from), b=byId(l.to); if(!a||!b) return;
+    var A=projPos(a,t), B=projPos(b,t);
+    ctx.strokeStyle="rgba("+AC+",.55)";ctx.lineWidth=1.8;
+    ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.quadraticCurveTo(h.x,h.y,B.x,B.y);ctx.stroke();
+  });
+
+  var rel={};
+  if(hover&&hover.kind==="p"){
+    var hp=projPos(hover.ref,t);
+    EDGES.filter(function(e){return e.from===hover.id||e.to===hover.id;}).forEach(function(e){
+      var oid=e.from===hover.id?e.to:e.from;
+      var op=byId(oid); if(!op) return;
+      rel[oid]=1;
+      var O=projPos(op,t);
+      ctx.strokeStyle="rgba("+XC+",.7)";ctx.lineWidth=1.6;ctx.setLineDash([3,6]);
+      ctx.beginPath();ctx.moveTo(hp.x,hp.y);ctx.quadraticCurveTo(h.x,h.y,O.x,O.y);ctx.stroke();
+      ctx.setLineDash([]);
+    });
+  }
+
+  pulses.forEach(function(pu){
+    var A=projPos(byId(pu.projId)||PROJ[0]||{ang:0},t);
+    var a=pu.dir>0?A:h, b=pu.dir>0?h:A;
+    var x=a.x+(b.x-a.x)*pu.u, y=a.y+(b.y-a.y)*pu.u;
+    var col=pu.dir>0?AC:AM;
+    var rg=ctx.createRadialGradient(x,y,0,x,y,12);
+    rg.addColorStop(0,"rgba("+col+",.85)");rg.addColorStop(1,"rgba("+col+",0)");
+    ctx.fillStyle=rg;ctx.beginPath();ctx.arc(x,y,12,0,6.29);ctx.fill();
+  });
+
+  var hon=hover&&hover.id==="brain";
+  var hg=ctx.createRadialGradient(h.x,h.y,HUB.r*.3,h.x,h.y,HUB.r*2.3);
+  hg.addColorStop(0,"rgba("+AC+","+(hon?.30:.20)+")");hg.addColorStop(1,"rgba("+AC+",0)");
+  ctx.fillStyle=hg;ctx.beginPath();ctx.arc(h.x,h.y,HUB.r*2.3,0,6.29);ctx.fill();
+  ctx.fillStyle="#2b3340";ctx.beginPath();ctx.arc(h.x,h.y,HUB.r,0,6.29);ctx.fill();
+  ctx.strokeStyle="rgba("+AC+","+(hon?1:.8)+")";ctx.lineWidth=hon?3:2.2;ctx.stroke();
+  var hf=flash.brain?t-flash.brain:9e9;
+  if(hf<800){var kk=hf/800;ctx.strokeStyle="rgba("+AC+","+(1-kk)*.75+")";ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(h.x,h.y,HUB.r+kk*26,0,6.29);ctx.stroke();}
+  ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle="#eeeeee";
+  ctx.font="500 14px Inter, system-ui, sans-serif";
+  var hw=HUB.n.split(" ");
+  ctx.fillText(hw.slice(0,-1).join(" "),h.x,h.y-14);
+  ctx.fillText(hw[hw.length-1],h.x,h.y+2);
+  ctx.fillStyle="#717986";ctx.font="11px 'JetBrains Mono', ui-monospace, monospace";
+  ctx.fillText(HUB.mem.toLocaleString(),h.x,h.y+21);
+
+  PROJ.forEach(function(p){
+    var P=projPos(p,t), on=hover&&hover.id===p.id;
+    var gl=ctx.createRadialGradient(P.x,P.y,p.r*.4,P.x,P.y,p.r*2.4);
+    gl.addColorStop(0,"rgba("+AC+","+(on?.24:.12)+")");gl.addColorStop(1,"rgba("+AC+",0)");
+    ctx.fillStyle=gl;ctx.beginPath();ctx.arc(P.x,P.y,p.r*2.4,0,6.29);ctx.fill();
+    ctx.fillStyle="#2b3340";ctx.beginPath();ctx.arc(P.x,P.y,p.r,0,6.29);ctx.fill();
+    if(rel[p.id]){ctx.strokeStyle="rgba("+XC+",.95)";ctx.lineWidth=2.2;}
+    else{ctx.strokeStyle="rgba("+AC+","+(on?.95:.62)+")";ctx.lineWidth=on?2.4:1.4;}
+    ctx.stroke();
+    var pf=flash[p.id]?t-flash[p.id]:9e9;
+    if(pf<800){var pk=pf/800;ctx.strokeStyle="rgba("+AM+","+(1-pk)*.8+")";ctx.lineWidth=2;
+      ctx.beginPath();ctx.arc(P.x,P.y,p.r+pk*20,0,6.29);ctx.stroke();}
+    ctx.fillStyle="#eeeeee";ctx.font="500 13px Inter, system-ui, sans-serif";
+    ctx.fillText(p.n,P.x,P.y+p.r+20);
+    ctx.fillStyle="#717986";ctx.font="11px 'JetBrains Mono', ui-monospace, monospace";
+    ctx.fillText(p.mem.toLocaleString()+" memories",P.x,P.y+p.r+37);
+    if(!p.flow){
+      ctx.fillStyle="rgba(230,185,60,.95)";ctx.font="10px 'JetBrains Mono', ui-monospace, monospace";
+      ctx.fillText("no activity in 3+ days",P.x,P.y+p.r+53);
+    }
+  });
+}
+
+function tick(t){
+  var tt=reduce?5000:t;
+  pulses.forEach(function(p){p.u+=p.v; if(p.u>=1&&!p.landed){p.landed=true;land(p);}});
+  pulses=pulses.filter(function(p){return p.u<1;});
+  draw(tt);requestAnimationFrame(tick);
+}
+function land(pu){
+  var now=performance.now();
+  if(pu.dir>0) flash.brain=now; else flash[pu.projId]=now;
+}
+function replayRecent(){
+  RECENT.slice().reverse().forEach(function(ev,i){
+    setTimeout(function(){
+      pulses.push({projId:ev.projectId,dir:ev.action==="capture"?1:-1,u:0,v:.007,landed:false});
+    }, i*450);
+  });
+}
+
+/* ---------- hit testing ---------- */
+$("stage").addEventListener("mousemove",function(e){
+  var b=cv.getBoundingClientRect(),mx=e.clientX-b.left,my=e.clientY-b.top,t=performance.now(),found=null;
+  var h=hubPos(t);
+  PROJ.forEach(function(p){var P=projPos(p,t);
+    if(Math.hypot(P.x-mx,P.y-my)<p.r+8) found={id:p.id,kind:"p",ref:p};});
+  if(!found && Math.hypot(h.x-mx,h.y-my)<HUB.r+8) found={id:"brain",kind:"b",ref:HUB};
+  hover=found;cv.style.cursor=found?"pointer":"default";
+  var tip=$("tip");
+  if(found){
+    var title=found.ref.n, bodyT=found.ref.d||"";
+    if(found.kind==="p"){
+      var links=EDGES.filter(function(e){return e.from===found.id||e.to===found.id;});
+      if(links.length){
+        var names=links.map(function(e){var oid=e.from===found.id?e.to:e.from;var o=byId(oid);return o?o.n:"another project";});
+        bodyT+="  ·  The brain connected this to "+names.join(", ")+".";
+      }
+    }
+    tip.innerHTML="<b>"+esc(title)+"</b>"+esc(bodyT);
+    tip.style.left=Math.min(mx+16,W-268)+"px";
+    tip.style.top=Math.min(my+16,H-110)+"px";
+    tip.classList.add("on");
+  } else tip.classList.remove("on");
+});
+$("stage").addEventListener("click",function(){
+  if(!hover)return;
+  if(hover.kind==="p")openProject(hover.ref);
+  else openBrain();
+});
+
+/* ---------- drawer ---------- */
+function show(){$("draw").classList.add("on");$("draw").setAttribute("aria-hidden","false");$("scrim").classList.add("on");}
+function closeDraw(){$("draw").classList.remove("on");$("draw").setAttribute("aria-hidden","true");$("scrim").classList.remove("on");}
+$("dclose").addEventListener("click",closeDraw);
+$("scrim").addEventListener("click",closeDraw);
+
+function openProject(p){
+  $("dName").textContent=p.n;$("dDesc").textContent=p.d;
+  $("dStats").innerHTML=
+    '<div><div class="v num">'+p.mem.toLocaleString()+'</div><div class="l">memories</div></div>'+
+    '<div><div class="v num">'+p.searches.toLocaleString()+'</div><div class="l">recalls</div></div>'+
+    '<div><div class="v num">'+(p.flow?"active":"quiet")+'</div><div class="l">last 3 days</div></div>';
+  var h="";
+  var links=EDGES.filter(function(e){return e.from===p.id||e.to===p.id;});
+  if(links.length){
+    h+='<span class="eb">What the brain connected this to</span>';
+    links.forEach(function(e){
+      var oid=e.from===p.id?e.to:e.from, o=byId(oid);
+      h+='<div class="mem shared" style="background:var(--acd);border:1px solid var(--acl);border-radius:var(--rs);padding:12px 14px;margin-bottom:8px;"><p style="font-size:13px">A recall here returned something captured in <b>'+esc(o?o.n:"another project")+'</b> — '+e.count+' time'+(e.count>1?"s":"")+'.</p></div>';
+    });
+  }
+  h+='<span class="eb">Shared memory</span>'+
+    '<p style="font-size:12.5px;color:var(--mu);margin-bottom:2px;">Off by default — turn this on to let '+esc(p.n)+' and another project recall each other\'s memories.</p>'+
+    '<div id="dShare"><div class="share-empty">Loading…</div></div>';
+  h+='<span class="eb">Manage this key</span>'+
+    '<div class="key-box hidden-block" id="dKeyBox"><span id="dKeyValue"></span><button class="mini-btn" id="dKeyCopy" style="margin:0">Copy</button></div>'+
+    '<div><button class="mini-btn" id="dShowKey">Show key</button><button class="mini-btn danger" id="dRevoke">Revoke</button></div>';
+  $("dBody").innerHTML=h;
+  show();
+  renderShareSection(p);
+
+  $("dShowKey").onclick=async function(){
+    var box=$("dKeyBox");
+    if(box.classList.contains("show")){box.classList.remove("show");return;}
+    var res=await fetch("/api/projects/"+p.id,{credentials:"same-origin"});
+    var data=await res.json();
+    if(!data.token) return;
+    $("dKeyValue").textContent=data.token;
+    $("dKeyCopy").onclick=function(){copyText(data.token,$("dKeyCopy"));};
+    box.classList.add("show");
+  };
+  $("dRevoke").onclick=async function(){
+    if(!confirm('Revoke the key for "'+p.n+'"? Anything using it stops working immediately.')) return;
+    await fetch("/api/projects/"+p.id,{method:"DELETE",credentials:"same-origin"});
+    closeDraw();
+    loadNetwork();
+  };
+}
+async function renderShareSection(p){
+  var host=$("dShare"); if(!host) return;
+  var res=await fetch("/api/projects/"+p.id+"/links",{credentials:"same-origin"});
+  if(!res.ok){ host.innerHTML='<div class="share-empty">Couldn\'t load.</div>'; return; }
+  var data=await res.json();
+  var others=data.projects||[];
+  if(!others.length){
+    host.innerHTML='<div class="share-empty">Connect another project to share memory with '+esc(p.n)+'.</div>';
+    return;
+  }
+  host.innerHTML=others.map(function(o){
+    return '<div class="share-row"><div><div class="sn">'+esc(o.name)+'</div>'+
+      '<div class="sd">'+(o.linked?"recall is shared both ways":"isolated — separate memory")+'</div></div>'+
+      '<button class="switch'+(o.linked?" on":"")+'" data-id="'+esc(o.id)+'" aria-label="Share memory with '+esc(o.name)+'"><span class="dot"></span></button></div>';
+  }).join("");
+  host.querySelectorAll(".switch").forEach(function(btn){
+    btn.onclick=async function(){
+      var targetId=btn.getAttribute("data-id");
+      var next=!btn.classList.contains("on");
+      btn.setAttribute("disabled","");
+      var r=await fetch("/api/projects/"+p.id+"/links",{
+        method:"POST",credentials:"same-origin",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({targetProjectId:targetId,linked:next})
+      });
+      btn.removeAttribute("disabled");
+      if(!r.ok) return;
+      btn.classList.toggle("on",next);
+      var sd=btn.parentElement.querySelector(".sd");
+      if(sd) sd.textContent=next?"recall is shared both ways":"isolated — separate memory";
+      loadNetwork();
+    };
+  });
+}
+function openBrain(){
+  $("dName").textContent=HUB.n;$("dDesc").textContent=HUB.d;
+  $("dStats").innerHTML=
+    '<div><div class="v num">'+HUB.mem.toLocaleString()+'</div><div class="l">memories</div></div>'+
+    '<div><div class="v num">'+PROJ.length+'</div><div class="l">projects</div></div>'+
+    '<div><div class="v num">1</div><div class="l">source of truth</div></div>';
+  $("dBody").innerHTML=
+    '<span class="eb">Why everything routes through here</span>'+
+    '<div class="mem" style="background:var(--panel);border:1px solid var(--bd);border-radius:var(--rs);padding:14px 15px;"><p style="font-size:13.5px">Every connected project writes to one transactional memory. By default each project only recalls what it captured itself — projects don\'t see each other\'s memory unless you turn sharing on. A connection shown here means either you linked two projects, or a search from one genuinely turned up something captured by another.</p></div>';
+  show();
+}
+
+/* ---------- insights (generated from real data, not scripted) ---------- */
+function renderInsights(){
+  var html="";
+  if(PROJ.length===0){
+    html+='<div class="ins hi"><div class="top"><span class="eb">Get started</span></div><p>Nothing connected yet. Connect a project and this map fills in with what it actually knows.</p></div>';
+  } else {
+    var dormant=PROJ.filter(function(p){return !p.flow;});
+    var active=PROJ.filter(function(p){return p.flow;});
+    if(EDGES.length){
+      var e=EDGES[0], a=byId(e.from), b=byId(e.to);
+      html+='<div class="ins hi"><div class="top"><span class="eb">The brain made a connection</span></div><p>A recall in <b>'+esc(a?a.n:"one project")+'</b> returned something captured in <b>'+esc(b?b.n:"another")+'</b> — nobody wired that together, the shared memory did.</p></div>';
+    }
+    if(dormant.length){
+      html+='<div class="ins warn"><div class="top"><span class="eb">Quiet</span></div><p>'+dormant.map(function(p){return esc(p.n);}).join(", ")+(dormant.length>1?" haven't":" hasn't")+' captured or recalled anything in the last few days.</p></div>';
+    }
+    if(active.length){
+      html+='<div class="ins"><div class="top"><span class="eb">Active</span></div><p>'+active.map(function(p){return esc(p.n)+" ("+p.mem+")";}).join(", ")+' — real memory, real activity.</p></div>';
+    }
+  }
+  $("insights").innerHTML=html;
+}
+
+function renderFlow(){
+  var flow=$("flow");
+  if(!RECENT.length){
+    flow.innerHTML='<p style="font-size:12.5px;color:var(--fa);padding:8px 0">Nothing has happened yet. Every row here arrives with a dot on the map.</p>';
+    return;
+  }
+  flow.innerHTML=RECENT.slice(0,6).map(function(ev){
+    var route=ev.action==="capture" ? esc(ev.projectName)+" → CommonMind Core" : "CommonMind Core → "+esc(ev.projectName);
+    return '<div class="fl"><div class="dot2">'+esc((ev.projectName||"?").slice(0,2).toUpperCase())+'</div>'+
+      '<div><p>'+(ev.action==="capture"?"Captured a memory":"Recalled memories")+'</p><div class="s">'+route+' · '+esc(relTime(ev.created_at))+'</div></div></div>';
+  }).join("");
+}
+
+/* ---------- connect-a-project ---------- */
+function toggleForm(){$("newProjForm").classList.toggle("on");}
+$("connectBtn").addEventListener("click",toggleForm);
+$("emptyConnectBtn").addEventListener("click",toggleForm);
+$("newProjSubmit").addEventListener("click",async function(){
+  var name=$("newProjName").value.trim();
+  if(!name) return;
+  var res=await fetch("/api/projects",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:name})});
+  var data=await res.json();
+  if(!res.ok) return;
+  $("newProjName").value="";
+  $("newProjForm").classList.remove("on");
+  await loadNetwork();
+  var p=byId(data.id);
+  if(p){
+    openProject(p);
+    setTimeout(function(){
+      var box=document.createElement("div");
+      box.className="key-box show";
+      box.style.cssText="display:flex;background:var(--acd);border-color:var(--acl);margin-bottom:16px;";
+      var span=document.createElement("span");
+      span.textContent=data.token;
+      var btn=document.createElement("button");
+      btn.className="mini-btn";
+      btn.style.margin="0";
+      btn.textContent="Copy";
+      btn.addEventListener("click",function(){copyText(data.token,btn);});
+      box.appendChild(span);box.appendChild(btn);
+      $("dBody").insertBefore(box,$("dBody").firstChild);
+    },50);
+  }
+});
+
+/* ---------- ask the company brain (real recall) ---------- */
+function openPalette(){$("palS").classList.add("on");$("pq").value="";pout("");$("pq").focus();}
+$("askBtn").addEventListener("click",openPalette);
+document.addEventListener("keydown",function(e){
+  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openPalette();}
+  if(e.key==="Escape"){$("palS").classList.remove("on");closeDraw();}
+});
+$("palS").addEventListener("click",function(e){if(e.target===$("palS"))$("palS").classList.remove("on");});
+
+var poutTimer=null;
+async function pout(q){
+  q=(q||"").trim();
+  if(q.length<3){$("pout").innerHTML='<div class="it"><p style="color:var(--fa)">Ask about anything captured across your connected projects.</p></div>';return;}
+  clearTimeout(poutTimer);
+  poutTimer=setTimeout(async function(){
+    $("pout").innerHTML='<div class="it"><p style="color:var(--fa)">Searching…</p></div>';
+    try{
+      var res=await fetch("/api/memory/search?q="+encodeURIComponent(q)+"&limit=6",{credentials:"same-origin"});
+      var data=await res.json();
+      var hits=data.results||[];
+      $("pout").innerHTML=hits.length
+        ? hits.map(function(h){return '<div class="it"><span class="score">'+ (h.score*100).toFixed(0) +'% match</span><p>'+esc(h.content)+'</p></div>';}).join("")
+        : '<div class="it"><p style="color:var(--fa)">Nothing found — capture something first.</p></div>';
+    }catch(e){
+      $("pout").innerHTML='<div class="it"><p style="color:var(--fa)">Search unavailable right now.</p></div>';
+    }
+  },350);
+}
+$("pq").addEventListener("input",function(){pout($("pq").value);});
+
+function copyText(text,btn){
+  navigator.clipboard.writeText(text).then(function(){
+    var o=btn.textContent;btn.textContent="Copied";setTimeout(function(){btn.textContent=o;},1500);
+  });
+}
+
+$("signoutBtn").addEventListener("click",async function(){
+  await fetch("/api/auth/logout",{method:"POST",credentials:"same-origin"});
+  window.location.href="/";
+});
+
+window.addEventListener("resize",size);
+size();
+loadNetwork();
+requestAnimationFrame(tick);
+
+} // initApp
+})();
+</script>
+</body>
+</html>

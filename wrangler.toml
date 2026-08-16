@@ -1,0 +1,14 @@
+# Cloudflare Pages config for the commonmind.agent9.dev site — auth,
+# onboarding, and dashboard. The memory core (src/) stays on AWS/CockroachDB,
+# owned by Kousik; this file only covers the Cloudflare-side frontend stack.
+#
+# Deploy with: wrangler pages deploy (run from the repo root)
+
+name = "commonmind"
+pages_build_output_dir = "./docs/site"
+compatibility_date = "2026-08-14"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "commonmind-auth"
+database_id = "254e4924-0a88-42af-9c77-8be6abb1ab0b"
