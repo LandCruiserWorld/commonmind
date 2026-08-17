@@ -8,8 +8,39 @@ import { MemoryRepository, type ApprovalRecord } from './memory/repository.js';
 import { randomUUID } from 'node:crypto';
 import { pathToFileURL } from 'node:url';
 
+const USAGE = `CommonMind — the memory layer for the agentic workforce
+
+Usage: commonmind <command> [args]
+
+Memory
+  capture "<text>"                 Capture a memory (row + embedding, one transaction)
+  ask "<text>"                     Semantic recall, ranked by similarity
+  ask --approval "<text>"          Open an approval and wait for the decision
+  decide <id> approved|denied      Resolve a pending approval
+
+Servers
+  serve-mcp                        MCP server over stdio (Claude Code, Claude Desktop)
+  serve-inbox                      HTTP API — POST /api/memory/capture, GET /api/memory/search
+  serve-cdc-bridge                 CDC changefeed bridge to SNS
+
+Setup
+  COCKROACH_DB_URL                 CockroachDB connection string
+  COMMONMIND_API_TOKEN             Bearer token for the HTTP API
+  EMBED_PROVIDER                   local | bedrock   (default: local)
+
+  Copy .env.example to .env and fill those in.
+
+Docs: https://github.com/LandCruiserWorld/commonmind`;
+
 export async function runCli(args = process.argv.slice(2)): Promise<void> {
   const [command, ...commandArgs] = args;
+
+  // No command, or an explicit ask for help: print usage rather than exiting
+  // silently. A bare `commonmind` that does nothing reads as broken.
+  if (!command || command === 'help' || command === '--help' || command === '-h') {
+    console.log(USAGE);
+    return;
+  }
 
   if (command === 'serve-mcp') {
     const { serveMcp } = await import(new URL('./mcp.js', import.meta.url).href);
@@ -79,7 +110,7 @@ export async function runCli(args = process.argv.slice(2)): Promise<void> {
       return;
     }
 
-    throw new Error('Usage: commonmind capture "<text>" | commonmind ask "<text>" | commonmind ask --approval "<text>"');
+    throw new Error(`Unknown command: ${command}\n\nRun \`commonmind help\` for usage.`);
   } finally {
     await closePool();
   }
