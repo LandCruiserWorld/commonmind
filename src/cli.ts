@@ -6,6 +6,7 @@ import { closePool } from './db.js';
 import { createEmbeddingProvider } from './embed.js';
 import { MemoryRepository, type ApprovalRecord } from './memory/repository.js';
 import { randomUUID } from 'node:crypto';
+import { realpathSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
 
 const USAGE = `CommonMind — the memory layer for the agentic workforce
@@ -153,9 +154,22 @@ async function waitForApproval(memories: MemoryRepository, approval: ApprovalRec
   return current;
 }
 
-if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  runCli().catch((error: unknown) => {
-    console.error(error instanceof Error ? error.message : error);
-    process.exitCode = 1;
-  });
+/**
+ * Global installs invoke through a bin symlink, so `process.argv[1]` is the
+ * shim path while `import.meta.url` is the real file — comparing them directly
+ * means the CLI silently never runs. Resolve the symlink before comparing.
+ */
+if (process.argv[1]) {
+  let invoked: string | null = null;
+  try {
+    invoked = pathToFileURL(realpathSync(process.argv[1])).href;
+  } catch {
+    invoked = pathToFileURL(process.argv[1]).href;
+  }
+  if (import.meta.url === invoked) {
+    runCli().catch((error: unknown) => {
+      console.error(error instanceof Error ? error.message : error);
+      process.exitCode = 1;
+    });
+  }
 }
