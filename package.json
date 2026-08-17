@@ -1,6 +1,6 @@
 {
   "name": "commonmind",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "CockroachDB-as-memory for the agentic workforce. Capture · recall · act — reliably, globally, at any scale.",
   "type": "module",
   "license": "Apache-2.0",
