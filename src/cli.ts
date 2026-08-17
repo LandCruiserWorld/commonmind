@@ -6,8 +6,6 @@ import { closePool } from './db.js';
 import { createEmbeddingProvider } from './embed.js';
 import { MemoryRepository, type ApprovalRecord } from './memory/repository.js';
 import { randomUUID } from 'node:crypto';
-import { realpathSync } from 'node:fs';
-import { pathToFileURL } from 'node:url';
 
 const USAGE = `CommonMind — the memory layer for the agentic workforce
 
@@ -154,22 +152,11 @@ async function waitForApproval(memories: MemoryRepository, approval: ApprovalRec
   return current;
 }
 
-/**
- * Global installs invoke through a bin symlink, so `process.argv[1]` is the
- * shim path while `import.meta.url` is the real file — comparing them directly
- * means the CLI silently never runs. Resolve the symlink before comparing.
- */
-if (process.argv[1]) {
-  let invoked: string | null = null;
-  try {
-    invoked = pathToFileURL(realpathSync(process.argv[1])).href;
-  } catch {
-    invoked = pathToFileURL(process.argv[1]).href;
-  }
-  if (import.meta.url === invoked) {
-    runCli().catch((error: unknown) => {
-      console.error(error instanceof Error ? error.message : error);
-      process.exitCode = 1;
-    });
-  }
-}
+// `dist/cli.js` is only ever the bin entrypoint — the library surface is
+// `index.js` — so run unconditionally. The argv[1]/import.meta.url guard this
+// replaces silently did nothing under a global install's bin symlink, which is
+// why `commonmind` printed nothing at all.
+runCli().catch((error: unknown) => {
+  console.error(error instanceof Error ? error.message : error);
+  process.exitCode = 1;
+});
