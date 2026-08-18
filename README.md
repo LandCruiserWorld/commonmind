@@ -2,7 +2,7 @@
 
 <div align="center">
 
-![CommonMind](./assets/images/commonmind-cover.png)
+![CommonMind — the memory graph expanding live](./assets/images/dashboard-cluster.gif)
 
 ### Universal memory for human and agent teamwork
 
@@ -266,23 +266,17 @@ Agents coordinate by **reading and writing shared memory**, not by messaging eac
 
 ---
 
-## The human interface: a doorbell, not a pager
+## The human interface: an approval gate, live today
 
-Agents emit a flood. People can't absorb a flood. So every event is recorded, and only three classes ever reach a human:
-
-| Regime | Trigger | Behaviour |
-|---|---|---|
-| **Silent** | Safe step — build, retry, query, happy-path sub-task | Recorded, never pushed |
-| **Alert** | A milestone crossed, or "needs your decision" | A push you can act on |
-| **Priority** | Finished differently — failure, delay, an answer you'd want tonight | Wakes you if needed |
-
-**A push is a doorbell, not a notice.** The interaction is two-way:
+Agents emit a flood. People can't absorb a flood. Most of what an agent does is recorded silently and never needs a human at all. The exception is the genuinely consequential step:
 
 ```
-doorbell → thread: ask back → decide (approve / edit / deny) → agent resumes → exchange becomes memory
+agent requests approval → human decides (approve / edit / deny), via CLI or MCP → agent resumes → the decision itself becomes memory
 ```
 
-Response kinds: `approval`, `yes_no`, `text_reply`, `thread_question`. The thread persists in the same memory layer as everything else — recallable and auditable. **The exchange itself becomes memory**, so the next decision of that shape is faster and, eventually, unnecessary.
+Response kinds: `approval`, `yes_no`, `text_reply`, `thread_question`. The exchange persists in the same memory layer as everything else — recallable and auditable. **The decision itself becomes memory**, so the next call of that shape is faster and, eventually, unnecessary.
+
+On the horizon, tracked in the [build log](./docs/BUILD_LOG.md): a real-time push layer (**a doorbell, not a pager**) on top of this — three alert classes (Silent / Alert / Priority) delivering to a phone the instant a decision is needed, instead of the human checking in. SNS + SQS + DLQ are provisioned in AWS today; the CockroachDB changefeed and Lambda bridge that would carry live traffic through them are the last mile.
 
 ---
 
@@ -310,8 +304,8 @@ What actually happens when each component fails:
 | One node dies (RF=3) | Raft re-elects, lease transfers, re-replication starts; reads and writes continue | None |
 | Majority lost | Range unavailable; writes rejected | None — refuses rather than diverging |
 | Bedrock unavailable | Capture fails closed; no row without its embedding | None — the transaction rolls back |
-| Lambda fanout fails | SQS retries, then DLQ; memory already committed | None — push is retryable, memory is durable |
-| Changefeed lags | Push is late; recall unaffected | None |
+| Lambda fanout fails *(designed; changefeed bridge not yet carrying traffic)* | SQS retries, then DLQ; memory already committed | None — push is retryable, memory is durable |
+| Changefeed lags *(designed; not yet wired)* | Push is late; recall unaffected | None |
 | Human never answers | Approval expires at `expires_at`; agent takes the safe path | None |
 | Two agents write the same key | Serializable isolation; one retries | None |
 
@@ -440,16 +434,18 @@ Full rationale in [Why AWS serverless](#why-aws-serverless).
 
 ---
 
-## Proof surfaces
+## Case studies
 
-One memory core, four unrelated products. The point of building four is that a memory layer which only works for one workload isn't a memory layer, it's a feature.
+One memory core, four real, unrelated products — connected live, not staged for the demo. The point of building four is that a memory layer which only works for one workload isn't a memory layer, it's a feature.
 
-| Surface | Integration | What it proves |
+| Case study | Integration | What it proves |
 |---|---|---|
-| **Solana trading platform** | Trade decisions captured; risky entries ping the owner's phone for approval. Runs on a Raspberry Pi over Tailscale | Kill the node — the bot keeps its context |
+| **Ocean Dreams** (Three.js game) | The creature remembers player behaviour across sessions — 600+ real captures today | Behaviour visibly changes based on what it remembers about you |
+| **Solana trading platform** (Python, on a Raspberry Pi over Tailscale) | Every trade decision and its rationale captured automatically; a risky entry stops for explicit approval via CLI/MCP instead of acting alone | Kill the node on camera — the bot keeps its context, no data loss |
+| **Finestra** (AI agent on a second Raspberry Pi) | Answers a real email, its response captured to the same shared memory | An agent with its own hardware, its own inbox, sharing the one brain |
 | **Dev-team coding sessions** | Capture hooks on Claude Code, Antigravity, opencode, Kimi K3, Qwen | A new hire asks the brain, not the person who knows |
-| **Marketing agency** | Client preferences, brand guidelines, campaign history to a shared per-client brain | Onboarding takes days, not months; brand voice never drifts |
-| **Ocean Dreams** (game) | The creature remembers player behaviour across sessions | Behaviour visibly changes based on what it remembers about you |
+
+Any two of these can share recall on purpose — flip a toggle in the dashboard and Trading Bot and Finestra start recalling each other's memory. Off by default; nothing shares unless you turn it on.
 
 ---
 
