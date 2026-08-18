@@ -102,6 +102,26 @@
   .lnrow .dot3 { width: 7px; height: 7px; border-radius: 999px; background: #7fd6dc; flex: none; }
   .lnrow .ln-n { font-size: 12.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
   .lnrow .ln-c { font-family: var(--mono); font-size: 11px; color: var(--muted); flex: none; }
+  .lnrow .ln-share { flex: none; width: 22px; height: 22px; border-radius: 7px; border: 1px solid transparent; background: none; color: var(--faint); font-size: 12px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .lnrow .ln-share:hover { color: var(--accent); border-color: var(--border-strong); background: var(--panel-2); }
+  .lnrow .ln-share.has-links { color: var(--accent); }
+
+  /* Sharing popover — same card language as .detail, docked next to the
+     left rail instead of the right so it never fights the activity feed
+     for space. */
+  .sharepanel { z-index: 6; left: 240px; top: 128px; width: 260px; max-height: calc(100% - 200px); overflow-y: auto; background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: 14px; padding: 16px 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.45); display: none; pointer-events: auto; }
+  .sharepanel.on { display: block; }
+  .sharepanel .close { position: absolute; top: 10px; right: 10px; background: none; border: none; color: var(--faint); font-size: 15px; cursor: pointer; padding: 4px; }
+  .sharepanel .close:hover { color: var(--text); }
+  .sharepanel h4 { margin: 0 0 4px; font-size: 14px; padding-right: 20px; }
+  .sharepanel .sp-sub { margin: 0 0 12px; font-size: 12px; color: var(--muted); }
+  .sprow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 8px 0; border-top: 1px solid var(--border); }
+  .sprow:first-of-type { border-top: none; }
+  .sprow .sp-n { font-size: 12.5px; color: var(--text); }
+  .spswitch { flex: none; width: 34px; height: 20px; border-radius: 999px; background: var(--panel-2); border: 1px solid var(--border); cursor: pointer; position: relative; transition: background .15s, border-color .15s; }
+  .spswitch .knob { position: absolute; top: 2px; left: 2px; width: 14px; height: 14px; border-radius: 999px; background: var(--faint); transition: transform .15s, background .15s; }
+  .spswitch.on { background: var(--accent-dim); border-color: rgba(0,173,181,0.4); }
+  .spswitch.on .knob { transform: translateX(14px); background: var(--accent); }
   .leftnav .lnadd { margin-top: 10px; font-size: 12px; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(0,173,181,0.35); border-radius: 9px; padding: 9px 12px; cursor: pointer; font-family: var(--font); font-weight: 600; }
   .leftnav .lnadd:hover { background: rgba(0,173,181,0.22); }
   .lnform { display: none; margin-top: 8px; gap: 6px; flex-direction: column; }
@@ -211,6 +231,13 @@
     <span id="lnkeyToken"></span>
     <button id="lnkeyCopy">Copy key</button>
   </div>
+</div>
+
+<div class="hud sharepanel" id="sharePanel">
+  <button class="close" id="shareClose">✕</button>
+  <h4 id="shareTitle"></h4>
+  <p class="sp-sub">Off by default — flip one on to let these two projects recall each other's memories.</p>
+  <div id="shareList"></div>
 </div>
 
 <div class="hud legend" id="legend"></div>
@@ -1489,7 +1516,7 @@ function renderLeftnav() {
   list.innerHTML = netData.projects
     .slice()
     .sort((a, b) => (b.memories || 0) - (a.memories || 0))
-    .map((p) => `<div class="lnrow" data-id="${esc(p.id)}"><span class="dot3"></span><span class="ln-n">${esc(p.name)}</span><span class="ln-c">${(p.memories || 0).toLocaleString()}</span></div>`)
+    .map((p) => `<div class="lnrow" data-id="${esc(p.id)}"><span class="dot3"></span><span class="ln-n">${esc(p.name)}</span><span class="ln-c">${(p.memories || 0).toLocaleString()}</span><button class="ln-share" data-share-id="${esc(p.id)}" data-share-name="${esc(p.name)}" title="Share memory with another project">⇄</button></div>`)
     .join('');
 }
 
@@ -1561,9 +1588,60 @@ function focusProject(id) {
   panToNode(n);
 }
 $('lnlist').addEventListener('click', (e) => {
+  const shareBtn = e.target.closest('.ln-share');
+  if (shareBtn) {
+    e.stopPropagation();
+    openSharePanel(shareBtn.dataset.shareId, shareBtn.dataset.shareName);
+    return;
+  }
   const row = e.target.closest('.lnrow');
   if (row?.dataset.id) focusProject(row.dataset.id);
 });
+
+// ── Sharing popover ─────────────────────────────────────────────────────
+let shareProjectId = null;
+async function openSharePanel(id, name) {
+  shareProjectId = id;
+  $('shareTitle').textContent = `Share ${name}'s memory`;
+  $('shareList').innerHTML = `<p style="font-size:12px;color:var(--faint)">Loading…</p>`;
+  $('sharePanel').classList.add('on');
+  try {
+    const res = await fetch(`/api/projects/${id}/links`, { credentials: 'same-origin' });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'failed');
+    renderShareList(data.projects || []);
+  } catch {
+    $('shareList').innerHTML = `<p style="font-size:12px;color:var(--faint)">Couldn't load — try again.</p>`;
+  }
+}
+function renderShareList(projects) {
+  if (!projects.length) {
+    $('shareList').innerHTML = `<p style="font-size:12px;color:var(--faint)">No other projects to share with yet.</p>`;
+    return;
+  }
+  $('shareList').innerHTML = projects
+    .map((p) => `<div class="sprow"><span class="sp-n">${esc(p.name)}</span><button class="spswitch${p.linked ? ' on' : ''}" data-target="${esc(p.id)}"><span class="knob"></span></button></div>`)
+    .join('');
+}
+$('shareList').addEventListener('click', async (e) => {
+  const sw = e.target.closest('.spswitch');
+  if (!sw || !shareProjectId) return;
+  const linked = !sw.classList.contains('on');
+  sw.classList.toggle('on', linked); // optimistic — feels instant
+  try {
+    const res = await fetch(`/api/projects/${shareProjectId}/links`, {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ targetProjectId: sw.dataset.target, linked }),
+    });
+    if (!res.ok) throw new Error();
+    showToast(linked ? 'Sharing turned on — recall now crosses both projects.' : 'Sharing turned off — back to isolated.');
+  } catch {
+    sw.classList.toggle('on', !linked); // revert on failure
+    showToast("Couldn't update sharing — try again.");
+  }
+});
+$('shareClose').addEventListener('click', () => $('sharePanel').classList.remove('on'));
 
 $('addProjectBtn').addEventListener('click', () => {
   $('lnform').classList.toggle('on');
