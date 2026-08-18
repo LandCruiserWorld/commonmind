@@ -6,10 +6,16 @@ import { closePool } from './db.js';
 import { createEmbeddingProvider } from './embed.js';
 import { MemoryRepository, type ApprovalRecord } from './memory/repository.js';
 import { randomUUID } from 'node:crypto';
+import { login, logout } from './login.js';
+import { readHostedConfig, hostedCapture, hostedSearch } from './hosted.js';
 
 const USAGE = `CommonMind — the memory layer for the agentic workforce
 
 Usage: commonmind <command> [args]
+
+Account
+  login                            Connect this machine to the hosted service
+  logout                           Forget the saved credentials
 
 Memory
   capture "<text>"                 Capture a memory (row + embedding, one transaction)
@@ -22,12 +28,12 @@ Servers
   serve-inbox                      HTTP API — POST /api/memory/capture, GET /api/memory/search
   serve-cdc-bridge                 CDC changefeed bridge to SNS
 
-Setup
+After 'login', capture and ask run against the hosted service. Without it they
+talk straight to your own cluster using .env:
+
   COCKROACH_DB_URL                 CockroachDB connection string
   COMMONMIND_API_TOKEN             Bearer token for the HTTP API
   EMBED_PROVIDER                   local | bedrock   (default: local)
-
-  Copy .env.example to .env and fill those in.
 
 Docs: https://github.com/LandCruiserWorld/commonmind`;
 
@@ -38,6 +44,16 @@ export async function runCli(args = process.argv.slice(2)): Promise<void> {
   // silently. A bare `commonmind` that does nothing reads as broken.
   if (!command || command === 'help' || command === '--help' || command === '-h') {
     console.log(USAGE);
+    return;
+  }
+
+  if (command === 'login') {
+    await login();
+    return;
+  }
+
+  if (command === 'logout') {
+    logout();
     return;
   }
 
@@ -56,6 +72,30 @@ export async function runCli(args = process.argv.slice(2)): Promise<void> {
   if (command === 'serve-cdc-bridge') {
     const { serveBridge } = await import(new URL('./cdc/bridge.js', import.meta.url).href);
     await serveBridge();
+    return;
+  }
+
+  // Hosted mode short-circuits before any pool is opened — a cm_ token talks
+  // to the REST bridge only, never to CockroachDB directly.
+  const hosted = readHostedConfig();
+  if (hosted && (command === 'capture' || command === 'ask')) {
+    const text = commandArgs.filter((arg) => arg !== '--approval').join(' ').trim();
+    if (!text) throw new Error(`Usage: commonmind ${command} "<text>"`);
+
+    if (command === 'capture') {
+      console.log(await hostedCapture(hosted, text));
+      return;
+    }
+
+    const matches = await hostedSearch(hosted, text);
+    if (!matches.length) {
+      console.log('No matches.');
+      return;
+    }
+    for (const match of matches) {
+      const score = typeof match.score === 'number' ? match.score.toFixed(4) : '   -  ';
+      console.log(`${score}\t${match.content}`);
+    }
     return;
   }
 
@@ -154,8 +194,7 @@ async function waitForApproval(memories: MemoryRepository, approval: ApprovalRec
 
 // `dist/cli.js` is only ever the bin entrypoint — the library surface is
 // `index.js` — so run unconditionally. The argv[1]/import.meta.url guard this
-// replaces silently did nothing under a global install's bin symlink, which is
-// why `commonmind` printed nothing at all.
+// replaces silently did nothing under a global install's bin symlink.
 runCli().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : error);
   process.exitCode = 1;
