@@ -56,6 +56,11 @@ CREATE TABLE IF NOT EXISTS project_activity (
     memory_id      TEXT,                 -- set on capture
     hit_project_id TEXT,                 -- set on search, if the top hit came from a different project
     hit_memory_id  TEXT,
+    content        TEXT,                 -- redacted copy of a capture's content, for the ledger view
+                                          -- (browsing a project's memories directly, not via search).
+                                          -- The upstream memory core has no "list" endpoint — only
+                                          -- semantic search — so this is what makes browsing possible
+                                          -- at all. NULL on rows captured before this column existed.
     created_at     TEXT DEFAULT (datetime('now'))
 );
 
@@ -79,3 +84,36 @@ CREATE TABLE IF NOT EXISTS project_links (
 
 CREATE INDEX IF NOT EXISTS idx_project_links_a ON project_links(project_a);
 CREATE INDEX IF NOT EXISTS idx_project_links_b ON project_links(project_b);
+
+-- Handoff for `commonmind login` (the CLI's browser-based sign-in, see
+-- /cli-auth/). The browser never sees the real project token — only this
+-- opaque, single-use code. The CLI's local callback server receives the
+-- code and redeems it for the token itself, server-to-server, right after
+-- the redirect — so the token never sits in a URL, browser history, or a
+-- localhost server's request log. 2-minute TTL regardless of use.
+CREATE TABLE IF NOT EXISTS cli_auth_codes (
+    code       TEXT PRIMARY KEY,
+    token      TEXT NOT NULL,             -- copy of project_tokens.token at mint time
+    project_id TEXT NOT NULL REFERENCES project_tokens(id),
+    created_at TEXT DEFAULT (datetime('now')),
+    expires_at TEXT NOT NULL,
+    used_at    TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_cli_auth_codes_code ON cli_auth_codes(code);
+
+-- Delete, for real, as far as the user is concerned: the underlying memory
+-- core doesn't expose a delete operation yet (that's upstream, not ours to
+-- add), so "delete" here means instant, permanent hiding from every search
+-- and every project view for this user. Upgrades cleanly to a true purge
+-- the moment the core adds one — nothing about this table has to change.
+CREATE TABLE IF NOT EXISTS hidden_memories (
+    id         TEXT PRIMARY KEY,
+    user_id    TEXT NOT NULL REFERENCES users(id),
+    memory_id  TEXT NOT NULL,
+    hidden_at  TEXT DEFAULT (datetime('now')),
+    UNIQUE(user_id, memory_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_hidden_memories_user ON hidden_memories(user_id);
+CREATE INDEX IF NOT EXISTS idx_hidden_memories_memory ON hidden_memories(memory_id);

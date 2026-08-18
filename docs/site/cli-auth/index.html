@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Connect your terminal — CommonMind</title>
+<meta name="robots" content="noindex" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #222831; --bg-elev: #2b3340;
+    --panel: rgba(255,255,255,0.028); --panel-2: rgba(255,255,255,0.05);
+    --border: rgba(255,255,255,0.07); --border-strong: rgba(255,255,255,0.13);
+    --text: #eeeeee; --muted: #a9b0ba; --faint: #717986;
+    --accent: #00adb5; --accent-dim: rgba(0,173,181,0.10);
+    --red: #e46a6a; --red-dim: rgba(228,106,106,0.12);
+    --radius: 16px;
+    --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --serif: "Instrument Serif", Georgia, serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); line-height: 1.6; -webkit-font-smoothing: antialiased; }
+  .wrap { max-width: 480px; margin: 0 auto; padding: 72px 24px 100px; }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 15px; margin-bottom: 48px; text-decoration: none; color: var(--text); width: fit-content; }
+  .brand .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+
+  .eyebrow { font-family: var(--mono); font-size: 11.5px; letter-spacing: .09em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  h1 { font-size: 30px; letter-spacing: -.01em; margin: 0 0 12px; text-wrap: balance; }
+  .lead { font-size: 15px; color: var(--muted); margin: 0 0 36px; line-height: 1.65; }
+  .lead code { font-family: var(--mono); font-size: 13.5px; color: var(--text); background: var(--panel-2); padding: 1px 6px; border-radius: 5px; }
+
+  .card { background: var(--panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; }
+  .card p.who { font-size: 14px; color: var(--muted); margin: 0 0 22px; }
+  .card p.who b { color: var(--text); }
+
+  .field { width: 100%; box-sizing: border-box; background: #1c2129; border: 1px solid var(--border-strong); border-radius: 9px; padding: 12px 14px; color: var(--text); font-family: var(--font); font-size: 14px; outline: none; margin-bottom: 14px; }
+  .field:focus { border-color: var(--accent); }
+  .field::placeholder { color: var(--faint); }
+
+  .row { display: flex; gap: 10px; }
+  .btn { flex: 1; border: none; border-radius: 9px; padding: 12px 18px; font-weight: 700; font-size: 14px; cursor: pointer; font-family: var(--font); }
+  .btn-primary { background: var(--accent); color: #072a2b; }
+  .btn-primary:hover { filter: brightness(1.08); }
+  .btn-primary:disabled { opacity: .55; cursor: default; filter: none; }
+  .btn-ghost { background: transparent; border: 1px solid var(--border-strong); color: var(--muted); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--border-strong); }
+  .btn-full { width: 100%; }
+
+  .state { display: none; }
+  .state.on { display: block; }
+
+  .note { font-size: 12.5px; color: var(--faint); margin-top: 16px; line-height: 1.6; }
+  .err { font-size: 13.5px; color: var(--red); background: var(--red-dim); border: 1px solid rgba(228,106,106,0.3); border-radius: 9px; padding: 12px 14px; margin-top: 16px; }
+
+  .check { width: 44px; height: 44px; border-radius: 999px; background: var(--accent-dim); border: 1px solid rgba(0,173,181,0.32); display: flex; align-items: center; justify-content: center; margin-bottom: 18px; font-size: 20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/" class="brand"><span class="dot"></span>CommonMind</a>
+
+  <div class="eyebrow">CommonMind CLI</div>
+  <h1 id="pageTitle">Connect your terminal</h1>
+  <p class="lead" id="pageLead">Signing in here finishes <code>commonmind login</code> — your terminal picks it up automatically once you approve below, no copy-paste.</p>
+
+  <!-- Invalid/missing port — CLI isn't listening, nothing to hand off to -->
+  <div class="state" id="stateBadRequest">
+    <div class="card">
+      <p class="who">This link is missing something <code>commonmind login</code> should have included — try running the command again.</p>
+    </div>
+  </div>
+
+  <!-- Not signed in yet -->
+  <div class="state" id="stateEmail">
+    <div class="card">
+      <p class="who">Enter your email — we'll send a sign-in link. First time here creates your account.</p>
+      <input class="field" type="email" id="emailInput" placeholder="you@company.com" autocomplete="email" />
+      <button class="btn btn-primary btn-full" id="emailSubmit">Send sign-in link</button>
+      <div id="emailErr"></div>
+    </div>
+  </div>
+
+  <!-- Link sent -->
+  <div class="state" id="stateSent">
+    <div class="card">
+      <div class="check">✉️</div>
+      <p class="who">Check <b id="sentEmail"></b> for the link. Opening it finishes the connection here — this tab can stay open or close, either works.</p>
+    </div>
+  </div>
+
+  <!-- Signed in, confirm the handoff -->
+  <div class="state" id="stateAuthorize">
+    <div class="card">
+      <p class="who">Signed in as <b id="whoEmail"></b>. A CLI on this computer wants to connect — this creates a new project key named <b id="projLabel"></b> and hands it straight to your terminal.</p>
+      <div class="row">
+        <button class="btn btn-ghost" id="cancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="authorizeBtn">Authorize</button>
+      </div>
+      <div id="authErr"></div>
+    </div>
+    <p class="note">Only this session's terminal receives the key — it's never shown here, and this tab never holds it either.</p>
+  </div>
+
+  <!-- Done -->
+  <div class="state" id="stateDone">
+    <div class="card">
+      <div class="check">✅</div>
+      <p class="who" id="doneMsg">Connected. Your terminal should already show it — you can close this tab.</p>
+    </div>
+  </div>
+
+  <!-- Cancelled -->
+  <div class="state" id="stateCancelled">
+    <div class="card">
+      <p class="who">Cancelled — nothing was created. Close this tab and run <code>commonmind login</code> again if you change your mind.</p>
+    </div>
+  </div>
+</div>
+
+<script src="/js/auth.js"></script>
+<script>
+(function(){
+  function $(id){ return document.getElementById(id); }
+  function show(id){
+    document.querySelectorAll('.state').forEach(function(el){ el.classList.remove('on'); });
+    $(id).classList.add('on');
+  }
+
+  var params = new URLSearchParams(location.search);
+  var port = parseInt(params.get('port'), 10);
+  var state = params.get('state') || '';
+  var label = (params.get('label') || 'CLI').slice(0, 60);
+
+  if (!port || port < 1 || port > 65535 || !state) {
+    show('stateBadRequest');
+    return;
+  }
+
+  $('projLabel').textContent = label;
+
+  (async function boot(){
+    var user = await Auth.getUser();
+
+    if (!user) {
+      show('stateEmail');
+      $('emailSubmit').addEventListener('click', async function(){
+        var email = $('emailInput').value.trim();
+        if (!email) return;
+        $('emailSubmit').disabled = true;
+        var next = '/cli-auth/' + location.search;
+        var res = await Auth.requestMagicLink(email, next);
+        if (res && res.success) {
+          $('sentEmail').textContent = email;
+          show('stateSent');
+        } else {
+          $('emailErr').innerHTML = '<div class="err">' + ((res && res.error) || 'Could not send the link — try again.') + '</div>';
+          $('emailSubmit').disabled = false;
+        }
+      });
+      return;
+    }
+
+    $('whoEmail').textContent = user.email;
+    show('stateAuthorize');
+
+    $('cancelBtn').addEventListener('click', function(){ show('stateCancelled'); });
+
+    $('authorizeBtn').addEventListener('click', async function(){
+      $('authorizeBtn').disabled = true;
+      try {
+        var projRes = await fetch('/api/projects', {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: label }),
+        });
+        var proj = await projRes.json();
+        if (!projRes.ok || !proj.id) throw new Error(proj.error || 'Could not create a project key');
+
+        var codeRes = await fetch('/api/cli/code', {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId: proj.id }),
+        });
+        var codeData = await codeRes.json();
+        if (!codeRes.ok || !codeData.code) throw new Error(codeData.error || 'Could not authorize the CLI');
+
+        show('stateDone');
+        location.href = 'http://localhost:' + port + '/callback?code=' + encodeURIComponent(codeData.code) + '&state=' + encodeURIComponent(state);
+      } catch (e) {
+        $('authErr').innerHTML = '<div class="err">' + (e.message || 'Something went wrong — try again.') + '</div>';
+        $('authorizeBtn').disabled = false;
+      }
+    });
+  })();
+})();
+</script>
+</body>
+</html>
