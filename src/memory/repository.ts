@@ -3,6 +3,10 @@
  *
  * Implements the capture path: store a memory row AND its embedding in one
  * transaction, plus semantic recall against the C-SPANN vector index.
+ *
+ * Tenancy: `owner_id` walls one account's memory off from another's on the
+ * shared hosted cluster. NULL means unowned — pre-multi-tenant rows and
+ * self-hosted single-tenant installs — and stays visible to everyone.
  */
 
 import { getPool, withTransaction } from '../db.js';
@@ -24,13 +28,18 @@ export class MemoryRepository {
   /**
    * Atomic write: `memory_records` + `memory_embeddings` commit together.
    */
-  async remember(content: string, entityType: MemoryRecord['entityType'], embedding: number[]): Promise<string> {
+  async remember(
+    content: string,
+    entityType: MemoryRecord['entityType'],
+    embedding: number[],
+    ownerId: string | null = null,
+  ): Promise<string> {
     return withTransaction(async (client) => {
       const res = await client.query(
-        `INSERT INTO memory_records (entity_type, content)
-         VALUES ($1, $2)
+        `INSERT INTO memory_records (entity_type, content, owner_id)
+         VALUES ($1, $2, $3)
          RETURNING id`,
-        [entityType, content],
+        [entityType, content, ownerId],
       );
       const id = res.rows[0].id as string;
       await client.query(
@@ -48,13 +57,18 @@ export class MemoryRepository {
    * (`memory.note`). `visibility: 'public'` grows the shared recall index;
    * `'private'` stays contributor-only — `recall()` excludes it by default.
    */
-  async note(content: string, visibility: Visibility, embedding: number[]): Promise<string> {
+  async note(
+    content: string,
+    visibility: Visibility,
+    embedding: number[],
+    ownerId: string | null = null,
+  ): Promise<string> {
     return withTransaction(async (client) => {
       const res = await client.query(
-        `INSERT INTO memory_records (entity_type, content, visibility)
-         VALUES ('note', $1, $2)
+        `INSERT INTO memory_records (entity_type, content, visibility, owner_id)
+         VALUES ('note', $1, $2, $3)
          RETURNING id`,
-        [content, visibility],
+        [content, visibility, ownerId],
       );
       const id = res.rows[0].id as string;
       await client.query(
@@ -67,18 +81,29 @@ export class MemoryRepository {
     });
   }
 
-  /** Semantic recall against the C-SPANN vector index. Excludes private notes — contributor-only. */
-  async recall(queryEmbedding: number[], limit = 8): Promise<Array<{ id: string; content: string; score: number }>> {
+  /**
+   * Semantic recall against the C-SPANN vector index. Excludes private notes —
+   * contributor-only — and rows owned by a different account.
+   *
+   * `IS NOT DISTINCT FROM` rather than `=` because `owner_id = NULL` is never
+   * true in SQL; an unowned caller must still match unowned rows.
+   */
+  async recall(
+    queryEmbedding: number[],
+    limit = 8,
+    ownerId: string | null = null,
+  ): Promise<Array<{ id: string; content: string; score: number }>> {
     const res = await getPool().query(
       `SELECT
          r.id, r.content,
-1 - (m.embedding <=> $1::vector) AS score
+         1 - (m.embedding <=> $1::vector) AS score
        FROM memory_embeddings m
        JOIN memory_records r ON r.id = m.entity_id
        WHERE r.visibility != 'private'
+         AND (r.owner_id IS NOT DISTINCT FROM $3 OR r.owner_id IS NULL)
        ORDER BY m.embedding <=> $1::vector
        LIMIT $2`,
-      [JSON.stringify(queryEmbedding), limit],
+      [JSON.stringify(queryEmbedding), limit, ownerId],
     );
     return res.rows as Array<{ id: string; content: string; score: number }>;
   }
@@ -147,6 +172,7 @@ export class MemoryRepository {
     correlationId: string,
     decision: Extract<ApprovalStatus, 'approved' | 'denied'>,
     embedding: number[],
+    ownerId: string | null = null,
   ): Promise<ApprovalRecord> {
     return withTransaction(async (client) => {
       const serviceId = await ensureCliService(client);
@@ -183,10 +209,10 @@ export class MemoryRepository {
 
       const approval = toApprovalRecord(resolved.rows[0]);
       const memory = await client.query(
-        `INSERT INTO memory_records (entity_type, content)
-         VALUES ('decision', $1)
+        `INSERT INTO memory_records (entity_type, content, owner_id)
+         VALUES ('decision', $1, $2)
          RETURNING id`,
-        [`Approval ${approval.correlationId} was ${approval.status}: ${approval.body}`],
+        [`Approval ${approval.correlationId} was ${approval.status}: ${approval.body}`, ownerId],
       );
       await client.query(
         `INSERT INTO memory_embeddings (entity_type, entity_id, embedding)
