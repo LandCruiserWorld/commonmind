@@ -29,7 +29,7 @@ Several documents in this repo contain schedules. Only the checklist is current 
 Every change should keep the atomic-write invariant intact — a memory record and
 its embedding are written **in one transaction**. Never split them.
 
-## The 10 principles (from the bible)
+## The 10 principles (from Core Values)
 These are immutable. New pull requests must not contradict them:
 1. Memory is the product.
 2. Memory must never go down.

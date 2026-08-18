@@ -8,7 +8,7 @@ This document does not replace the plan. [`MASTER_DEVELOPER_DOC.md`](./MASTER_DE
 
 ## 1. Where we actually are
 
-**Day 1 went into strategy instead of scaffolding, and that was the right trade.** In a single day (Aug 3) the project produced: the public repo under Apache-2.0, the full product bible with a machine-readable JSON-LD spec, `MASTER_DEVELOPER_DOC` (the why, the agents, the judging-criteria map), `STRATEGIC_PLAN` (positioning and the L1–L4 cut ladder), `DEVELOPER_SPEC` (schema and API contract), the CockroachDB schema, the TypeScript memory core, and a designed landing page.
+**Day 1 went into strategy instead of scaffolding, and that was the right trade.** In a single day (Aug 3) the project produced: the public repo under Apache-2.0, the full product core values with a machine-readable JSON-LD spec, `MASTER_DEVELOPER_DOC` (the why, the agents, the judging-criteria map), `STRATEGIC_PLAN` (positioning and the L1–L4 cut ladder), `DEVELOPER_SPEC` (schema and API contract), the CockroachDB schema, the TypeScript memory core, and a designed landing page.
 
 That is why the next 14 days are **execution rather than discovery** — the hard thinking is done, the cut order is already agreed, and the judging criteria are already mapped to deliverables. Most hackathon entries reach Aug 18 without a document this good.
 
@@ -17,7 +17,7 @@ That is why the next 14 days are **execution rather than discovery** — the har
 | | State |
 |---|---|
 | Repo, license, structure, name | ✅ Done |
-| Product bible, spec, strategy, plan, landing page | ✅ Done — and deeper than the plan required |
+| Product core values, spec, strategy, plan, landing page | ✅ Done — and deeper than the plan required |
 | Schema **written** | ✅ `src/db/schema.sql` |
 | Schema **applied** | ❌ Database `commonmind` does not exist |
 | Cluster provisioned via `ccloud` | ❌ Not started — and it's a required tool *and* the kill-the-node dependency |

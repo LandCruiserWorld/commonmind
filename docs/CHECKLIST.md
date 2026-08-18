@@ -146,8 +146,8 @@ Gates are binary. Met or not met, checked end of day. Detail in [`ROADMAP.md` §
 
 The same work as the daily gates above, organised by *what we're building* rather than *when it's due*. Moved here from `BUILD_LOG.md` so one document owns the actionable plan.
 
-- [✅] Landing page / product bible (premium redesign, machine-readable JSON-LD spec)
-- [✅] 10 principles + `#commonmind-bible` JSON-LD (agents read it to stay on track)
+- [✅] Landing page / product core values (premium redesign, machine-readable JSON-LD spec)
+- [✅] 10 principles + `#commonmind-values` JSON-LD (agents read it to stay on track)
 - [🟡] `npm install -g commonmind` front door → local CockroachDB + `save / ask / ask --approval`
 - [🟡] **CommonMind MCP server** (universal adapter: capture · recall · ask · approve · note) — no per-app plugins
 

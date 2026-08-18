@@ -46,4 +46,4 @@ When you make a decision, record it in [`BUILD_LOG.md`](BUILD_LOG.md) with the r
 
 ## The product story
 
-- [Landing page](site/index.html) — the narrative plus the embedded `#commonmind-bible` JSON-LD that agents can parse. **Single copy**, deployed to <https://commonmind.agent9.dev>. Do not fork a second landing page.
+- [Landing page](site/index.html) — the narrative plus the embedded `#commonmind-values` JSON-LD that agents can parse. **Single copy**, deployed to <https://commonmind.agent9.dev>. Do not fork a second landing page.
