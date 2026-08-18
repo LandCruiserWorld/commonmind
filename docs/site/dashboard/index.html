@@ -142,8 +142,55 @@
   .pal .out{max-height:44vh;overflow-y:auto;padding:8px;}
   .pal .it{padding:12px 14px;border-radius:10px;}
   .pal .it p{font-size:13.5px;margin-top:3px;}
+  .pal .it .row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
   .pal .score{font-family:var(--m);font-size:10.5px;color:var(--ac);}
+  .pal .del-btn{font-family:var(--f);font-size:11px;font-weight:600;color:var(--fa);background:none;border:1px solid var(--bd2);border-radius:7px;padding:4px 9px;cursor:pointer;flex:none;opacity:0;transition:opacity .15s,border-color .15s,color .15s;}
+  .pal .it:hover .del-btn{opacity:1;}
+  .pal .del-btn:hover{border-color:var(--rd);color:var(--rd);}
+  .pal .it.removing{opacity:.35;pointer-events:none;}
+
+  .ledger .pal{width:min(92vw,680px);max-height:78vh;display:flex;flex-direction:column;}
+  .ledger-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--bd);flex:none;}
+  .ledger-hd h3{font-size:15px;font-weight:600;}
+  .ledger-hd .eb{display:block;margin-bottom:2px;}
+  .ledger-hd button{background:none;border:0;color:var(--fa);font-size:18px;cursor:pointer;line-height:1;padding:4px;}
+  .ledger-hd button:hover{color:var(--tx);}
+  .ledger-list{overflow-y:auto;padding:8px;flex:1;}
+  .ledger-row{padding:12px 14px;border-radius:10px;border-bottom:1px solid var(--bd);}
+  .ledger-row:last-child{border-bottom:0;}
+  .ledger-row .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px;}
+  .ledger-row .date{font-family:var(--m);font-size:10.5px;color:var(--fa);}
+  .ledger-row p{font-size:13.5px;line-height:1.5;}
+  .ledger-row p.empty{color:var(--fa);font-style:italic;}
+  .ledger-foot{padding:12px 18px;border-top:1px solid var(--bd);flex:none;text-align:center;}
+  .ledger-foot button{width:100%;}
   .pal .ft{padding:11px 22px;border-top:1px solid var(--bd);font-size:11.5px;color:var(--fa);}
+
+  /* Memory graph: a project as a hub, its real memories as nodes radiating
+     out — hub-and-spoke, adapted directly from the project-network canvas
+     above it. Deliberately NOT a full interconnected mesh: memories don't
+     have links to each other in this data model (only project-to-project
+     links exist), so drawing fake memory-to-memory edges would be showing
+     a connection that isn't real. This shows the one that is: every node
+     here really is that project's own captured content, clickable to the
+     actual text. */
+  .memgraph .pal{width:min(94vw,900px);height:min(86vh,720px);display:flex;flex-direction:column;padding:0;}
+  .mg-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--bd);flex:none;}
+  .mg-hd h3{font-size:15px;font-weight:600;}
+  .mg-hd .eb{display:block;margin-bottom:2px;}
+  .mg-hd button{background:none;border:0;color:var(--fa);font-size:18px;cursor:pointer;line-height:1;padding:4px;}
+  .mg-hd button:hover{color:var(--tx);}
+  .mg-body{position:relative;flex:1;overflow:hidden;}
+  .mg-body canvas{display:block;width:100%;height:100%;cursor:default;}
+  .mg-legend{position:absolute;left:14px;bottom:14px;display:flex;flex-wrap:wrap;gap:10px;font-family:var(--m);font-size:10px;color:var(--fa);pointer-events:none;}
+  .mg-legend span{display:inline-flex;align-items:center;gap:5px;}
+  .mg-legend i{width:8px;height:8px;border-radius:50%;display:inline-block;}
+  .mg-detail{position:absolute;right:14px;top:14px;width:280px;max-height:calc(100% - 28px);overflow-y:auto;background:var(--elev);border:1px solid var(--bd2);border-radius:var(--rs);padding:14px 16px;box-shadow:0 14px 40px rgba(0,0,0,.35);display:none;}
+  .mg-detail.on{display:block;}
+  .mg-detail .date{font-family:var(--m);font-size:10.5px;color:var(--fa);display:block;margin-bottom:6px;}
+  .mg-detail p{font-size:13px;line-height:1.5;}
+  .mg-detail .close{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--fa);cursor:pointer;font-size:14px;}
+  .mg-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--fa);font-size:13px;}
 
   .new-proj-form{display:none;}
   .new-proj-form.on{display:block;padding:16px 26px;border-bottom:1px solid var(--bd);background:var(--panel);}
@@ -178,6 +225,7 @@
       </div>
       <div class="grow"></div>
       <button class="ask" id="askBtn">Ask the company brain<span class="k">⌘K</span></button>
+      <a class="connect-btn" href="/graph/" style="text-decoration:none;display:inline-flex;align-items:center;">✦ Full graph</a>
       <button class="connect-btn" id="connectBtn">+ Connect a project</button>
       <button class="ib" id="signoutBtn" title="Sign out">⏻</button>
     </div>
@@ -238,6 +286,38 @@
   </div>
 </div>
 
+<div class="pal-s ledger" id="ledgerS">
+  <div class="pal">
+    <div class="ledger-hd">
+      <div><span class="eb">Ledger</span><h3 id="ledgerTitle"></h3></div>
+      <button id="ledgerClose" aria-label="Close">✕</button>
+    </div>
+    <div class="ledger-list" id="ledgerList"></div>
+    <div class="ledger-foot" id="ledgerFoot" style="display:none">
+      <button class="mini-btn" id="ledgerMore" style="margin:0">Load more</button>
+    </div>
+  </div>
+</div>
+
+<div class="pal-s memgraph" id="memGraphS">
+  <div class="pal">
+    <div class="mg-hd">
+      <div><span class="eb">Memory graph</span><h3 id="mgTitle"></h3></div>
+      <button id="mgClose" aria-label="Close">✕</button>
+    </div>
+    <div class="mg-body">
+      <canvas id="mgCv"></canvas>
+      <div class="mg-empty" id="mgEmpty" style="display:none">Nothing captured here yet.</div>
+      <div class="mg-legend" id="mgLegend"></div>
+      <div class="mg-detail" id="mgDetail">
+        <button class="close" id="mgDetailClose">✕</button>
+        <span class="date" id="mgDetailDate"></span>
+        <p id="mgDetailBody"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 (function(){
 "use strict";
@@ -288,9 +368,10 @@ var PROJ=[], EDGES=[], LINKS=[], RECENT=[];
 
 function byId(id){for(var i=0;i<PROJ.length;i++) if(PROJ[i].id===id) return PROJ[i];}
 
-async function loadNetwork(){
-  var res=await fetch("/api/network",{credentials:"same-origin"});
-  var d=await res.json();
+var seenActivity=null; // null = not yet initialized (first load), else a Set
+var pollTimer=null;
+
+function applyNetworkData(d){
   HUB.mem=d.core.memories||0;
   $("sMem").textContent=HUB.mem.toLocaleString();
   $("sProj").textContent=(d.projects||[]).length;
@@ -303,7 +384,7 @@ async function loadNetwork(){
       mem:p.memories||0, searches:p.searches||0,
       lastActive:p.lastActive, connectedAt:p.connectedAt,
       ang:-Math.PI/2 + (i/n)*Math.PI*2,
-      r:22+Math.min(18,Math.sqrt(p.memories||0)*2),
+      r:22+Math.min(34,Math.sqrt(p.memories||0)*2.6),
       flow: isRecent(p.lastActive) ? 1 : 0
     };
   });
@@ -314,7 +395,38 @@ async function loadNetwork(){
   $("emptyHint").classList.toggle("hide", PROJ.length>0);
   renderInsights();
   renderFlow();
+}
+
+async function loadNetwork(){
+  var res=await fetch("/api/network",{credentials:"same-origin"});
+  var d=await res.json();
+  applyNetworkData(d);
+
+  // First load: mark everything we're about to replay as "seen" so the
+  // live poller (below) doesn't re-fire the same real activity again a
+  // few seconds later — it only ever animates what's genuinely new.
+  seenActivity=new Set(RECENT.map(function(ev){return ev.id;}));
   if(!reduce) replayRecent();
+
+  if(!pollTimer) pollTimer=setInterval(pollNetwork,10000);
+}
+
+// Live update: real activity, polled — not a one-time replay. Anything
+// that happened since the last poll gets a real pulse the moment we see
+// it; everything else (stats, node sizes, edges) just refreshes in place.
+async function pollNetwork(){
+  var res;
+  try{ res=await fetch("/api/network",{credentials:"same-origin"}); }catch(e){ return; }
+  if(!res.ok) return;
+  var d=await res.json();
+  applyNetworkData(d);
+  if(!seenActivity) return;
+  RECENT.slice().reverse().forEach(function(ev){
+    if(seenActivity.has(ev.id)) return;
+    seenActivity.add(ev.id);
+    if(reduce) return;
+    pulses.push({projId:ev.projectId,dir:ev.action==="capture"?1:-1,u:0,v:.007,landed:false});
+  });
 }
 
 function isRecent(ts){ if(!ts) return false; return (Date.now()-Date.parse(ts+"Z"))<1000*60*60*24*3; }
@@ -370,6 +482,18 @@ function draw(t){
     var A=projPos(a,t), B=projPos(b,t);
     ctx.strokeStyle="rgba("+AC+",.55)";ctx.lineWidth=1.8;
     ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.quadraticCurveTo(h.x,h.y,B.x,B.y);ctx.stroke();
+  });
+
+  // Detected connections stay faintly visible all the time, not just on
+  // hover — the "brain made a connection nobody wired" moment is the best
+  // proof-of-magic this map has, and a viewer who never thinks to hover
+  // should still see it. Hovering just brightens what's already there.
+  EDGES.forEach(function(e){
+    var a=byId(e.from), b=byId(e.to); if(!a||!b) return;
+    var A=projPos(a,t), B=projPos(b,t);
+    ctx.strokeStyle="rgba("+XC+",.22)";ctx.lineWidth=1.2;ctx.setLineDash([2,7]);
+    ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.quadraticCurveTo(h.x,h.y,B.x,B.y);ctx.stroke();
+    ctx.setLineDash([]);
   });
 
   var rel={};
@@ -497,6 +621,10 @@ function openProject(p){
     '<div><div class="v num">'+p.searches.toLocaleString()+'</div><div class="l">recalls</div></div>'+
     '<div><div class="v num">'+(p.flow?"active":"quiet")+'</div><div class="l">last 3 days</div></div>';
   var h="";
+  h+='<div style="display:flex;gap:8px;margin-bottom:18px;">'+
+     '<button class="mini-btn" id="dBrowse" style="margin:0;flex:1;">Browse all '+p.mem.toLocaleString()+' '+(p.mem===1?"memory":"memories")+' →</button>'+
+     '<button class="mini-btn" id="dGraph" style="margin:0;flex:1;">View as graph</button>'+
+     '</div>';
   var links=EDGES.filter(function(e){return e.from===p.id||e.to===p.id;});
   if(links.length){
     h+='<span class="eb">What the brain connected this to</span>';
@@ -514,6 +642,8 @@ function openProject(p){
   $("dBody").innerHTML=h;
   show();
   renderShareSection(p);
+  $("dBrowse").addEventListener("click",function(){openLedger(p);});
+  $("dGraph").addEventListener("click",function(){openMemGraph(p);});
 
   $("dShowKey").onclick=async function(){
     var box=$("dKeyBox");
@@ -532,6 +662,216 @@ function openProject(p){
     loadNetwork();
   };
 }
+/* ---------- ledger — browse a project's memories directly, most
+   recent first, instead of guessing a search query ---------- */
+var ledgerCursor=null, ledgerLoading=false, ledgerProjectId=null;
+function fmtDate(iso){
+  if(!iso) return "";
+  var d=new Date(iso+"Z");
+  return d.toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
+}
+function ledgerRow(entry){
+  var body=entry.content
+    ? '<p>'+esc(entry.content)+'</p>'
+    : '<p class="empty">Captured before content browsing was added — not viewable here.</p>';
+  return '<div class="ledger-row" data-id="'+esc(entry.id)+'">'+
+    '<div class="row"><span class="date">'+esc(fmtDate(entry.createdAt))+'</span>'+
+    '<button class="del-btn" title="Delete this memory">Delete</button></div>'+
+    body+'</div>';
+}
+async function loadLedgerPage(append){
+  if(ledgerLoading) return;
+  ledgerLoading=true;
+  var url="/api/projects/"+ledgerProjectId+"/ledger?limit=20"+(append&&ledgerCursor?"&cursor="+encodeURIComponent(ledgerCursor):"");
+  try{
+    var res=await fetch(url,{credentials:"same-origin"});
+    var data=await res.json();
+    var entries=data.entries||[];
+    if(!append) $("ledgerList").innerHTML="";
+    if(!append && !entries.length){
+      $("ledgerList").innerHTML='<div class="ledger-row"><p class="empty">Nothing captured here yet.</p></div>';
+    } else {
+      $("ledgerList").insertAdjacentHTML("beforeend",entries.map(ledgerRow).join(""));
+    }
+    ledgerCursor=data.nextCursor;
+    $("ledgerFoot").style.display=ledgerCursor?"block":"none";
+  }catch(e){
+    if(!append) $("ledgerList").innerHTML='<div class="ledger-row"><p class="empty">Couldn\'t load — try again.</p></div>';
+  }
+  ledgerLoading=false;
+}
+function openLedger(p){
+  ledgerProjectId=p.id;ledgerCursor=null;
+  $("ledgerTitle").textContent=p.n;
+  $("ledgerList").innerHTML='<div class="ledger-row"><p class="empty">Loading…</p></div>';
+  $("ledgerFoot").style.display="none";
+  $("ledgerS").classList.add("on");
+  loadLedgerPage(false);
+}
+function closeLedger(){$("ledgerS").classList.remove("on");}
+$("ledgerClose").addEventListener("click",closeLedger);
+$("ledgerS").addEventListener("click",function(e){if(e.target===$("ledgerS"))closeLedger();});
+$("ledgerMore").addEventListener("click",function(){loadLedgerPage(true);});
+$("ledgerList").addEventListener("click",async function(e){
+  var btn=e.target.closest(".del-btn");
+  if(!btn) return;
+  var row=btn.closest(".ledger-row");
+  var id=row&&row.getAttribute("data-id");
+  if(!id) return;
+  if(!confirm("Delete this memory? It stops showing up everywhere, immediately.")) return;
+  row.style.opacity=".35";
+  try{
+    var res=await fetch("/api/memory/"+encodeURIComponent(id),{method:"DELETE",credentials:"same-origin"});
+    if(res.ok){ row.remove(); loadNetwork(); } else { row.style.opacity="1"; }
+  }catch(e){ row.style.opacity="1"; }
+});
+
+/* ---------- memory graph — a project as hub, its real memories as nodes
+   radiating out, adapted from the same hub-and-spoke pattern the project
+   network above uses (hubPos/projPos), one level deeper. Deliberately NOT
+   a full interconnected mesh: memories don't have links to each other in
+   this data model, only project-to-project links do — drawing fake
+   memory-to-memory edges would show a connection that isn't real. This
+   shows the one that is: every node here really is that project's own
+   captured content, pulled live and clickable to the actual text. ---- */
+var mgNodes=[],mgW=0,mgH=0,mgCX=0,mgCY=0,mgRAD=0,mgDPR=Math.min(window.devicePixelRatio||1,2);
+var mgCv=null,mgCtx=null,mgHover=null,mgSelected=null,mgRunning=false,mgProjectName="";
+var MG_TYPES={
+  feed:{color:"74,222,128",label:"fed"},
+  pet:{color:"255,127,176",label:"pet"},
+  startled:{color:"243,162,89",label:"startled / fled"},
+  caught:{color:"242,109,109",label:"caught"},
+  revived:{color:"0,173,181",label:"revived"},
+  observed:{color:"127,214,220",label:"observed"},
+  other:{color:"169,176,186",label:"other"},
+};
+function mgClassify(content){
+  var c=(content||"").toLowerCase();
+  if(c.indexOf("caught by a predator")>-1) return "caught";
+  if(c.indexOf("found alive and well again")>-1) return "revived";
+  if(c.indexOf("startled by the diver")>-1) return "startled";
+  if(c.indexOf("escaped a predator")>-1) return "startled";
+  if(c.indexOf("observed calmly")>-1) return "observed";
+  if(c.indexOf("fed ")===0||c.indexOf(" fed ")>-1) return "feed";
+  if(c.indexOf("pet ")===0||c.indexOf(" pet ")>-1) return "pet";
+  return "other";
+}
+function mgSize(){
+  var host=$("mgCv").parentElement;
+  var b=host.getBoundingClientRect();
+  mgW=b.width;mgH=b.height;
+  mgCv.width=mgW*mgDPR;mgCv.height=mgH*mgDPR;mgCtx.setTransform(mgDPR,0,0,mgDPR,0,0);
+  mgCX=mgW/2;mgCY=mgH/2;mgRAD=Math.min(mgW,mgH)*0.38;
+}
+function mgHubPos(t){return {x:mgCX+Math.sin(t*.00016)*4,y:mgCY+Math.cos(t*.00013)*4};}
+function mgNodePos(n,t){
+  var a=n.ang+Math.sin(t*.0001+n.ang)*.03;
+  var r=mgRAD*n.rf;
+  var h=mgHubPos(t);
+  return {x:h.x+Math.cos(a)*r,y:h.y+Math.sin(a)*r*.86};
+}
+function mgDraw(t){
+  mgCtx.clearRect(0,0,mgW,mgH);
+  var h=mgHubPos(t);
+  mgNodes.forEach(function(n){
+    var P=mgNodePos(n,t),type=MG_TYPES[n.type],on=mgHover===n||mgSelected===n;
+    mgCtx.strokeStyle="rgba("+type.color+","+(on?.65:.22)+")";
+    mgCtx.lineWidth=on?1.6:1;
+    mgCtx.beginPath();mgCtx.moveTo(P.x,P.y);mgCtx.lineTo(h.x,h.y);mgCtx.stroke();
+  });
+  var hg=mgCtx.createRadialGradient(h.x,h.y,10,h.x,h.y,46);
+  hg.addColorStop(0,"rgba(0,173,181,.22)");hg.addColorStop(1,"rgba(0,173,181,0)");
+  mgCtx.fillStyle=hg;mgCtx.beginPath();mgCtx.arc(h.x,h.y,46,0,6.29);mgCtx.fill();
+  mgCtx.fillStyle="#2b3340";mgCtx.beginPath();mgCtx.arc(h.x,h.y,20,0,6.29);mgCtx.fill();
+  mgCtx.strokeStyle="rgba(0,173,181,.85)";mgCtx.lineWidth=2;mgCtx.stroke();
+  mgCtx.fillStyle="#eeeeee";mgCtx.font="600 12px Inter, system-ui, sans-serif";
+  mgCtx.textAlign="center";mgCtx.textBaseline="middle";
+  mgCtx.fillText(mgProjectName.length>14?mgProjectName.slice(0,13)+"…":mgProjectName,h.x,h.y);
+  mgNodes.forEach(function(n){
+    var P=mgNodePos(n,t),type=MG_TYPES[n.type],on=mgHover===n||mgSelected===n,r=on?7:5;
+    var gl=mgCtx.createRadialGradient(P.x,P.y,r*.3,P.x,P.y,r*3);
+    gl.addColorStop(0,"rgba("+type.color+","+(on?.5:.24)+")");gl.addColorStop(1,"rgba("+type.color+",0)");
+    mgCtx.fillStyle=gl;mgCtx.beginPath();mgCtx.arc(P.x,P.y,r*3,0,6.29);mgCtx.fill();
+    mgCtx.fillStyle="rgba("+type.color+",.92)";mgCtx.beginPath();mgCtx.arc(P.x,P.y,r,0,6.29);mgCtx.fill();
+    if(on){mgCtx.strokeStyle="#fff";mgCtx.lineWidth=1.4;mgCtx.stroke();}
+    n._x=P.x;n._y=P.y;n._r=r+4; // generous hit-test radius, easy to click
+  });
+}
+function mgTick(t){
+  if(!mgRunning) return;
+  mgDraw(t);
+  requestAnimationFrame(mgTick);
+}
+function mgNodeAt(x,y){
+  for(var i=mgNodes.length-1;i>=0;i--){
+    var n=mgNodes[i],dx=x-n._x,dy=y-n._y;
+    if(dx*dx+dy*dy<=n._r*n._r) return n;
+  }
+  return null;
+}
+function mgShowDetail(n){
+  mgSelected=n;
+  $("mgDetailDate").textContent=fmtDate(n.createdAt);
+  $("mgDetailBody").textContent=n.content||"(no content)";
+  $("mgDetail").classList.add("on");
+}
+async function openMemGraph(p){
+  mgProjectName=p.n;
+  $("mgTitle").textContent=p.n;
+  $("mgEmpty").style.display="none";
+  $("mgDetail").classList.remove("on");
+  mgSelected=null;mgHover=null;mgNodes=[];
+  $("memGraphS").classList.add("on");
+  if(!mgCv){
+    mgCv=$("mgCv");mgCtx=mgCv.getContext("2d");
+    mgCv.addEventListener("mousemove",function(e){
+      var b=mgCv.getBoundingClientRect();
+      mgHover=mgNodeAt(e.clientX-b.left,e.clientY-b.top);
+      mgCv.style.cursor=mgHover?"pointer":"default";
+    });
+    mgCv.addEventListener("click",function(e){
+      var b=mgCv.getBoundingClientRect();
+      var n=mgNodeAt(e.clientX-b.left,e.clientY-b.top);
+      if(n) mgShowDetail(n);
+    });
+    window.addEventListener("resize",function(){if($("memGraphS").classList.contains("on")) mgSize();});
+  }
+  mgSize();
+  mgRunning=true;
+  requestAnimationFrame(mgTick);
+  // Legend only shows types actually present — no "caught" swatch on a
+  // project that's never had one.
+  try{
+    var res=await fetch("/api/projects/"+p.id+"/ledger?limit=2000",{credentials:"same-origin"});
+    var data=await res.json();
+    var entries=data.entries||[];
+    if(!entries.length){ $("mgEmpty").style.display="flex"; return; }
+    var seen={};
+    mgNodes=entries.map(function(e,i){
+      var type=mgClassify(e.content);
+      seen[type]=1;
+      return { id:e.id, content:e.content, createdAt:e.createdAt, type:type,
+        ang:(i/entries.length)*6.283+Math.random()*0.3, rf:0.55+Math.random()*0.45 };
+    });
+    var legend="";
+    Object.keys(MG_TYPES).forEach(function(k){
+      if(!seen[k]) return;
+      legend+='<span><i style="background:rgb('+MG_TYPES[k].color+')"></i>'+MG_TYPES[k].label+'</span>';
+    });
+    $("mgLegend").innerHTML=legend;
+  }catch(e){
+    $("mgEmpty").textContent="Couldn't load.";
+    $("mgEmpty").style.display="flex";
+  }
+}
+function closeMemGraph(){
+  $("memGraphS").classList.remove("on");
+  mgRunning=false;
+}
+$("mgClose").addEventListener("click",closeMemGraph);
+$("memGraphS").addEventListener("click",function(e){if(e.target===$("memGraphS"))closeMemGraph();});
+$("mgDetailClose").addEventListener("click",function(){$("mgDetail").classList.remove("on");mgSelected=null;});
+
 async function renderShareSection(p){
   var host=$("dShare"); if(!host) return;
   var res=await fetch("/api/projects/"+p.id+"/links",{credentials:"same-origin"});
@@ -651,7 +991,7 @@ function openPalette(){$("palS").classList.add("on");$("pq").value="";pout("");$
 $("askBtn").addEventListener("click",openPalette);
 document.addEventListener("keydown",function(e){
   if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openPalette();}
-  if(e.key==="Escape"){$("palS").classList.remove("on");closeDraw();}
+  if(e.key==="Escape"){$("palS").classList.remove("on");closeLedger();closeMemGraph();closeDraw();}
 });
 $("palS").addEventListener("click",function(e){if(e.target===$("palS"))$("palS").classList.remove("on");});
 
@@ -667,7 +1007,7 @@ async function pout(q){
       var data=await res.json();
       var hits=data.results||[];
       $("pout").innerHTML=hits.length
-        ? hits.map(function(h){return '<div class="it"><span class="score">'+ (h.score*100).toFixed(0) +'% match</span><p>'+esc(h.content)+'</p></div>';}).join("")
+        ? hits.map(function(h){return '<div class="it" data-id="'+esc(h.id||"")+'"><div class="row"><span class="score">'+ (h.score*100).toFixed(0) +'% match</span><button class="del-btn" title="Delete this memory">Delete</button></div><p>'+esc(h.content)+'</p></div>';}).join("")
         : '<div class="it"><p style="color:var(--fa)">Nothing found — capture something first.</p></div>';
     }catch(e){
       $("pout").innerHTML='<div class="it"><p style="color:var(--fa)">Search unavailable right now.</p></div>';
@@ -675,6 +1015,28 @@ async function pout(q){
   },350);
 }
 $("pq").addEventListener("input",function(){pout($("pq").value);});
+$("pout").addEventListener("click",async function(e){
+  var btn=e.target.closest(".del-btn");
+  if(!btn) return;
+  var item=btn.closest(".it");
+  var id=item&&item.getAttribute("data-id");
+  if(!id) return;
+  if(!confirm("Delete this memory? It stops showing up everywhere, immediately.")) return;
+  item.classList.add("removing");
+  try{
+    var res=await fetch("/api/memory/"+encodeURIComponent(id),{method:"DELETE",credentials:"same-origin"});
+    if(res.ok){
+      item.style.maxHeight=item.offsetHeight+"px";
+      requestAnimationFrame(function(){item.style.maxHeight="0";item.style.overflow="hidden";});
+      setTimeout(function(){item.remove();},200);
+      loadNetwork();
+    } else {
+      item.classList.remove("removing");
+    }
+  }catch(e){
+    item.classList.remove("removing");
+  }
+});
 
 function copyText(text,btn){
   navigator.clipboard.writeText(text).then(function(){

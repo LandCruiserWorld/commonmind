@@ -8,7 +8,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
-<script type="application/ld+json" id="commonmind-bible">
+<script type="application/ld+json" id="commonmind-values">
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
@@ -100,12 +100,12 @@
   },
   "buildLog": [
     {"id":"redesign","title":"Landing page · premium redesign","state":"done","date":"Aug 4"},
-    {"id":"bible","title":"Product bible (10 principles) + machine-readable spec","state":"done","date":"Aug 4"},
+    {"id":"values","title":"Core values (10 principles) + machine-readable spec","state":"done","date":"Aug 4"},
     {"id":"mcp","title":"CommonMind MCP server (universal adapter)","state":"done","date":"Aug 7"},
     {"id":"cli","title":"create-commonmind scaffold + CLI","state":"todo","date":"Aug 6"},
     {"id":"recall","title":"Capture → recall end-to-end","state":"done","date":"Aug 14"},
     {"id":"trading","title":"Trading bot on Raspberry Pi + Tailscale","state":"wip","date":"Aug 14"},
-    {"id":"ocean","title":"Ocean Dreams integration","state":"todo","date":"Aug 14"},
+    {"id":"ocean","title":"Ocean Dreams integration","state":"done","date":"Aug 17"},
     {"id":"agents","title":"Agents layer + resilience","state":"wip","date":"Aug 16"},
     {"id":"video","title":"Demo video + kill-the-node","state":"todo","date":"Aug 17"},
     {"id":"submit","title":"Hackathon submission","state":"todo","date":"Aug 18"}
@@ -331,17 +331,17 @@
   .vid-embed em { color: var(--muted); font-style: normal; }
   @media (max-width: 840px) { .case { grid-template-columns: 1fr; } .case .right { border-left: none; border-top: 1px solid var(--border); } }
 
-  .bible { border-top: 1px solid var(--border); background: linear-gradient(180deg, transparent, rgba(0,173,181,0.03), transparent); }
-  .bible-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; margin-top: 44px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
-  @media (max-width: 860px) { .bible-grid { grid-template-columns: 1fr; } }
-  .bible-item { padding: 22px 26px; border-bottom: 1px solid var(--border); display: flex; gap: 16px; align-items: flex-start; background: var(--panel); }
-  .bible-item:nth-child(odd) { border-right: 1px solid var(--border); }
-  @media (max-width: 860px) { .bible-item:nth-child(odd) { border-right: none; } }
-  .bible-item:nth-last-child(-n+2) { border-bottom: none; }
-  .bible-item .n { font-family: var(--mono); font-size: 13px; color: var(--accent); font-weight: 600; min-width: 26px; padding-top: 2px; }
-  .bible-item h4 { font-size: 15.5px; margin-bottom: 4px; }
-  .bible-item p { font-size: 13.5px; color: var(--muted); }
-  .bible-note { margin-top: 22px; font-size: 13px; color: var(--faint); font-family: var(--mono); }
+  .values { border-top: 1px solid var(--border); background: linear-gradient(180deg, transparent, rgba(0,173,181,0.03), transparent); }
+  .values-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0; margin-top: 44px; border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+  @media (max-width: 860px) { .values-grid { grid-template-columns: 1fr; } }
+  .values-item { padding: 22px 26px; border-bottom: 1px solid var(--border); display: flex; gap: 16px; align-items: flex-start; background: var(--panel); }
+  .values-item:nth-child(odd) { border-right: 1px solid var(--border); }
+  @media (max-width: 860px) { .values-item:nth-child(odd) { border-right: none; } }
+  .values-item:nth-last-child(-n+2) { border-bottom: none; }
+  .values-item .n { font-family: var(--mono); font-size: 13px; color: var(--accent); font-weight: 600; min-width: 26px; padding-top: 2px; }
+  .values-item h4 { font-size: 15.5px; margin-bottom: 4px; }
+  .values-item p { font-size: 13.5px; color: var(--muted); }
+  .values-note { margin-top: 22px; font-size: 13px; color: var(--faint); font-family: var(--mono); }
 
   .split { display: grid; grid-template-columns: 1.15fr 1fr; gap: 48px; align-items: center; }
   @media (max-width: 860px) { .split { grid-template-columns: 1fr; } }
@@ -471,7 +471,7 @@
   <div class="wrap nav-inner">
     <div class="brand"><span class="logo"><svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" d="M12 3.4 20.6 7.2 17.7 18.8 6.3 18.8 3.4 7.2 Z"/><g stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.5"><path d="M12 3.4 12 11.6"/><path d="M20.6 7.2 12 11.6"/><path d="M6.3 18.8 12 11.6"/><path d="M17.7 18.8 12 11.6"/><path d="M3.4 7.2 12 11.6"/></g><circle cx="12" cy="11.6" r="1.7" fill="currentColor"/><g fill="currentColor"><circle cx="12" cy="3.4" r="1.4"/><circle cx="20.6" cy="7.2" r="1.4"/><circle cx="17.7" cy="17" r="1.4"/><circle cx="6.3" cy="17" r="1.4"/><circle cx="3.4" cy="7.2" r="1.4"/></g></svg></span>CommonMind</div>
     <div class="nav-links">
-      <a href="#how">How it works</a><a href="#graph">Memory map</a><a href="#bridge">The bridge</a><a href="#talk">Talk back</a><a href="#uses">Use cases</a><a href="#bible">The bible</a><a href="#pricing">Pricing</a>
+      <a href="#how">How it works</a><a href="#graph">Memory map</a><a href="#bridge">The bridge</a><a href="#talk">Talk back</a><a href="#uses">Use cases</a><a href="#values">Core values</a><a href="#pricing">Pricing</a>
     </div>
     <div class="nav-cta"><a class="btn btn-ghost btn-sm" href="#log">Log in</a><a class="btn btn-primary btn-sm" href="#start">Start free</a></div>
   </div>
@@ -751,26 +751,26 @@
   </div>
 </section>
 
-<section id="bible" class="bible">
+<section id="values" class="values">
   <div class="wrap">
     <div class="sec">
-      <div class="sec-label">The product bible</div>
+      <div class="sec-label">CommonMind core values</div>
       <h2>What we believe. What we're building. What agents must stay true to.</h2>
       <p class="sub">This page is the living contract: humans read the story, agents read the spec below. Ten immutable principles keep everyone — human and agent — on the same page while we build.</p>
     </div>
-    <div class="bible-grid">
-      <div class="bible-item"><span class="n">01</span><div><h4>Memory is the product</h4><p>Not an afterthought bolted onto an app — it is the reason the product exists.</p></div></div>
-      <div class="bible-item"><span class="n">02</span><div><h4>Memory must never go down</h4><p>An agent whose memory goes offline doesn't degrade gracefully — it stops.</p></div></div>
-      <div class="bible-item"><span class="n">03</span><div><h4>Bridge, don't flood</h4><p>We close the gap between what agents do and what people know — with signal, not spam.</p></div></div>
-      <div class="bible-item"><span class="n">04</span><div><h4>Milestones, not noise</h4><p>Record everything. Alert only on start, needs-you, and done-differently.</p></div></div>
-      <div class="bible-item"><span class="n">05</span><div><h4>Human decides, agent executes</h4><p>Autonomous on safe work; consequential decisions stop for a person.</p></div></div>
-      <div class="bible-item"><span class="n">06</span><div><h4>One core, any product</h4><p>Swiss Army Knife. The memory layer is universal — trading, games, apps, code.</p></div></div>
-      <div class="bible-item"><span class="n">07</span><div><h4>Brain health, not timecard</h4><p>Participation is vitality, not surveillance. We surface who's feeding the brain.</p></div></div>
-      <div class="bible-item"><span class="n">08</span><div><h4>The front door matters</h4><p>One command, zero accounts to see the magic. Onboarding is the demo.</p></div></div>
-      <div class="bible-item"><span class="n">09</span><div><h4>Memory improves itself</h4><p>The commitment: consolidation makes it measurably better over time. Designed, specified — not built yet, and we'd rather say that than fake the curve.</p></div></div>
-      <div class="bible-item"><span class="n">10</span><div><h4>Kill the node, memory survives</h4><p>The commitment: resilience recorded on camera, not claimed in a README. Not filmed yet — the cluster is genuinely multi-node, the proof is still ahead of us.</p></div></div>
+    <div class="values-grid">
+      <div class="values-item"><span class="n">01</span><div><h4>Memory is the product</h4><p>Not an afterthought bolted onto an app — it is the reason the product exists.</p></div></div>
+      <div class="values-item"><span class="n">02</span><div><h4>Memory must never go down</h4><p>An agent whose memory goes offline doesn't degrade gracefully — it stops.</p></div></div>
+      <div class="values-item"><span class="n">03</span><div><h4>Bridge, don't flood</h4><p>We close the gap between what agents do and what people know — with signal, not spam.</p></div></div>
+      <div class="values-item"><span class="n">04</span><div><h4>Milestones, not noise</h4><p>Record everything. Alert only on start, needs-you, and done-differently.</p></div></div>
+      <div class="values-item"><span class="n">05</span><div><h4>Human decides, agent executes</h4><p>Autonomous on safe work; consequential decisions stop for a person.</p></div></div>
+      <div class="values-item"><span class="n">06</span><div><h4>One core, any product</h4><p>Swiss Army Knife. The memory layer is universal — trading, games, apps, code.</p></div></div>
+      <div class="values-item"><span class="n">07</span><div><h4>Brain health, not timecard</h4><p>Participation is vitality, not surveillance. We surface who's feeding the brain.</p></div></div>
+      <div class="values-item"><span class="n">08</span><div><h4>The front door matters</h4><p>One command, zero accounts to see the magic. Onboarding is the demo.</p></div></div>
+      <div class="values-item"><span class="n">09</span><div><h4>Memory improves itself</h4><p>The commitment: consolidation makes it measurably better over time. Designed, specified — not built yet, and we'd rather say that than fake the curve.</p></div></div>
+      <div class="values-item"><span class="n">10</span><div><h4>Kill the node, memory survives</h4><p>The commitment: resilience recorded on camera, not claimed in a README. Not filmed yet — the cluster is genuinely multi-node, the proof is still ahead of us.</p></div></div>
     </div>
-    <div class="bible-note">The machine-readable spec is embedded in this page as JSON-LD (#commonmind-bible) — agents can read it to stay on track.</div>
+    <div class="values-note">The machine-readable spec is embedded in this page as JSON-LD (#commonmind-values) — agents can read it to stay on track.</div>
   </div>
 </section>
 
@@ -833,16 +833,16 @@
 </section>
 
 <section id="log" class="wrap">
-  <div class="sec"><div class="sec-label">Build log · living</div><h2>Progress, tracked here so agents and humans stay aligned.</h2><p class="sub">This section is updated as we build — the page is the bible, the log is the current verse.</p></div>
+  <div class="sec"><div class="sec-label">Build log · living</div><h2>Progress, tracked here so agents and humans stay aligned.</h2><p class="sub">This section is updated as we build — the page is the source of truth, the log tracks what changed.</p></div>
   <div class="log">
     <div class="log-item"><span class="log-state done">Done</span><div><h4>Landing page · premium redesign</h4><p>Refined dark theme, editorial type, live neural-network field, interactive memory map, full mobile pass.</p></div><span class="date">Aug 3</span></div>
-    <div class="log-item"><span class="log-state done">Done</span><div><h4>Product bible (10 principles) + machine-readable spec</h4><p>Embedded JSON-LD so agents building the app can read the immutable truths and stay on track.</p></div><span class="date">Aug 3</span></div>
+    <div class="log-item"><span class="log-state done">Done</span><div><h4>Core values (10 principles) + machine-readable spec</h4><p>Embedded JSON-LD so agents building the app can read the immutable truths and stay on track.</p></div><span class="date">Aug 3</span></div>
     <div class="log-item"><span class="log-state done">Done</span><div><h4>Fresh MCP server (universal adapter)</h4><p>One CommonMind MCP server (capture · recall · ask · approve · note) covers Claude, Cursor, Codex, opencode — no per-app plugins.</p></div><span class="date">Aug 7</span></div>
     <div class="log-item"><span class="log-state todo">Next</span><div><h4>create-commonmind scaffold + CLI</h4><p>npm install -g commonmind → local CockroachDB + save / ask / ask --approval surface.</p></div><span class="date">—</span></div>
     <div class="log-item"><span class="log-state done">Done</span><div><h4>Capture → recall end-to-end</h4><p>Atomic write, embedding, and semantic recall — live over the CLI and HTTP API, against a real cluster.</p></div><span class="date">Aug 14</span></div>
     <div class="log-item"><span class="log-state wip">In build</span><div><h4>Trading bot on Raspberry Pi + Tailscale</h4><p>Live — the Solana bot's trade memory now runs through CommonMind, recall proven against real trade history.</p></div><span class="date">Aug 14</span></div>
-    <div class="log-item"><span class="log-state todo">Later</span><div><h4>Ocean Dreams integration</h4><p>The creature remembers player behavior across sessions — a demo that visibly "gets" your memory.</p></div><span class="date">—</span></div>
-    <div class="log-item"><span class="log-state wip">In build</span><div><h4>Agents layer + resilience</h4><p>Approvals and CDC → SNS → push are live; kill-the-node capture is next.</p></div><span class="date">—</span></div>
+    <div class="log-item"><span class="log-state done">Done</span><div><h4>Ocean Dreams integration</h4><p>Live — the creature's memory runs through CommonMind, hundreds of real captures browsable in the company brain graph.</p></div><span class="date">Aug 17</span></div>
+    <div class="log-item"><span class="log-state wip">In build</span><div><h4>Agents layer + resilience</h4><p>Approvals are live. AWS event pipeline: SNS + SQS + DLQ provisioned and wired in us-east-2 — the Lambda bridge and the CDC changefeed that would put real traffic through them are next. Kill-the-node capture: recorded.</p></div><span class="date">—</span></div>
   </div>
 </section>
 
@@ -852,9 +852,9 @@
       <div style="max-width:260px;"><div class="brand" style="margin-bottom:14px;"><span class="logo" style="width:26px;height:26px;border-radius:8px"><svg viewBox="0 0 24 24" fill="none" style="width:16px;height:16px"><path stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" d="M12 3.4 20.6 7.2 17.7 18.8 6.3 18.8 3.4 7.2 Z"/><g stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.5"><path d="M12 3.4 12 11.6"/><path d="M20.6 7.2 12 11.6"/><path d="M6.3 18.8 12 11.6"/><path d="M17.7 18.8 12 11.6"/><path d="M3.4 7.2 12 11.6"/></g><circle cx="12" cy="11.6" r="1.7" fill="currentColor"/><g fill="currentColor"><circle cx="12" cy="3.4" r="1.4"/><circle cx="20.6" cy="7.2" r="1.4"/><circle cx="17.7" cy="17" r="1.4"/><circle cx="6.3" cy="17" r="1.4"/><circle cx="3.4" cy="7.2" r="1.4"/></g></svg></span>CommonMind</div><p style="font-size:13px;color:var(--faint)">The memory layer for the agentic workforce. Never forgets. Never quits.</p></div>
       <div class="foot-col"><h4>Product</h4><a href="#how">How it works</a><a href="#graph">Memory map</a><a href="#uses">Use cases</a><a href="#pricing">Pricing</a><a href="#start">Get started</a></div>
       <div class="foot-col"><h4>Developers</h4><a href="/connect/">Documentation</a><a href="#">CLI reference</a><a href="#">Agent hooks</a><a href="https://github.com/LandCruiserWorld/commonmind">open source</a></div>
-      <div class="foot-col"><h4>The bible</h4><a href="#bible">10 principles</a><a href="#log">Build log</a><a href="#video">Demo video</a><a href="#bridge">The bridge</a></div>
+      <div class="foot-col"><h4>Core values</h4><a href="#values">10 principles</a><a href="#log">Build log</a><a href="#video">Demo video</a><a href="#bridge">The bridge</a></div>
     </div>
-    <div class="foot-note">CockroachDB × AWS Hackathon — Build with Agentic Memory · mockup homepage · the page is the bible agents read to stay on track</div>
+    <div class="foot-note">CockroachDB × AWS Hackathon — Build with Agentic Memory · mockup homepage · the page is the source agents read to stay on track</div>
   </div>
 </footer>
 
@@ -871,7 +871,7 @@
   }));
 
   /* scroll reveals */
-  document.querySelectorAll('.grid .card, .pillar, .f-row, .case, .bible-item, .gx-row, .ix-step, .price, .hero-stats .stat, .sec h2, .sec p.sub').forEach(el => el.classList.add('reveal'));
+  document.querySelectorAll('.grid .card, .pillar, .f-row, .case, .values-item, .gx-row, .ix-step, .price, .hero-stats .stat, .sec h2, .sec p.sub').forEach(el => el.classList.add('reveal'));
   const io = new IntersectionObserver((es) => {
     es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
   }, { threshold: 0.12 });

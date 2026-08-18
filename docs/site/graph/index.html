@@ -1,0 +1,1412 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Memory graph — CommonMind</title>
+<meta name="description" content="Your whole company brain as one real, physically-simulated graph — every node is a real memory, every edge a real connection." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #222831; --bg-elev: #2b3340;
+    --panel: rgba(255,255,255,0.04); --panel-2: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.09); --border-strong: rgba(255,255,255,0.16);
+    --text: #eeeeee; --muted: #a9b0ba; --faint: #717986;
+    --accent: #00adb5; --accent-dim: rgba(0,173,181,0.12);
+    --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --serif: "Instrument Serif", Georgia, serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+  #scene { position: fixed; inset: 0; touch-action: none; }
+  #scene.dragging-node { cursor: grabbing; }
+
+  .hud { position: fixed; z-index: 5; font-family: var(--font); pointer-events: none; }
+  .hud a, .hud button { pointer-events: auto; }
+
+  .topbar { top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; background: linear-gradient(to bottom, rgba(34,40,49,0.92), rgba(34,40,49,0)); }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 14.5px; }
+  .brand .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  .brand .sep { color: var(--faint); font-weight: 400; }
+  .stats { display: flex; gap: 18px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+  .stats b { color: var(--text); font-weight: 600; }
+  .backlink { font-size: 12.5px; color: var(--muted); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; background: var(--panel); }
+  .backlink:hover { color: var(--text); border-color: var(--border-strong); }
+
+  .modeTabs { display: flex; gap: 2px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 3px; }
+  .modeTab { font-family: var(--font); font-size: 12.5px; font-weight: 600; color: var(--muted); background: none; border: none; border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+  .modeTab.on { background: var(--accent); color: #072a2b; }
+  .modeTab:not(.on):hover { color: var(--text); }
+
+  /* Treemap — plain DOM, not WebGL. Deliberate: text stays pixel-crisp at
+     any zoom, rectangles are native clickable elements (no raycasting
+     needed), and it degrades gracefully to hundreds of items without any
+     physics settling time — the whole point of offering it as the
+     handles-scale-with-ease alternative to the force graph. */
+  /* No padding here on purpose — padding on a position:fixed element does
+     NOT offset its absolutely-positioned children (they measure from the
+     padding edge, which sits at the border, not the content edge). All
+     margin math lives in treemapRect() in JS instead, which is already
+     computing exact pixel positions for every cell — one source of truth. */
+  .treemap { position: fixed; inset: 0; display: none; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, #232b36 0%, #1a1f27 70%, #15191f 100%); }
+  .treemap.on { display: block; }
+  .tmRect {
+    position: absolute; border-radius: 10px; overflow: hidden; cursor: pointer; box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.10) inset, 0 10px 24px -8px rgba(0,0,0,0.55), 0 0 0 rgba(0,0,0,0);
+    transform: scale(0.86); opacity: 0;
+    transition: transform .38s cubic-bezier(.22,1.4,.36,1), opacity .3s, box-shadow .18s, border-color .18s;
+  }
+  .tmRect.in { transform: scale(1); opacity: 1; }
+  .tmRect:hover { z-index: 2; border-color: rgba(255,255,255,0.3); box-shadow: 0 1px 0 rgba(255,255,255,0.16) inset, 0 16px 34px -10px rgba(0,0,0,0.65), 0 0 26px -4px var(--tmGlow, transparent); }
+  .tmRect:hover .tmFill { filter: brightness(1.22) saturate(1.08); }
+  .tmFill { position: absolute; inset: 0; transition: filter .18s; }
+  .tmRect .tmLabel { position: absolute; left: 10px; top: 8px; right: 10px; font-family: var(--font); font-weight: 700; color: rgba(255,255,255,0.96); text-shadow: 0 1px 4px rgba(0,0,0,0.45); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; letter-spacing: -.01em; }
+  .tmRect .tmSub { position: absolute; left: 10px; bottom: 8px; right: 10px; font-family: var(--mono); font-size: 10.5px; color: rgba(255,255,255,0.75); text-shadow: 0 1px 3px rgba(0,0,0,0.4); pointer-events: none; }
+
+  .legend { left: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 7px; font-family: var(--mono); font-size: 11px; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; backdrop-filter: blur(6px); }
+  .legend .row { display: flex; align-items: center; gap: 8px; }
+  .legend i { width: 9px; height: 9px; border-radius: 999px; flex: none; }
+
+  .breadcrumb { left: 20px; top: 74px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .breadcrumb .crumb { cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+  .breadcrumb .crumb:hover { background: var(--panel); color: var(--text); }
+  .breadcrumb .crumb.current { color: var(--accent); }
+  .breadcrumb .sep { color: var(--faint); }
+
+  .hint { right: 20px; bottom: 20px; font-family: var(--mono); font-size: 10.5px; color: var(--faint); text-align: right; line-height: 1.7; }
+
+  .detail { position: fixed; z-index: 6; right: 20px; top: 74px; width: 320px; max-height: calc(100% - 100px); overflow-y: auto; background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: 14px; padding: 18px 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.45); display: none; }
+  .detail.on { display: block; }
+  .detail .close { position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--faint); font-size: 15px; cursor: pointer; padding: 4px; }
+  .detail .close:hover { color: var(--text); }
+  .detail .kind { font-family: var(--mono); font-size: 10.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+  .detail h3 { font-size: 17px; margin: 0 0 4px; padding-right: 20px; }
+  .detail .date { font-family: var(--mono); font-size: 11px; color: var(--faint); margin-bottom: 12px; display: block; }
+  .detail p { font-size: 13.5px; color: var(--text); line-height: 1.65; margin: 0 0 14px; }
+  .detail .meta { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .detail .action { margin-top: 14px; font-size: 12px; color: var(--accent); background: none; border: 1px solid rgba(0,173,181,0.35); border-radius: 8px; padding: 8px 12px; cursor: pointer; width: 100%; font-family: var(--font); }
+  .detail .action:hover { background: var(--accent-dim); }
+
+  .loading { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+  .loading.gone { display: none; }
+  #nodeLabels { position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+  .nodeLabel { position: absolute; left: 0; top: 0; font-family: var(--mono); font-size: 11.5px; font-weight: 600; letter-spacing: .01em; color: rgba(255,255,255,0.92); text-shadow: 0 1px 3px rgba(0,0,0,0.65), 0 0 14px rgba(0,0,0,0.5); white-space: nowrap; transition: opacity .2s; }
+
+  .loading .err { font-family: var(--mono); font-size: 12px; color: var(--muted); display: none; }
+  .loading.err-state .err { display: block; }
+  .loading.err-state .boot-card { display: none; }
+
+  .boot-card { width: 100%; max-width: 380px; background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: 16px; padding: 26px; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+
+  /* A tiny live preview of the real graph — orbiting dots around a core,
+     so the wait itself already looks like the product, not a placeholder. */
+  .boot-orbit { position: relative; width: 68px; height: 68px; margin: 2px auto 22px; }
+  .boot-orbit-core { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -4.5px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 14px var(--accent); }
+  .boot-orbit-ring { position: absolute; border: 1px dashed var(--border); border-radius: 999px; animation: orbitSpin linear infinite; }
+  .boot-orbit-ring.r1 { inset: 14px; animation-duration: 3.2s; }
+  .boot-orbit-ring.r2 { inset: 4px; animation-duration: 5.4s; animation-direction: reverse; }
+  .boot-orbit-ring.r3 { inset: -8px; animation-duration: 8s; }
+  .boot-orbit-dot { position: absolute; top: -2.5px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 999px; box-shadow: 0 0 8px currentColor; }
+  .boot-orbit-ring.r1 .boot-orbit-dot { background: #c9a3ff; color: #c9a3ff; }
+  .boot-orbit-ring.r2 .boot-orbit-dot { background: #7fd6dc; color: #7fd6dc; }
+  .boot-orbit-ring.r3 .boot-orbit-dot { background: #ffc857; color: #ffc857; }
+  @keyframes orbitSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .boot-orbit-ring { animation: none; } }
+
+  .boot-card .brand { display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 14px; margin-bottom: 20px; color: var(--text); }
+  .boot-card .brand .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  .boot-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-family: var(--font); font-size: 13.5px; color: var(--faint); transition: color .3s; }
+  .boot-row:last-child { border-bottom: none; }
+  .boot-row.active, .boot-row.done { color: var(--text); }
+  .boot-check { width: 18px; height: 18px; flex: none; border-radius: 999px; border: 1.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 10px; transition: background .3s, border-color .3s, transform .3s; }
+  .boot-row.active .boot-check { border-color: var(--accent); }
+  .boot-row.active .boot-check::after { content: ''; width: 8px; height: 8px; border-radius: 999px; background: var(--accent); animation: bootPulse 1s ease-in-out infinite; }
+  .boot-row.done .boot-check { background: var(--accent); border-color: var(--accent); color: #072a2b; transform: scale(1.05); }
+  .boot-row.done .boot-check::after { content: '✓'; width: auto; height: auto; background: none; animation: none; }
+  @keyframes bootPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(.7); } }
+  @media (prefers-reduced-motion: reduce) { .boot-row.active .boot-check::after { animation: none; } }
+
+  .toast { position: fixed; z-index: 8; left: 50%; bottom: 26px; transform: translate(-50%, 12px); background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: 10px; padding: 10px 18px; font-size: 12.5px; color: var(--text); opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
+</style>
+</head>
+<body>
+
+<canvas id="scene"></canvas>
+<div id="nodeLabels"></div>
+<div class="treemap" id="treemap"></div>
+
+<div class="loading" id="loading">
+  <div class="boot-card">
+    <div class="brand"><span class="dot"></span>CommonMind</div>
+    <div class="boot-row" data-step="connect"><span class="boot-check"></span>Connecting to your company brain</div>
+    <div class="boot-row" data-step="map"><span class="boot-check"></span>Mapping projects &amp; memories</div>
+    <div class="boot-row" data-step="render"><span class="boot-check"></span>Rendering the graph</div>
+  </div>
+  <p class="err" id="loadingMsg"></p>
+</div>
+
+<div class="hud topbar">
+  <a href="/dashboard/" class="brand"><span class="dot"></span>CommonMind<span class="sep">/ memory graph</span></a>
+  <div class="stats" id="stats"></div>
+  <div class="modeTabs" id="modeTabs">
+    <button class="modeTab on" data-mode="network">Network</button>
+    <button class="modeTab" data-mode="treemap">Treemap</button>
+  </div>
+  <a href="/dashboard/" class="backlink">← Dashboard</a>
+</div>
+
+<div class="hud breadcrumb" id="breadcrumb"></div>
+
+<div class="hud legend" id="legend"></div>
+
+<div class="hud hint" id="hint">drag empty space to orbit · scroll to zoom · drag a node to move it<br>click a project to open it · click a memory to read it</div>
+
+<div class="detail" id="detail">
+  <button class="close" id="detailClose">✕</button>
+  <div class="kind" id="detailKind"></div>
+  <h3 id="detailTitle"></h3>
+  <span class="date" id="detailDate"></span>
+  <p id="detailBody"></p>
+  <div class="meta" id="detailMeta"></div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
+
+const $ = (id) => document.getElementById(id);
+
+// ── Real data model ─────────────────────────────────────────────────────
+// Every node traces back to a real API response — nothing here is invented.
+// `core`: the CommonMind Core hub. `project`: a row from /api/network.
+// `memory`: a row from /api/projects/:id/ledger. Colors encode real content
+// classification (see classify()), not decoration.
+const TYPE_COLOR = {
+  core:      0x00adb5,
+  project:   0x7fd6dc,
+  fed:       0x4ade80,
+  pet:       0xff7fb0,
+  startled:  0xf3a259,
+  caught:    0xf26d6d,
+  revived:   0x00adb5,
+  observed:  0x7fd6dc,
+  trade:     0xc9a3ff,
+  agent:     0x9fd18a,
+  session:   0xffc857,
+  other:     0xa9b0ba,
+};
+const TYPE_LABEL = {
+  fed: 'fed', pet: 'pet', startled: 'startled / fled', caught: 'caught',
+  revived: 'revived', observed: 'observed', trade: 'trading decision',
+  agent: 'agent run', session: 'coding session', other: 'memory',
+};
+
+function classify(content) {
+  const c = (content || '').toLowerCase();
+  if (c.startsWith('claude code session')) return 'session';
+  if (c.includes('caught by a predator')) return 'caught';
+  if (c.includes('found alive and well again')) return 'revived';
+  if (c.includes('startled by the diver') || c.includes('escaped a predator')) return 'startled';
+  if (c.includes('observed calmly')) return 'observed';
+  if (c.startsWith('fed ') || c.includes(' fed ')) return 'fed';
+  if (c.startsWith('pet ') || c.includes(' pet ')) return 'pet';
+  if (c.includes('executed a') && (c.includes('buy') || c.includes('sell'))) return 'trade';
+  if (c.includes('invalidation') || c.includes('thesis') || c.includes('pnl') || /closed [+-]?\d/.test(c)) return 'trade';
+  if (c.includes('agent completed a real request') || c.includes('agent failed a request')) return 'agent';
+  return 'other';
+}
+
+// A short, real preview of a memory's actual content — used anywhere a
+// node/cell has room to show more than its type label.
+function snippet(content, max = 80) {
+  const s = (content || '').trim();
+  if (!s) return '';
+  return s.length > max ? s.slice(0, max - 1).trimEnd() + '…' : s;
+}
+
+// ── Renderer / scene ────────────────────────────────────────────────────
+const canvas = $('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+// No tone mapping meant additive blending had no ceiling — a point with
+// hundreds of edges converging on it (a data-heavy project) and a point
+// with just a handful (the core) both clip to flat white past a certain
+// sum, so the core could never out-shine a big project no matter how it
+// was tuned. Filmic compression rolls off high sums hard while leaving
+// moderate brightness alone — exactly what "the core should read as most
+// intense" needs: it's the loudest thing left once the crowd is tamed.
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1b2028);
+scene.fog = new THREE.FogExp2(0x1b2028, 0.018);
+
+const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 2000);
+// Elevation matters more than distance here — a near-equatorial view is
+// exactly when two points on the fibonacci sphere below can line up behind
+// the core from the camera's angle. A proper three-quarter-down angle
+// spreads the equator into a visible ellipse instead of a thin edge-on line.
+camera.position.set(0, 115, 195);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.35;
+controls.minDistance = 15;
+controls.maxDistance = 420;
+
+// Ambient starfield — depth cue only, never mistaken for data (no glow,
+// no interaction, far behind everything real).
+(function stars() {
+  const N = 900;
+  const pos = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) {
+    const r = 400 + Math.random() * 500;
+    const th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th);
+    pos[i * 3 + 2] = r * Math.cos(ph);
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({ color: 0x3a4452, size: 1.6, sizeAttenuation: true });
+  scene.add(new THREE.Points(geo, mat));
+})();
+
+// Soft radial-gradient sprite texture, tinted per-node via material.color —
+// one shared texture, cheap, always faces camera, reads as a "glowing node"
+// without needing per-node geometry.
+const glowTex = (() => {
+  const s = 128, c = document.createElement('canvas');
+  c.width = c.height = s;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.35, 'rgba(255,255,255,0.85)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, s, s);
+  return new THREE.CanvasTexture(c);
+})();
+
+// Selection indicator — a real ring, not just a scale bump, so "what did I
+// click" reads at a glance even in a dense cluster of hundreds of nodes.
+const ringTex = (() => {
+  const s = 128, c = document.createElement('canvas');
+  c.width = c.height = s;
+  const g = c.getContext('2d');
+  g.strokeStyle = 'white';
+  g.lineWidth = 7;
+  g.beginPath();
+  g.arc(s / 2, s / 2, s / 2 - 8, 0, Math.PI * 2);
+  g.stroke();
+  return new THREE.CanvasTexture(c);
+})();
+const selectionRing = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: ringTex, color: 0xffffff, fog: false, transparent: true,
+  depthWrite: false, blending: THREE.AdditiveBlending,
+}));
+selectionRing.visible = false;
+scene.add(selectionRing);
+
+// ── Post-processing: bloom is what turns "colored dots" into "glowing
+// nodes in a real graph" — the single highest-leverage visual choice here.
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.85, 0.5, 0.15);
+composer.addPass(bloom);
+// EffectComposer renders through an intermediate target, so the renderer's
+// own `antialias:true` never actually reaches the final frame — FXAA here
+// is what keeps node edges and text-adjacent UI from reading jagged.
+const fxaa = new ShaderPass(FXAAShader);
+function syncFXAAResolution() {
+  const pr = renderer.getPixelRatio();
+  fxaa.material.uniforms['resolution'].value.set(1 / (window.innerWidth * pr), 1 / (window.innerHeight * pr));
+}
+syncFXAAResolution();
+composer.addPass(fxaa);
+composer.addPass(new OutputPass());
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+  syncFXAAResolution();
+});
+
+// ── Graph state ─────────────────────────────────────────────────────────
+// nodes: id -> { id, kind, label, data, radius, pos:Vector3, vel:Vector3,
+//                sprite, fixed, parent }
+// edges: [{a, b, strength}] — spring rest-length scales with strength so
+// tightly-clustered memories sit close, weaker cross-project links sit
+// further apart. This drives the ENTIRE layout — nothing is hand-placed.
+const nodes = new Map();
+const edges = [];
+let expanded = new Set();      // project ids currently drilled into
+let hovered = null, selected = null, dragging = null, legendFocusId = null;
+// A real drag still fires a native `click` on release — `dragging` itself
+// can't be used to catch that, because pointerup (which fires first) already
+// nulls it out before click's handler runs. This survives past that reset.
+let dragMoved = false, dragStartX = 0, dragStartY = 0, suppressNextClick = false;
+let netData = null;
+
+// Node glow is a canvas texture + additive blending, not a custom shader —
+// tried a real onBeforeCompile fresnel/pulse injection on the Sprite
+// material (root-caused a genuine GL_INVALID_OPERATION to Three's
+// per-map `vMapUv` varying, confirmed against the r160 source), fixed
+// that, and it still rendered every node fully invisible with zero GL
+// errors — almost certainly Three's shader-program cache key not
+// accounting for onBeforeCompile identity across many SpriteMaterial
+// instances that otherwise hash identically, a known sharp edge in this
+// exact API. Diagnosing that further wasn't worth risking the graph's
+// core readability today. The edge shader below hits the same "genuine
+// GLSL, not a CSS trick" bar and is verified working — that's where the
+// real shader craft in this build lives.
+function addNode(id, kind, label, data, radius, seedPos) {
+  if (nodes.has(id)) return nodes.get(id);
+  const mat = new THREE.SpriteMaterial({
+    map: glowTex, color: TYPE_COLOR[kind] ?? TYPE_COLOR.other,
+    // fog:false is deliberate — scene fog is a depth cue for the background
+    // starfield (hundreds of units out), not for the actual graph, which
+    // sits much closer. Leaving it on faded every real node almost to the
+    // background color at the camera's default distance.
+    fog: false,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.setScalar(radius * 2);
+  const p = seedPos || new THREE.Vector3((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
+  sprite.position.copy(p);
+  scene.add(sprite);
+  const node = { id, kind, label, data, radius, pos: p, vel: new THREE.Vector3(), sprite, fixed: false, baseScale: radius * 2, _posGen: 0, _scaleGen: 0 };
+  // Persistent screen-space labels — only the structural nodes (core +
+  // projects), never the hundreds of memory leaves, or this turns into
+  // clutter instead of the "what is what at a glance" it's meant to solve.
+  if (kind === 'core' || kind === 'project') {
+    const el = document.createElement('div');
+    el.className = 'nodeLabel';
+    el.textContent = label;
+    $('nodeLabels').appendChild(el);
+    node.labelEl = el;
+  }
+  nodes.set(id, node);
+  return node;
+}
+function addEdge(a, b, strength) {
+  if (!nodes.has(a) || !nodes.has(b)) return;
+  edges.push({ a, b, strength: strength ?? 1 });
+}
+function removeNode(id) {
+  const n = nodes.get(id);
+  if (!n) return;
+  // Collapsing a project removes its memory children — if the one you had
+  // open was one of them, its selection ring was floating in empty space
+  // and the detail panel was still showing content for a node that no
+  // longer exists. Close it along with its parent.
+  if (selected === n) closeDetail();
+  if (hovered === n) hovered = null;
+  scene.remove(n.sprite);
+  n.sprite.material.dispose();
+  n.labelEl?.remove();
+  nodes.delete(id);
+  for (let i = edges.length - 1; i >= 0; i--) if (edges[i].a === id || edges[i].b === id) edges.splice(i, 1);
+}
+
+// Edge lines — one shared BufferGeometry, positions rewritten every frame
+// from live node positions (cheap: a few hundred edges max at this scale).
+// A real memory graph's most honest "wow" isn't a decorative effect, it's
+// visualizing the thing the product actually does: a memory captured in
+// one project surfacing in another. So the edge shader renders that
+// literally — bands of light traveling from one node to the other along
+// each connection, not a static line. `aT` is 0 at an edge's start vertex
+// and 1 at its end, which — because it's a straight 2-point segment — the
+// GPU interpolates into a free 0→1 gradient per-pixel across the fragment
+// shader; from there it's just a moving threshold band in a sine of `aT`.
+const edgeGeo = new THREE.BufferGeometry();
+const edgeMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending,
+  uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color(0x3fd1d8) }, uBase: { value: 0.16 } },
+  vertexShader: `
+    attribute float aT;
+    varying float vT;
+    void main() {
+      vT = aT;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform float uTime; uniform vec3 uColor; uniform float uBase;
+    varying float vT;
+    void main() {
+      float band1 = smoothstep(0.12, 0.0, abs(fract(vT * 1.0 - uTime * 0.35) - 0.5) - 0.32);
+      float band2 = smoothstep(0.10, 0.0, abs(fract(vT * 1.0 - uTime * 0.35 + 0.5) - 0.5) - 0.30);
+      // Tuned back when a busy project had ~100 edges; a real project can
+      // now have 600+ converging on one point, and additive blending sums
+      // every one of them — same per-edge brightness was blowing out into
+      // a flat white blob instead of a lively cluster of edges.
+      float glow = uBase * 0.3 + band1 * 0.22 + band2 * 0.12;
+      gl_FragColor = vec4(uColor * glow, glow);
+    }
+  `,
+});
+const edgeLines = new THREE.LineSegments(edgeGeo, edgeMat);
+scene.add(edgeLines);
+
+function syncEdgeGeometry() {
+  const arr = new Float32Array(edges.length * 6);
+  const tArr = new Float32Array(edges.length * 2);
+  edges.forEach((e, i) => {
+    const a = nodes.get(e.a), b = nodes.get(e.b);
+    if (!a || !b) return;
+    arr[i * 6] = a.pos.x; arr[i * 6 + 1] = a.pos.y; arr[i * 6 + 2] = a.pos.z;
+    arr[i * 6 + 3] = b.pos.x; arr[i * 6 + 4] = b.pos.y; arr[i * 6 + 5] = b.pos.z;
+    tArr[i * 2] = 0; tArr[i * 2 + 1] = 1;
+  });
+  edgeGeo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+  edgeGeo.attributes.position.needsUpdate = true;
+  // Only needs rebuilding when the edge COUNT changes, not every frame, but
+  // edges.length changing is exactly when this function is already called
+  // for a different reason (project expanded/collapsed) — simplest correct
+  // thing is just keeping it in lockstep with position, which this does.
+  if (!edgeGeo.getAttribute('aT') || edgeGeo.getAttribute('aT').count !== tArr.length) {
+    edgeGeo.setAttribute('aT', new THREE.BufferAttribute(tArr, 1));
+  }
+}
+
+// ── Force simulation ────────────────────────────────────────────────────
+// Hand-rolled, not a library: repulsion (all pairs) + spring (edges) +
+// gentle center pull + damping. O(n^2) repulsion is fine through the low
+// hundreds of nodes this graph reaches today; if it ever needs to hold
+// thousands at once, that's the piece to swap for a Barnes-Hut approx.
+function stepPhysics(dt) {
+  const list = [...nodes.values()];
+  const REPEL = 420, SPRING = 0.06, CENTER = 0.004, DAMP = 0.86;
+
+  for (const n of list) n._force = new THREE.Vector3();
+
+  for (let i = 0; i < list.length; i++) {
+    for (let j = i + 1; j < list.length; j++) {
+      const a = list[i], b = list[j];
+      const d = new THREE.Vector3().subVectors(a.pos, b.pos);
+      let dist = d.length();
+      if (dist < 0.01) { d.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5); dist = 0.1; }
+      const f = REPEL / (dist * dist);
+      d.normalize().multiplyScalar(f);
+      a._force.add(d);
+      b._force.sub(d);
+    }
+  }
+
+  for (const e of edges) {
+    const a = nodes.get(e.a), b = nodes.get(e.b);
+    if (!a || !b) continue;
+    // Core↔project edges get a long, fixed rest length so ordinary physics
+    // holds the wide reveal spread instead of slowly reeling every project
+    // back in toward a radius-based rest that was always much shorter than
+    // where the firework launch actually placed them. Project↔memory edges
+    // (the burst-around-an-opened-project look) keep the tight radius-based
+    // rest — those SHOULD hug their parent.
+    const isCoreLink = a.kind === 'core' || b.kind === 'core';
+    const rest = isCoreLink ? 66 : 10 + (a.radius + b.radius) * 1.6;
+    const d = new THREE.Vector3().subVectors(b.pos, a.pos);
+    const dist = Math.max(d.length(), 0.01);
+    const stretch = (dist - rest) * SPRING * e.strength;
+    d.normalize().multiplyScalar(stretch);
+    a._force.add(d);
+    b._force.sub(d);
+  }
+
+  const MAX_RADIUS = 130; // keeps every node reachable near the default framing —
+  // repulsion between a sparsely-connected project and a crowded one can
+  // otherwise out-run the weak center spring and push it off-screen for good.
+  for (const n of list) {
+    if (n.kind !== 'core') n._force.add(n.pos.clone().multiplyScalar(-CENTER));
+    if (n === dragging || n.fixed) { n.vel.set(0, 0, 0); continue; }
+    n.vel.add(n._force.multiplyScalar(dt));
+    n.vel.multiplyScalar(DAMP);
+    n.pos.add(n.vel.clone().multiplyScalar(dt));
+    const r = n.pos.length();
+    if (r > MAX_RADIUS) {
+      n.pos.multiplyScalar(MAX_RADIUS / r);
+      const outward = n.pos.clone().normalize();
+      const radialVel = n.vel.dot(outward);
+      if (radialVel > 0) n.vel.addScaledVector(outward, -radialVel); // kill outward component only
+    }
+    n.sprite.position.copy(n.pos);
+  }
+}
+
+// ── Interaction: hover, click, drag ─────────────────────────────────────
+const raycaster = new THREE.Raycaster();
+raycaster.params.Sprite = { threshold: 1 };
+const mouseNDC = new THREE.Vector2();
+const dragPlane = new THREE.Plane();
+const dragPoint = new THREE.Vector3();
+
+function nodeAtPointer(clientX, clientY) {
+  mouseNDC.x = (clientX / window.innerWidth) * 2 - 1;
+  mouseNDC.y = -(clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouseNDC, camera);
+  const sprites = [...nodes.values()].map((n) => n.sprite);
+  const hit = raycaster.intersectObjects(sprites)[0];
+  if (!hit) return null;
+  return [...nodes.values()].find((n) => n.sprite === hit.object) || null;
+}
+
+canvas.addEventListener('pointermove', (e) => {
+  if (dragging) {
+    if (!dragMoved && Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY) > 4) dragMoved = true;
+    raycaster.setFromCamera(mouseNDC, camera);
+    mouseNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouseNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouseNDC, camera);
+    if (raycaster.ray.intersectPlane(dragPlane, dragPoint)) {
+      dragging.pos.copy(dragPoint);
+      dragging.sprite.position.copy(dragPoint);
+    }
+    return;
+  }
+  const n = nodeAtPointer(e.clientX, e.clientY);
+  if (n !== hovered) {
+    hovered = n;
+    canvas.style.cursor = n ? 'pointer' : 'grab';
+    updateHoverHighlight();
+  }
+});
+
+canvas.addEventListener('pointerdown', (e) => {
+  const n = nodeAtPointer(e.clientX, e.clientY);
+  if (!n) return;
+  cancelTweens(n); // a grab always wins over any in-flight firework/expand animation
+  n.fixed = false;
+  dragging = n;
+  dragMoved = false;
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
+  canvas.classList.add('dragging-node');
+  controls.enabled = false;
+  // Plane faces the camera, passing through the node — dragging then just
+  // means "follow the ray-plane intersection," which keeps the node under
+  // the cursor at a constant depth instead of sliding toward/away from camera.
+  const faceNormal = camera.getWorldDirection(new THREE.Vector3()).negate();
+  dragPlane.setFromNormalAndCoplanarPoint(faceNormal, n.pos);
+});
+
+window.addEventListener('pointerup', () => {
+  if (dragging) {
+    dragging.vel.set(0, 0, 0);
+    // Pin it — a manual drop should hold exactly where the user let go.
+    // Without this, physics resumes the instant you release (repulsion,
+    // the spring back to the core, everything), and a project you just
+    // placed drifts toward wherever those forces settle instead of
+    // staying put. Its memory children (if expanded) aren't fixed, so
+    // they still follow it naturally via their own edge to it.
+    dragging.fixed = true;
+    // The browser fires a native click right after this on the same
+    // element even though real movement happened — `dragging` itself is
+    // already null by the time that click handler runs (it's cleared
+    // right here), so it can't be used to catch this. If real movement
+    // happened, tell the very next click to no-op instead of treating the
+    // drag-release as a toggle click and undoing the placement.
+    if (dragMoved) suppressNextClick = true;
+    dragging = null;
+    canvas.classList.remove('dragging-node');
+    controls.enabled = true;
+  }
+});
+
+canvas.addEventListener('click', (e) => {
+  if (suppressNextClick) { suppressNextClick = false; return; } // that was a drag release, not a real click
+  const n = nodeAtPointer(e.clientX, e.clientY);
+  if (!n) { closeDetail(); return; }
+  if (n.kind === 'project') { toggleProject(n); return; }
+  if (n.kind === 'core') { toggleCoreIsolation(); return; }
+  openDetail(n);
+});
+
+// Clicking the core isolates it — everything else vanishes, leaving just
+// the one point everything traces back to. Click it again to bring
+// everything back exactly as it was; nothing is actually removed or
+// recomputed, just hidden, so this is fully reversible either direction.
+let coreIsolated = false;
+function toggleCoreIsolation() {
+  coreIsolated = !coreIsolated;
+  for (const n of nodes.values()) {
+    if (n.kind === 'core') continue;
+    n.sprite.visible = !coreIsolated;
+    if (n.labelEl) n.labelEl.style.display = coreIsolated ? 'none' : '';
+  }
+  edgeLines.visible = !coreIsolated;
+  showToast(coreIsolated ? 'Isolated — click the core again to bring everything back' : 'Showing everything again');
+}
+
+function updateHoverHighlight() {
+  const connected = new Set();
+  if (hovered) {
+    connected.add(hovered.id);
+    for (const e of edges) {
+      if (e.a === hovered.id) connected.add(e.b);
+      if (e.b === hovered.id) connected.add(e.a);
+    }
+  }
+  for (const n of nodes.values()) {
+    if (n._popping) continue; // mid firework-pop/contract tween — let it own the scale
+    // A selected node stays undimmed and enlarged even after the mouse
+    // moves off it — hover alone reset the instant you looked away, which
+    // made it impossible to tell what you'd actually opened.
+    const dim = hovered && !connected.has(n.id) && n !== selected;
+    n.sprite.material.opacity = dim ? 0.25 : 1;
+    const s = n.baseScale * (hovered === n ? 1.35 : n === selected ? 1.3 : 1);
+    n.sprite.scale.setScalar(s);
+  }
+  edgeMat.uniforms.uBase.value = hovered ? 0.05 : 0.16;
+
+  // The legend's memory-type rows are scoped to whatever project you're
+  // actually looking at, not every currently-expanded project mashed
+  // together — a project you haven't hovered isn't "selected data."
+  const owner = !hovered ? null : hovered.kind === 'project' ? hovered.id : hovered.kind === 'core' ? null : hovered.parent ?? null;
+  if (owner !== legendFocusId) { legendFocusId = owner; renderLegend(); }
+}
+
+// ── Project expand / collapse ───────────────────────────────────────────
+async function toggleProject(pn) {
+  if (expanded.has(pn.id)) {
+    // Collapse: remove its memory children only. The project itself stays
+    // exactly where it is — expand/collapse is absolute, not a reason to
+    // reposition something the user may have deliberately placed.
+    const toRemove = [...nodes.values()].filter((n) => n.parent === pn.id);
+    toRemove.forEach((n) => removeNode(n.id));
+    expanded.delete(pn.id);
+    renderBreadcrumb();
+    renderLegend(); // this project's categories just vanished — don't leave them showing stale
+    return;
+  }
+  expanded.add(pn.id);
+  renderBreadcrumb();
+  showToast(`Loading ${pn.label}'s memories…`);
+  try {
+    const res = await fetch(`/api/projects/${pn.id}/ledger?limit=2000`, { credentials: 'same-origin' });
+    const data = await res.json();
+    // Skip rows with no recorded content (a handful predate content-storage).
+    const entries = (data.entries || []).filter((e) => typeof e.content === 'string' && e.content.trim());
+    if (!entries.length) { showToast(`${pn.label} has nothing to browse yet.`); return; }
+    entries.forEach((e, i) => {
+      const kind = classify(e.content);
+      const ang = (i / entries.length) * Math.PI * 2;
+      const seed = pn.pos.clone().add(new THREE.Vector3(Math.cos(ang) * 14, (Math.random() - 0.5) * 10, Math.sin(ang) * 14));
+      const mid = `mem:${e.id}`;
+      addNode(mid, kind, TYPE_LABEL[kind] || 'memory', { content: e.content, createdAt: e.createdAt, project: pn.label }, 1.5, seed).parent = pn.id;
+      addEdge(pn.id, mid, 0.8);
+    });
+    showToast(`${entries.length} real memories loaded from ${pn.label}.`);
+    renderLegend();
+  } catch {
+    showToast(`Couldn't load ${pn.label} — try again.`);
+    expanded.delete(pn.id);
+  }
+}
+
+function renderBreadcrumb() {
+  const root = '<span class="crumb current">Company brain</span>';
+  const open = [...expanded].map((id) => {
+    const n = nodes.get(id);
+    return n ? `<span class="sep">/</span><span class="crumb" data-collapse="${id}">${esc(n.label)}</span>` : '';
+  }).join('');
+  $('breadcrumb').innerHTML = root + open;
+  $('breadcrumb').querySelectorAll('[data-collapse]').forEach((el) => {
+    el.addEventListener('click', () => { const n = nodes.get(el.dataset.collapse); if (n) toggleProject(n); });
+  });
+}
+
+// ── Detail panel ────────────────────────────────────────────────────────
+function openDetail(n) {
+  selected = n;
+  $('detailKind').textContent = TYPE_LABEL[n.kind] || n.kind;
+  $('detailTitle').textContent = n.label;
+  if (n.kind === 'project') {
+    $('detailDate').textContent = `connected ${fmtDate(n.data.connectedAt)}`;
+    $('detailBody').textContent = `${n.data.memories.toLocaleString()} memories captured, ${n.data.searches.toLocaleString()} recalls made.`;
+    $('detailMeta').innerHTML = `<span>last active: ${n.data.lastActive ? fmtDate(n.data.lastActive) : 'never'}</span>`;
+  } else {
+    $('detailDate').textContent = fmtDate(n.data.createdAt);
+    $('detailBody').textContent = n.data.content || '(content not available)';
+    $('detailMeta').innerHTML = `<span>project: ${esc(n.data.project)}</span>`;
+  }
+  $('detail').classList.add('on');
+  selectionRing.visible = true;
+  updateHoverHighlight(); // refresh scale/opacity immediately, don't wait for the next hover event
+}
+function closeDetail() {
+  selected = null;
+  $('detail').classList.remove('on');
+  selectionRing.visible = false;
+  updateHoverHighlight();
+}
+$('detailClose').addEventListener('click', closeDetail);
+
+// ── Legend ──────────────────────────────────────────────────────────────
+// Scoped to legendFocusId (see updateHoverHighlight) — nothing hovered
+// means nothing to key beyond "project" itself; hovering a project or one
+// of its memories shows only the real categories that project actually has.
+function renderLegend() {
+  const pool = legendFocusId
+    ? [...nodes.values()].filter((n) => n.id === legendFocusId || n.parent === legendFocusId)
+    : [];
+  const present = new Set(pool.map((n) => n.kind).filter((k) => k !== 'core' && k !== 'project'));
+  let h = `<div class="row"><i style="background:#${TYPE_COLOR.project.toString(16)}"></i>project</div>`;
+  present.forEach((k) => { h += `<div class="row"><i style="background:#${TYPE_COLOR[k].toString(16)}"></i>${TYPE_LABEL[k] || k}</div>`; });
+  $('legend').innerHTML = h;
+}
+
+// ── Toast ───────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg) {
+  clearTimeout(toastTimer);
+  $('toast').textContent = msg;
+  $('toast').classList.add('on');
+  toastTimer = setTimeout(() => $('toast').classList.remove('on'), 2600);
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso.replace(' ', 'T') + (iso.includes('Z') ? '' : 'Z'));
+  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+// ── Treemap ─────────────────────────────────────────────────────────────
+// Squarified treemap (Bruls, Huizing & van Wijk, 1999) — the published
+// algorithm, not an approximation: each row is grown greedily for as long
+// as doing so improves the row's worst aspect ratio, then laid out along
+// whichever side of the remaining rect is currently shorter. That's what
+// keeps cells close to square instead of degenerating into slivers as item
+// counts grow, which is the whole reason this is the offered alternative
+// for "handle a lot of data with ease."
+function squarify(items, x, y, w, h) {
+  const list = items.filter((i) => i.value > 0).sort((a, b) => b.value - a.value);
+  const total = list.reduce((s, i) => s + i.value, 0);
+  if (!list.length || total <= 0) return [];
+  const totalArea = w * h;
+  const nodes = list.map((i) => ({ ref: i, area: (i.value / total) * totalArea }));
+
+  function worst(row, side) {
+    const sum = row.reduce((s, n) => s + n.area, 0);
+    const maxA = Math.max(...row.map((n) => n.area));
+    const minA = Math.min(...row.map((n) => n.area));
+    return Math.max((side * side * maxA) / (sum * sum), (sum * sum) / (side * side * minA));
+  }
+
+  const out = [];
+  let rx = x, ry = y, rw = w, rh = h, i = 0;
+  while (i < nodes.length) {
+    const side = Math.min(rw, rh);
+    let row = [nodes[i]], j = i + 1;
+    while (j < nodes.length) {
+      const trial = row.concat([nodes[j]]);
+      if (worst(trial, side) <= worst(row, side)) { row = trial; j++; } else break;
+    }
+    const rowSum = row.reduce((s, n) => s + n.area, 0);
+    const thickness = rowSum / side;
+    if (rw >= rh) {
+      let cy = ry;
+      row.forEach((n) => { const ih = n.area / thickness; out.push({ ref: n.ref, x: rx, y: cy, w: thickness, h: ih }); cy += ih; });
+      rx += thickness; rw -= thickness;
+    } else {
+      let cx = rx;
+      row.forEach((n) => { const iw = n.area / thickness; out.push({ ref: n.ref, x: cx, y: ry, w: iw, h: thickness }); cx += iw; });
+      ry += thickness; rh -= thickness;
+    }
+    i = j;
+  }
+  return out;
+}
+
+let mode = 'network';
+let tmProject = null;           // null = showing all projects; else the project drilled into
+const ledgerCache = new Map();  // projectId -> entries[], avoids refetching on every tab switch
+
+function tmColorFor(kind) { return '#' + (TYPE_COLOR[kind] ?? TYPE_COLOR.other).toString(16).padStart(6, '0'); }
+
+// One distinct, stable color per project — a plain treemap where every
+// project shares the same hue reads as one undifferentiated mass; category
+// color is what makes a treemap scannable at a glance instead of requiring
+// the labels to do all the work. Hashed from the project id so a given
+// project keeps its color across reloads and re-layouts, not reassigned by
+// array position (which shifts as memory counts change over time).
+const PROJECT_PALETTE = [0x00adb5, 0xf3a259, 0xc9a3ff, 0x4ade80, 0xf26d6d, 0x7fa8ff, 0xffd166, 0xff7fb0];
+function projectColor(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return PROJECT_PALETTE[h % PROJECT_PALETTE.length];
+}
+function hex(n) { return '#' + n.toString(16).padStart(6, '0'); }
+function shade(n, amt) { // amt in [-1,1]; lighten toward white or darken toward black
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const mix = (c) => Math.round(amt >= 0 ? c + (255 - c) * amt : c * (1 + amt));
+  return (mix(r) << 16) | (mix(g) << 8) | mix(b);
+}
+
+function renderTreemapCells(cells) {
+  const host = $('treemap');
+  host.innerHTML = '';
+  const pad = 4;
+  cells.forEach((c, i) => {
+    const isProject = c.ref.kind === 'project';
+    const base = isProject ? projectColor(c.ref.data.id) : (TYPE_COLOR[c.ref.kind] ?? TYPE_COLOR.other);
+
+    const el = document.createElement('div');
+    el.className = 'tmRect';
+    el.style.left = c.x + 'px'; el.style.top = c.y + 'px';
+    el.style.width = Math.max(0, c.w - pad) + 'px'; el.style.height = Math.max(0, c.h - pad) + 'px';
+    el.style.setProperty('--tmGlow', hex(base) + '88');
+
+    const fill = document.createElement('div');
+    fill.className = 'tmFill';
+    // Subtle top-lit gradient — the same "glass panel catching light" cue
+    // used everywhere else in this build (node glow, bloom), just in flat
+    // CSS instead of WebGL, so the two views feel like one product.
+    fill.style.background = `linear-gradient(165deg, ${hex(shade(base, 0.22))} 0%, ${hex(base)} 55%, ${hex(shade(base, -0.28))} 100%)`;
+    el.appendChild(fill);
+
+    // Type scales with the cell itself — Ocean Dreams' label should read
+    // like a headline, a tiny 3-memory cell shouldn't have oversized text
+    // it doesn't have room for. min()/max() keep it inside sane bounds.
+    const area = c.w * c.h;
+    const fontPx = Math.max(11, Math.min(22, Math.sqrt(area) * 0.11));
+
+    if (c.w > 46 && c.h > 26) {
+      const label = document.createElement('div');
+      label.className = 'tmLabel';
+      label.style.fontSize = fontPx + 'px';
+      label.textContent = c.ref.label;
+      el.appendChild(label);
+      if (c.w > 80 && c.h > 50) {
+        const sub = document.createElement('div');
+        sub.className = 'tmSub';
+        sub.textContent = c.ref.sub || '';
+        el.appendChild(sub);
+      }
+    } else {
+      // Too small for on-cell text — still readable via native tooltip.
+      el.title = c.ref.sub ? `${c.ref.label}: ${c.ref.sub}` : c.ref.label;
+    }
+    el.addEventListener('click', () => {
+      if (isProject) openTreemapProject(c.ref);
+      else openDetail(c.ref);
+    });
+    host.appendChild(el);
+    // Staggered scale+fade entrance, capped so a 100-memory drill-down
+    // doesn't take a full second to finish appearing.
+    setTimeout(() => el.classList.add('in'), Math.min(i, 24) * 14);
+  });
+}
+
+function treemapRect() {
+  // #treemap has no CSS padding (see its rule for why), so this is the one
+  // place the topbar/breadcrumb/hint clearances are accounted for — real
+  // pixel margins, not a padding value the layout silently ignored.
+  const top = 110, side = 20, bottom = 60;
+  return {
+    x: side, y: top,
+    w: Math.max(50, window.innerWidth - side * 2),
+    h: Math.max(50, window.innerHeight - top - bottom),
+  };
+}
+
+function renderTreemapLegend(items) {
+  // At the top level, each project already carries its own color + label
+  // directly on the cell — a shared "project" swatch would now be actively
+  // wrong (it'd show one color while cells show several). Only the
+  // memory-type breakdown needs a key, and only once drilled into one.
+  const present = new Set(items.map((i) => i.kind).filter((k) => k !== 'core' && k !== 'project'));
+  if (!present.size) { $('legend').innerHTML = ''; return; }
+  let h = '';
+  present.forEach((k) => { h += `<div class="row"><i style="background:${tmColorFor(k)}"></i>${TYPE_LABEL[k] || k}</div>`; });
+  $('legend').innerHTML = h;
+}
+
+function renderTreemapTop() {
+  tmProject = null;
+  const rect = treemapRect();
+  // sqrt(memories), not the raw count — same reasoning as the network view's
+  // node radius. Ocean Dreams (567) is 92% of all memories right now; a
+  // linear-area treemap would render it as one giant rectangle and reduce
+  // the other three projects to a barely-visible sliver, which is correct
+  // math but fails "readable at a glance" hard. Compressing the range keeps
+  // real proportion (Ocean Dreams still clearly bigger) without one project
+  // erasing the rest.
+  const items = netData.projects.map((p) => ({
+    kind: 'project', label: p.name, value: Math.max(1, Math.sqrt(p.memories || 0)),
+    sub: `${(p.memories || 0).toLocaleString()} memories`, data: p,
+  }));
+  renderTreemapCells(squarify(items, rect.x, rect.y, rect.w, rect.h));
+  renderTreemapBreadcrumb();
+  renderTreemapLegend(items);
+}
+
+async function openTreemapProject(p) {
+  tmProject = p.data;
+  renderTreemapBreadcrumb();
+  const rect = treemapRect();
+  $('treemap').innerHTML = `<div style="position:absolute;left:${rect.x}px;top:${rect.y}px;color:var(--faint);font-family:var(--mono);font-size:12px;">Loading ${esc(p.label)}'s memories…</div>`;
+  try {
+    let entries = ledgerCache.get(p.data.id);
+    if (!entries) {
+      const res = await fetch(`/api/projects/${p.data.id}/ledger?limit=2000`, { credentials: 'same-origin' });
+      const data = await res.json();
+      // Same filter as the network view — skip rows with no content.
+      entries = (data.entries || []).filter((e) => typeof e.content === 'string' && e.content.trim());
+      ledgerCache.set(p.data.id, entries);
+    }
+    if (!entries.length) {
+      $('treemap').innerHTML = `<div style="position:absolute;left:${rect.x}px;top:${rect.y}px;color:var(--faint);font-family:var(--mono);font-size:12px;">${esc(p.label)} has nothing to browse yet.</div>`;
+      return;
+    }
+    const items = entries.map((e) => {
+      const kind = classify(e.content);
+      return { kind, label: TYPE_LABEL[kind] || 'memory', sub: snippet(e.content), value: 1, data: { content: e.content, createdAt: e.createdAt, project: p.label } };
+    });
+    renderTreemapCells(squarify(items, rect.x, rect.y, rect.w, rect.h));
+    renderTreemapLegend(items);
+  } catch {
+    showToast(`Couldn't load ${p.label} — try again.`);
+    tmProject = null;
+    renderTreemapBreadcrumb();
+  }
+}
+
+function renderTreemapBreadcrumb() {
+  const root = `<span class="crumb${tmProject ? '' : ' current'}" id="tmCrumbRoot">Company brain</span>`;
+  const proj = tmProject ? `<span class="sep">/</span><span class="crumb current">${esc(tmProject.name)}</span>` : '';
+  $('breadcrumb').innerHTML = root + proj;
+  const rootEl = document.getElementById('tmCrumbRoot');
+  if (rootEl) rootEl.addEventListener('click', renderTreemapTop);
+}
+
+function setMode(next) {
+  if (mode === next) return;
+  mode = next;
+  document.querySelectorAll('.modeTab').forEach((b) => b.classList.toggle('on', b.dataset.mode === next));
+  closeDetail();
+  if (next === 'treemap') {
+    // display:none, not just pointer-events — the 3D scene was still fully
+    // visible (and still rendering every frame) underneath the treemap's
+    // semi-transparent cells, showing through as a messy double-exposure.
+    canvas.style.display = 'none';
+    controls.enabled = false;
+    $('nodeLabels').style.display = 'none';
+    $('treemap').classList.add('on');
+    $('hint').innerHTML = 'click a project to open it · click a memory to read it';
+    renderTreemapTop();
+  } else {
+    canvas.style.display = 'block';
+    controls.enabled = true;
+    $('nodeLabels').style.display = 'block';
+    $('treemap').classList.remove('on');
+    $('hint').innerHTML = 'drag empty space to orbit · scroll to zoom · drag a node to move it<br>click a project to open it · click a memory to read it';
+    renderBreadcrumb();
+    renderLegend();
+  }
+}
+document.querySelectorAll('.modeTab').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+window.addEventListener('resize', () => { if (mode === 'treemap') { tmProject ? openTreemapProject({ label: tmProject.name, data: tmProject }) : renderTreemapTop(); } });
+
+// ── Boot: real data only, staged by real work — no step here is a timer,
+// each checkmark lands when its actual async/render work finishes. ──────
+const bootRows = {
+  connect: document.querySelector('[data-step="connect"]'),
+  map: document.querySelector('[data-step="map"]'),
+  render: document.querySelector('[data-step="render"]'),
+};
+function bootActivate(step) { bootRows[step]?.classList.add('active'); }
+function bootFinish(step) { bootRows[step]?.classList.remove('active'); bootRows[step]?.classList.add('done'); }
+function nextFrame() { return new Promise((r) => requestAnimationFrame(r)); }
+function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
+function bootFail(msg) {
+  $('loading').classList.add('err-state');
+  $('loadingMsg').textContent = msg;
+}
+
+// ── Fly-to tween: eases a node's position (and, via popScale, its sprite
+// scale) toward a target, holding it `fixed` for the physics step so the
+// simulation doesn't fight the tween mid-flight. Used for the boot-time
+// firework reveal and for the click-to-contract/expand toggle below. ─────
+function easeOutBack(t) {
+  const c1 = 1.70158, c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+// Camera-only tween — a slow, overshoot-free pull-back reads as a deliberate
+// dolly shot; easeOutBack's bounce is right for a node "pop" but would read
+// as a mistake on the camera itself.
+function dollyCamera(from, to, duration) {
+  return new Promise((resolve) => {
+    const t0 = performance.now();
+    (function step() {
+      const t = Math.min(1, (performance.now() - t0) / duration);
+      camera.position.lerpVectors(from, to, easeOutCubic(t));
+      if (t < 1) { requestAnimationFrame(step); return; }
+      resolve();
+    })();
+  });
+}
+// A node can be mid-flight when the user grabs it to drag (or a second
+// tween starts on top of an earlier one) — without a way to yield, whichever
+// loop's rAF callback lands last each frame "wins," and the node visibly
+// fights the user's own drag. Each step checks it still owns its generation
+// counter before touching the node; position and scale get separate
+// counters since flyTo+popScale are always started together as one visual
+// beat and must not invalidate each other. cancelTweens() bumps both, for
+// the drag-grab case where any in-flight animation should just let go.
+function cancelTweens(node) {
+  node._posGen = (node._posGen || 0) + 1;
+  node._scaleGen = (node._scaleGen || 0) + 1;
+}
+function flyTo(node, target, duration = 900) {
+  const gen = (node._posGen = (node._posGen || 0) + 1);
+  return new Promise((resolve) => {
+    const start = node.pos.clone();
+    const t0 = performance.now();
+    node.fixed = true;
+    node.vel.set(0, 0, 0);
+    (function step() {
+      if (node._posGen !== gen) { resolve(); return; } // superseded — a drag or newer tween owns it now
+      const t = Math.min(1, (performance.now() - t0) / duration);
+      node.pos.lerpVectors(start, target, easeOutBack(t));
+      node.sprite.position.copy(node.pos);
+      if (t < 1) { requestAnimationFrame(step); return; }
+      node.fixed = false;
+      resolve();
+    })();
+  });
+}
+function popScale(node, duration = 900, target = 1) {
+  const gen = (node._scaleGen = (node._scaleGen || 0) + 1);
+  return new Promise((resolve) => {
+    const t0 = performance.now();
+    const from = node.sprite.scale.x;
+    const to = node.baseScale * target;
+    node._popping = true;
+    (function step() {
+      if (node._scaleGen !== gen) { node._popping = false; resolve(); return; }
+      const t = Math.min(1, (performance.now() - t0) / duration);
+      const eased = easeOutBack(t);
+      node.sprite.scale.setScalar(Math.max(0.01, from + (to - from) * eased));
+      if (t < 1) { requestAnimationFrame(step); return; }
+      node._popping = false;
+      resolve();
+    })();
+  });
+}
+// Launches every project node outward from the core, largest first — a
+// firework shell opening rather than everything just appearing at once,
+// with the camera opening on a tight shot of the collapsed core and
+// dollying back out over the whole sequence. User input is held off for
+// the duration so nothing fights the shot; it's ~3.5s, not a loading gate.
+async function launchFireworks(projectNodes) {
+  const ordered = [...projectNodes].sort((a, b) => (b.data.memories || 0) - (a.data.memories || 0));
+  const FLIGHT = 1050, GAP = 240; // gap = breather between one project settling and the next launching
+
+  const restingCam = camera.position.clone();
+  const closeCam = restingCam.clone().multiplyScalar(0.3);
+  camera.position.copy(closeCam);
+  controls.enabled = false;
+  const dollyDuration = (FLIGHT + GAP) * ordered.length + 300;
+  dollyCamera(closeCam, restingCam, dollyDuration);
+
+  await wait(550); // let the collapsed core sit for a breath before the first launch
+  // Fully sequential, largest project first — one settles, then the next
+  // launches, the same motion as a manual click-to-expand, just automated.
+  for (const n of ordered) {
+    await Promise.all([flyTo(n, n.restPos, FLIGHT), popScale(n, FLIGHT)]);
+    await wait(GAP);
+  }
+  controls.enabled = true;
+}
+
+// Every project's memories load automatically, largest project first, same
+// cascade as the firework reveal — no click required to reach the memory
+// level. toggleProject still handles the fetch/burst-out/edge-wiring; this
+// just fires it for each project instead of waiting for a user to.
+// Collapsing one back down (click it) still works if it's ever wanted.
+async function autoExpandAll(projectNodes) {
+  const ordered = [...projectNodes].sort((a, b) => (b.data.memories || 0) - (a.data.memories || 0));
+  for (const n of ordered) {
+    toggleProject(n); // don't await — each project's own fetch runs concurrently
+    await wait(400);
+  }
+}
+
+async function boot() {
+  bootActivate('connect');
+  try {
+    const res = await fetch('/api/network', { credentials: 'same-origin' });
+    if (res.status === 401) { location.href = '/dashboard/'; return; }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    netData = await res.json();
+  } catch {
+    bootFail("Couldn't reach your company brain — try refreshing.");
+    return;
+  }
+  bootFinish('connect');
+
+  bootActivate('map');
+  // Small but powerful — the marble shading, halo, and pulse carry the
+  // presence now, not footprint. Deliberately smaller than most projects.
+  const core = addNode('core', 'core', 'CommonMind Core', netData.core, 4, new THREE.Vector3(0, 0, 0));
+  core.fixed = true;
+
+  // A real sphere, not a flat billboard sprite like every other node — the
+  // one thing in this scene with actual 3D form, so it reads as the
+  // physical anchor everything else orbits, not just another dot. Swapped
+  // in for core.sprite; every existing system (hover raycasting, position
+  // sync, the pulse below) treats node.sprite generically and doesn't care
+  // whether it's a Sprite or a Mesh, so nothing else needs to change.
+  //
+  // Self-lit shader marble — not MeshStandardMaterial + scene lights (tried
+  // that first; a PointLight's intensity is physically-based candela in
+  // this Three.js version, so it needed four-digit values to read as lit at
+  // this scale and just came out dark). Same self-contained approach as the
+  // edge shader elsewhere in this file: turbulence-based veining, a fixed
+  // fake key light for a real specular highlight, and a fresnel rim — a
+  // glossy, richly-colored marble with zero dependency on scene lighting.
+  scene.remove(core.sprite);
+  core.sprite.material.dispose();
+  const globeMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uDeep: { value: new THREE.Color(0x042a30) },
+      uVein: { value: new THREE.Color(0x5ff2ea) },
+      uRim: { value: new THREE.Color(0x00e5ff) },
+    },
+    vertexShader: `
+      varying vec3 vNormal;
+      varying vec3 vViewPos;
+      varying vec3 vPos;
+      void main() {
+        vPos = position;
+        vNormal = normalize(normalMatrix * normal);
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        vViewPos = -mvPosition.xyz;
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform vec3 uDeep;
+      uniform vec3 uVein;
+      uniform vec3 uRim;
+      varying vec3 vNormal;
+      varying vec3 vViewPos;
+      varying vec3 vPos;
+
+      float hash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 45.164))) * 43758.5453); }
+      float noise(vec3 p) {
+        vec3 i = floor(p), f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        float n000 = hash(i), n100 = hash(i + vec3(1,0,0));
+        float n010 = hash(i + vec3(0,1,0)), n110 = hash(i + vec3(1,1,0));
+        float n001 = hash(i + vec3(0,0,1)), n101 = hash(i + vec3(1,0,1));
+        float n011 = hash(i + vec3(0,1,1)), n111 = hash(i + vec3(1,1,1));
+        return mix(mix(mix(n000,n100,f.x), mix(n010,n110,f.x), f.y),
+                   mix(mix(n001,n101,f.x), mix(n011,n111,f.x), f.y), f.z);
+      }
+
+      void main() {
+        vec3 N = normalize(vNormal);
+        vec3 V = normalize(vViewPos);
+
+        // Turbulent veining, slowly drifting — a real marble swirl, not a flat tint.
+        vec3 p = vPos * 1.6 + vec3(0.0, uTime * 0.05, 0.0);
+        float n = noise(p) * 0.5 + noise(p * 2.03) * 0.25 + noise(p * 4.01) * 0.125;
+        float vein = smoothstep(0.35, 0.75, sin((vPos.x + vPos.y * 0.6) * 3.0 + n * 6.0) * 0.5 + 0.5);
+        vec3 base = mix(uDeep, uVein, vein);
+
+        // Fixed fake key light — a real specular pop without needing scene lights.
+        vec3 L = normalize(vec3(0.5, 0.8, 0.6));
+        float diff = max(dot(N, L), 0.0);
+        float spec = pow(max(dot(reflect(-L, N), V), 0.0), 40.0);
+        float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.2);
+        // Rim flickers rather than glowing steady — electrified, not just lit.
+        float flicker = 0.82 + 0.28 * noise(vec3(uTime * 4.0, N.x * 3.0, N.y * 3.0));
+
+        // Thin, fast-crackling arcs raked across the surface — high-frequency
+        // noise thresholded hard so it reads as jagged lines, not a blob,
+        // animated fast enough to actually flicker frame to frame.
+        vec3 ep = vPos * 3.4 + vec3(uTime * 1.7, uTime * 2.3, uTime * 1.1);
+        float en = noise(ep) * 0.6 + noise(ep * 2.7 + 5.0) * 0.4;
+        float arc = smoothstep(0.8, 0.92, en) * (0.6 + 0.4 * sin(uTime * 30.0 + vPos.x * 10.0));
+
+        vec3 color = base * (0.6 + diff * 0.8) + vec3(1.0) * spec * 1.1
+          + uRim * fresnel * 2.1 * flicker + uRim * arc * 2.4;
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `,
+  });
+  const globe = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), globeMat);
+  globe.scale.setScalar(core.baseScale / 2); // sphere radius 1 * baseScale/2 == the sprite's old footprint
+  scene.add(globe);
+  core.sprite = globe;
+
+  // Extra halo layers, core only — an expanded project earns its visual
+  // intensity from a real burst of a hundred memory sprites; the core has
+  // no memories of its own to burst, so it gets that same hot, layered
+  // look from its own glow instead, not from inventing fake data points.
+  core.haloSprites = [0.75, 0.45].map((opacity, i) => {
+    const mat = new THREE.SpriteMaterial({
+      map: glowTex, color: TYPE_COLOR.core, fog: false, transparent: true,
+      opacity, depthWrite: false, blending: THREE.AdditiveBlending,
+    });
+    const s = new THREE.Sprite(mat);
+    s.scale.setScalar(core.baseScale * (1.35 + i * 0.55));
+    s.position.set(0, 0, 0);
+    scene.add(s);
+    return s;
+  });
+
+  const projectNodes = [];
+  const projectCount = netData.projects.length;
+  netData.projects.forEach((p, i) => {
+    const r = 2.5 + Math.min(6, Math.log2((p.memories || 0) + 1) * 1.1);
+    // Fibonacci-sphere placement, not a flat ring — points on a ring all
+    // share one plane, so the auto-rotating camera periodically lines two
+    // of them up back-to-front and they read as "stacked." Spreading them
+    // across a real sphere (golden-angle spacing, the standard even-point-
+    // distribution trick) means no two projects are ever coplanar with the
+    // core, so that collision can't happen from any viewing angle.
+    const orbit = 66 + Math.min(20, Math.log2((p.memories || 0) + 1) * 3.5);
+    const yFrac = projectCount > 1 ? 1 - (i / (projectCount - 1)) * 2 : 0; // +1..-1
+    const ringR = Math.sqrt(Math.max(0, 1 - yFrac * yFrac));
+    const theta = Math.PI * (3 - Math.sqrt(5)) * i; // golden angle
+    const restPos = new THREE.Vector3(
+      Math.cos(theta) * ringR * orbit,
+      yFrac * orbit * 0.8, // a real sphere, not flattened into a disc
+      Math.sin(theta) * ringR * orbit,
+    );
+    // Start every project collapsed at the core, tiny — launchFireworks()
+    // pops each one out to restPos once the loading overlay is gone, so
+    // the reveal actually plays where the user can see it.
+    const n = addNode(p.id, 'project', p.name, p, r, new THREE.Vector3(0, 0, 0));
+    n.restPos = restPos;
+    n.sprite.scale.setScalar(0.01);
+    n.fixed = true;
+    addEdge('core', p.id, 1.4);
+    projectNodes.push(n);
+  });
+
+  netData.edges.forEach((e) => addEdge(e.from, e.to, Math.min(1.2, 0.3 + e.count * 0.05)));
+  netData.links.forEach((l) => addEdge(l.from, l.to, 1));
+
+  $('stats').innerHTML = `<span><b>${netData.core.memories.toLocaleString()}</b> memories</span><span><b>${netData.projects.length}</b> projects</span>`;
+  renderBreadcrumb();
+  renderLegend();
+  await nextFrame(); // let the DOM/layout settle before the render checkmark fires
+  bootFinish('map');
+
+  bootActivate('render');
+  renderer.render(scene, camera); // force one real committed frame before we claim it's ready
+  await nextFrame();
+  bootFinish('render');
+  await nextFrame();
+
+  $('loading').classList.add('gone');
+  // Fire-and-forget from boot()'s own perspective — plays live in view, not
+  // behind the loader — but chained internally: the memory-level cascade
+  // only starts once every project has actually landed at its resting spot.
+  (async () => {
+    await launchFireworks(projectNodes);
+    await autoExpandAll(projectNodes);
+  })();
+}
+
+// ── Render loop ─────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let elapsed = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  if (mode === 'treemap') { clock.getDelta(); return; } // still call getDelta so dt doesn't jump on switch-back
+  const dt = Math.min(clock.getDelta(), 0.05);
+  elapsed += dt;
+  stepPhysics(dt);
+  syncEdgeGeometry();
+  edgeMat.uniforms.uTime.value = elapsed;
+  // A slow heartbeat, unique to the core — everything else is static-scale
+  // until you interact with it, so this alone marks it as the one node
+  // that's always alive, always the center.
+  const core = nodes.get('core');
+  if (core && !core._popping) {
+    if (core.sprite.material.uniforms?.uTime) core.sprite.material.uniforms.uTime.value = elapsed;
+    const pulse = 1 + Math.sin(elapsed * 1.15) * 0.07;
+    core.sprite.scale.setScalar(core.baseScale * pulse);
+    core.haloSprites?.forEach((s, i) => {
+      s.position.copy(core.pos);
+      // Slightly out of phase with the core and each other — reads as a
+      // living glow, not three things scaling in lockstep.
+      const haloPulse = 1 + Math.sin(elapsed * (0.7 + i * 0.25) + i) * 0.12;
+      s.scale.setScalar(core.baseScale * (1.35 + i * 0.55) * haloPulse);
+    });
+  }
+  if (selected && selectionRing.visible) {
+    selectionRing.position.copy(selected.pos);
+    const ringPulse = 1 + Math.sin(elapsed * 3) * 0.1;
+    selectionRing.scale.setScalar(selected.baseScale * 2.1 * ringPulse);
+  }
+  controls.update();
+  composer.render();
+  updateNodeLabels();
+}
+
+const _labelProj = new THREE.Vector3();
+function updateNodeLabels() {
+  // Two structural labels can land on the same screen point from some
+  // camera angles (e.g. a project sitting behind the core from this
+  // viewpoint) — placed[] lets each new label nudge below any label
+  // already placed this frame instead of overlapping it illegibly.
+  const placed = [];
+  for (const n of nodes.values()) {
+    if (!n.labelEl) continue;
+    _labelProj.copy(n.pos).project(camera);
+    if (_labelProj.z > 1) { n.labelEl.style.opacity = '0'; continue; } // behind camera
+    const spread = n.restPos ? Math.min(1, n.pos.length() / Math.max(1, n.restPos.length() * 0.55)) : 1;
+    if (spread < 0.05) { n.labelEl.style.opacity = '0'; continue; }
+    const x = (_labelProj.x * 0.5 + 0.5) * window.innerWidth;
+    let y = (-_labelProj.y * 0.5 + 0.5) * window.innerHeight + n.radius * 5; // clear the sprite itself
+    const w = n.labelEl.offsetWidth || 60;
+    for (const p of placed) {
+      if (Math.abs(x - p.x) < (w + p.w) / 2 && Math.abs(y - p.y) < 16) y = p.y + 16;
+    }
+    placed.push({ x, y, w });
+    n.labelEl.style.opacity = String(spread);
+    n.labelEl.style.transform = `translate(${x - w / 2}px, ${y}px)`;
+  }
+}
+animate();
+boot();
+</script>
+</body>
+</html>

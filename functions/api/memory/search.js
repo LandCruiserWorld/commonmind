@@ -19,9 +19,15 @@
  * detected against the FULL unfiltered upstream set, so a real similarity
  * across two unlinked projects still surfaces as a discovery, even though
  * its content never crosses into what either project actually gets back.
+ *
+ * Deleted (hidden_memories, see /api/memory/[id].js) memories are filtered
+ * out here too, for every search this user makes — project-scoped or the
+ * account-wide session search alike. A delete has to actually stick
+ * everywhere, not just in the one view it was clicked from.
  */
 
 import { requireUser } from '../../_lib/session.js';
+import { sendEmail } from '../../_email.js';
 
 export async function onRequestGet(context) {
   const { request, env } = context;
@@ -40,30 +46,47 @@ export async function onRequestGet(context) {
   if (!query) {
     return json({ error: 'missing q' }, 400);
   }
-  const requestedLimit = Math.max(
-    1,
-    parseInt(incoming.searchParams.get('limit') ?? incoming.searchParams.get('top_k') ?? '3', 10) || 3,
+  const requestedLimit = Math.min(
+    Math.max(1, parseInt(incoming.searchParams.get('limit') ?? incoming.searchParams.get('top_k') ?? '3', 10) || 3),
+    30, // a caller asking for more than this gets capped, not a 500 — see upstreamLimit note below
   );
   // Ask upstream for more than we'll return, so the isolation filter below
-  // still has enough in-scope candidates left to fill the real limit.
-  const upstreamLimit = user.projectId ? Math.max(requestedLimit * 6, 25) : requestedLimit;
+  // still has enough in-scope candidates left to fill the real limit. Capped
+  // at 40: found by hand that requesting significantly more than that from
+  // the upstream core (e.g. a naive requestedLimit*6 with no ceiling) makes
+  // it throw a real 500 — this stays comfortably under that.
+  const upstreamLimit = user.projectId ? Math.min(Math.max(requestedLimit * 6, 25), 40) : requestedLimit;
 
   const upstreamUrl = new URL(`${env.COMMONMIND_API_URL.replace(/\/$/, '')}/api/memory/search`);
   upstreamUrl.searchParams.set('q', query);
   upstreamUrl.searchParams.set('limit', String(upstreamLimit));
 
-  const upstream = await fetch(upstreamUrl.toString(), {
-    headers: {
-      Authorization: `Bearer ${env.COMMONMIND_API_TOKEN}`,
-      'X-CommonMind-Owner': user.id,
-    },
-  });
+  // Same gap as capture.js used to have: an unguarded fetch here turns any
+  // DNS blip, timeout, or connection reset on the way to Kousik's API into
+  // an unhandled exception, which Cloudflare surfaces as a bare 520 with no
+  // diagnostic info — indistinguishable from this bridge being broken.
+  let upstream, rawBody;
+  try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10_000);
+    try {
+      upstream = await fetch(upstreamUrl.toString(), {
+        headers: {
+          Authorization: `Bearer ${env.COMMONMIND_API_TOKEN}`,
+          'X-CommonMind-Owner': user.id,
+        },
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
+    rawBody = await upstream.text();
+  } catch (err) {
+    console.error('search bridge: upstream request failed', err?.name, err?.message);
+    return json({ error: 'Could not reach the memory backend — try again' }, 502);
+  }
 
-  const rawBody = await upstream.text();
-
-  // No project to scope by (a dashboard session searching directly) or
-  // upstream failed — nothing to filter, pass it straight through.
-  if (!user.projectId || !upstream.ok) {
+  if (!upstream.ok) {
     return new Response(rawBody, {
       status: upstream.status,
       headers: { 'Content-Type': 'application/json' },
@@ -81,6 +104,24 @@ export async function onRequestGet(context) {
     return new Response(rawBody, { status: upstream.status, headers: { 'Content-Type': 'application/json' } });
   }
 
+  // Deleted-for-this-user memories never come back, in any view.
+  const { results: hiddenRows } = await env.DB.prepare(
+    'SELECT memory_id FROM hidden_memories WHERE user_id = ?',
+  )
+    .bind(user.id)
+    .all();
+  const hidden = new Set(hiddenRows.map((r) => r.memory_id));
+  const visible = hidden.size ? results.filter((r) => !hidden.has(r.id)) : results;
+
+  // No project to scope by (a dashboard session searching directly) —
+  // nothing further to filter beyond hidden memories, return as-is.
+  if (!user.projectId) {
+    return new Response(JSON.stringify({ ...parsed, results: visible.slice(0, requestedLimit) }), {
+      status: upstream.status,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+
   // This project's allowed set: itself, plus anything it's explicitly linked to.
   const { results: linkRows } = await env.DB.prepare(
     `SELECT CASE WHEN project_a = ? THEN project_b ELSE project_a END AS id
@@ -91,7 +132,7 @@ export async function onRequestGet(context) {
   const allowed = new Set([user.projectId, ...linkRows.map((r) => r.id)]);
 
   // Who actually captured each candidate result, per our own activity log.
-  const ids = results.map((r) => r.id).filter(Boolean);
+  const ids = visible.map((r) => r.id).filter(Boolean);
   const attribution = new Map();
   if (ids.length) {
     const placeholders = ids.map(() => '?').join(',');
@@ -104,7 +145,7 @@ export async function onRequestGet(context) {
     attrRows.forEach((r) => attribution.set(r.memory_id, r.project_id));
   }
 
-  const filtered = results
+  const filtered = visible
     .filter((r) => {
       const owner = attribution.get(r.id);
       // Fail closed: a project only sees memories with a known, in-scope
@@ -126,7 +167,7 @@ export async function onRequestGet(context) {
     (async () => {
       let hitProjectId = null;
       let hitMemoryId = null;
-      const firstOutside = results.find((r) => {
+      const firstOutside = visible.find((r) => {
         const owner = attribution.get(r.id);
         return owner && owner !== user.projectId;
       });
@@ -134,12 +175,52 @@ export async function onRequestGet(context) {
         hitProjectId = attribution.get(firstOutside.id);
         hitMemoryId = firstOutside.id;
       }
+
+      // Has this project pair ever connected before? Check BEFORE inserting
+      // the row below, so it reflects prior history, not this hit.
+      let isNewConnection = false;
+      if (hitProjectId) {
+        const prior = await env.DB.prepare(
+          `SELECT 1 FROM project_activity
+           WHERE hit_project_id IS NOT NULL
+             AND ((project_id = ? AND hit_project_id = ?) OR (project_id = ? AND hit_project_id = ?))
+           LIMIT 1`,
+        )
+          .bind(user.projectId, hitProjectId, hitProjectId, user.projectId)
+          .first();
+        isNewConnection = !prior;
+      }
+
       await env.DB.prepare(
         `INSERT INTO project_activity (id, project_id, action, hit_project_id, hit_memory_id)
          VALUES (?, ?, 'search', ?, ?)`,
       )
         .bind(crypto.randomUUID(), user.projectId, hitProjectId, hitMemoryId)
         .run();
+
+      // The first time two projects genuinely connect is exactly the kind
+      // of event a real product announces, not something a user has to
+      // stumble onto by opening the graph. Only fires once per pair, ever.
+      if (isNewConnection && hitProjectId && user.email) {
+        const toProj = await env.DB.prepare('SELECT name FROM project_tokens WHERE id = ?')
+          .bind(hitProjectId)
+          .first();
+        const fromName = user.projectName || 'a project';
+        const toName = toProj?.name || 'another project';
+        const snippet = typeof firstOutside.content === 'string' ? firstOutside.content.slice(0, 240) : null;
+        await sendEmail(env, {
+          to: user.email,
+          subject: `New connection: ${fromName} ↔ ${toName}`,
+          text: [
+            `CommonMind just found a real connection between two of your projects.`,
+            '',
+            `${fromName} ↔ ${toName}`,
+            snippet ? `Matched memory: "${snippet}"` : '',
+            '',
+            `See it live: https://commonmind.agent9.dev/graph/`,
+          ].filter(Boolean).join('\n'),
+        }).catch(() => {});
+      }
     })().catch(() => {}),
   );
 

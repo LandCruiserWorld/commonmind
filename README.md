@@ -385,7 +385,7 @@ One **MCP server** covers every agent CLI — Claude Code, Cursor, Codex, openco
 
 ## The ten principles
 
-Carried on the landing page as machine-readable JSON-LD (`#commonmind-bible`) so agents building here can read them.
+Carried on the landing page as machine-readable JSON-LD (`#commonmind-values`) so agents building here can read them.
 
 | | |
 |---|---|
@@ -502,7 +502,7 @@ docs/
   MASTER_DEVELOPER_DOC.md
   STRATEGIC_PLAN.md
   agents/AGENTS.md     rules for coding agents in this repo
-  site/index.html      landing page + JSON-LD bible (single copy)
+  site/index.html      landing page + JSON-LD core values (single copy)
 assets/images/         cover, architecture and resilience diagrams
 tests/
 ```
@@ -515,9 +515,9 @@ This repo is **under active build**. What's true today:
 
 | | |
 |---|---|
-| ✅ Done | Schema, TypeScript memory core, product bible + JSON-LD, landing page, architecture, MCP server (capture · recall · ask · approve · note), approval round-trip, CDC → SNS → SQS pipeline, capture → recall against a live cluster (CLI + HTTP), account auth + self-serve project keys, real network-map dashboard, end-to-end latency measured |
+| ✅ Done | Schema, TypeScript memory core, core values + JSON-LD, landing page, architecture, MCP server (capture · recall · ask · approve · note), approval round-trip, capture → recall against a live cluster (CLI + HTTP), account auth + self-serve project keys, real network-map dashboard, end-to-end latency measured |
 | 🟡 In build | `npm install -g commonmind` front door, trading-bot integration (live on the platform, not yet demo-recorded), kill-the-node capture |
-| ⏳ Next | Multi-node resilience benchmark, demo video |
+| ⏳ Next | AWS event pipeline — SNS topic + SQS queue + DLQ are provisioned and wired in us-east-2 today; the Lambda bridge and the CockroachDB `CREATE CHANGEFEED` that would put real traffic through them are the next step, not yet done. Also: multi-node resilience benchmark, demo video |
 | ⬜ Later | Dream-weaver consolidation ([spec](docs/DREAM_WEAVER_SPEC.md)) |
 
 **Performance figures on the landing page are measurements, not design targets** — the `<50ms` estimate is gone, replaced by 15 real recall requests and 10 real capture requests against the actual deployed path (see [Why AWS serverless](#why-aws-serverless)). We would rather show one measured number than five aspirational ones — a claim we can't reproduce on demand is a claim a judge can dismantle.
