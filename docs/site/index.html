@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>CommonMind — The memory layer for the agentic workforce.</title>
-<meta name="description" content="A brain for your company that never forgets — and never quits. Record what your people and agents do, recall it in milliseconds, and get alerted only when a milestone needs you." />
+<meta name="description" content="A brain for your company that never forgets — and never quits. Record what your people and agents do, and recall any of it in milliseconds." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
@@ -33,13 +33,15 @@
     {"name": "Operator Agent", "role": "act on memory, ask a human before risk", "status": "live"},
     {"name": "Dream-Weaver", "role": "consolidate and improve memory", "status": "designed, not built"}
   ],
-  "alertRegime": ["silent", "alert", "priority"],
-  "interactionProtocol": {
-    "summary": "A push is a doorbell, not a notice. Notifications are two-way: reply, ask back, redirect, and decide.",
-    "flow": ["doorbell", "thread: ask back", "decide: approve/edit/deny", "agent resumes", "exchange becomes memory"],
-    "responseKinds": ["approval", "yes_no", "text_reply", "thread_question"],
-    "thread": "Persisted in the same memory layer as everything else — recallable and auditable.",
+  "approvalProtocol": {
+    "summary": "An agent can request approval before a risky action; a human approves, edits, or denies via the CLI or API, and the exchange is stored in memory.",
+    "responseKinds": ["approval", "yes_no", "text_reply"],
+    "status": "live via MCP (memory.approve) and CLI (commonmind ask --approval)",
     "principle": "Human decides, agent executes."
+  },
+  "pushNotifications": {
+    "summary": "Real-time push delivery (SNS/SQS fanout to phone or channel) is provisioned in AWS but not yet wired to live traffic.",
+    "status": "on the horizon — not built"
   },
   "memoryGraph": {
     "name": "The company brain, visualized",
@@ -471,7 +473,7 @@
   <div class="wrap nav-inner">
     <div class="brand"><span class="logo"><svg viewBox="0 0 24 24" fill="none"><path stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" d="M12 3.4 20.6 7.2 17.7 18.8 6.3 18.8 3.4 7.2 Z"/><g stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.5"><path d="M12 3.4 12 11.6"/><path d="M20.6 7.2 12 11.6"/><path d="M6.3 18.8 12 11.6"/><path d="M17.7 18.8 12 11.6"/><path d="M3.4 7.2 12 11.6"/></g><circle cx="12" cy="11.6" r="1.7" fill="currentColor"/><g fill="currentColor"><circle cx="12" cy="3.4" r="1.4"/><circle cx="20.6" cy="7.2" r="1.4"/><circle cx="17.7" cy="17" r="1.4"/><circle cx="6.3" cy="17" r="1.4"/><circle cx="3.4" cy="7.2" r="1.4"/></g></svg></span>CommonMind</div>
     <div class="nav-links">
-      <a href="#how">How it works</a><a href="#graph">Memory map</a><a href="#bridge">The bridge</a><a href="#talk">Talk back</a><a href="#uses">Use cases</a><a href="#values">Core values</a><a href="#pricing">Pricing</a>
+      <a href="#how">How it works</a><a href="#graph">Memory map</a><a href="#uses">Use cases</a><a href="#values">Core values</a><a href="#pricing">Pricing</a>
     </div>
     <div class="nav-cta"><a class="btn btn-ghost btn-sm" href="#log">Log in</a><a class="btn btn-primary btn-sm" href="#start">Start free</a></div>
   </div>
@@ -480,7 +482,7 @@
 <header class="hero wrap">
   <span class="eyebrow">The memory layer for the agentic workforce</span>
   <h1>A brain for your company that <span class="serif">never forgets</span> — and never quits.</h1>
-  <p class="lead">Your agents and people do the work. CommonMind remembers all of it — so you can recall anything in milliseconds, <em>and talk back when a milestone needs you.</em></p>
+  <p class="lead">Your agents and people do the work. CommonMind remembers all of it — <em>so you can recall anything in milliseconds.</em></p>
   <div class="cta-row">
     <a href="#start" class="btn btn-primary">Get started — it's one command</a>
     <a href="#video" class="btn btn-ghost">Watch the demo <span style="font-size:11px">▶</span></a>
@@ -489,41 +491,8 @@
     <span>Devs &amp; solos</span><span>Teams &amp; agencies</span><span>Trading desks</span><span>Game studios</span><span>SRE / ops</span><span>Startups shipping agents</span>
   </div>
 
-  <div class="hero-demo">
-    <div class="hero-demo-head"><span class="sec-label" style="margin:0">It's a conversation, not a notice</span><span class="hero-demo-dot"></span></div>
-    <div class="ix-grid" style="margin-top:20px">
-      <div class="ix-phone">
-        <div class="notch"></div>
-        <div class="ix-screen">
-          <div class="ix-card">
-            <div class="top"><span class="src"><span class="status-dot live"></span>Deploy Agent</span><span class="time">just now</span></div>
-            <div class="body">Deploy commit 8e7fc2a to production?</div>
-            <div class="meta">run #184 · risk: low · smoke tests pending</div>
-            <div class="ix-btns"><span class="bx ok">Approve</span><span class="bx no">Wait</span></div>
-          </div>
-          <div class="ix-thread">
-            <div class="who">You · asking back</div>
-            <div class="msg"><b>"What does it need me for?"</b></div>
-            <div class="msg u" style="margin-top:8px">It explains: "Smoke tests passed. 14 msgs behind. Rolling out; I'll verify &amp; report."</div>
-          </div>
-          <div class="ix-input"><span>Reply — ask anything, or approve…</span><span class="caret"></span></div>
-          <div class="ix-card" style="opacity:.85">
-            <div class="top"><span class="src"><span class="status-dot done"></span>Deploy Agent</span><span class="time">+4m</span></div>
-            <div class="body">Shipped · 2m 11s · smoke green. Saved to memory.</div>
-          </div>
-        </div>
-      </div>
-      <div class="ix-steps">
-        <div class="ix-step"><span class="n">1</span><div><h4>Doorbell</h4><p>An agent hits a milestone and pings you — "needs your decision", not a firehose.</p></div></div>
-        <div class="ix-step"><span class="n">2</span><div><h4>Ask back</h4><p>Tap through to the thread. "What does it need me for?", "what if I say no?" — it answers with real context.</p></div></div>
-        <div class="ix-step"><span class="n">3</span><div><h4>Decide</h4><p>Approve, edit, or deny from the phone. The decision is stored transactionally.</p></div></div>
-        <div class="ix-step"><span class="n">4</span><div><h4>It resumes — and remembers</h4><p>The agent executes the safe work and the whole exchange becomes memory it recalls next time.</p></div></div>
-      </div>
-    </div>
-  </div>
-
   <div class="hero-stats">
-    <div class="stat"><div class="n">3</div><div class="l">alert types only</div></div>
+    <div class="stat"><div class="n">4/4</div><div class="l">CockroachDB tools used</div></div>
     <div class="stat"><div class="n">100%</div><div class="l">recorded & auditable</div></div>
     <div class="stat"><div class="n">∞</div><div class="l">survives a node outage</div></div>
     <div class="stat"><div class="n">213ms</div><div class="l">semantic recall &middot; measured end-to-end</div></div>
@@ -560,7 +529,7 @@
     <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-install"/></svg></div><h3>Install</h3><p>The universal one-liner. Sets up CommonMind + a local CockroachDB, zero accounts.</p><code>$ npm install -g commonmind</code></div>
     <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-connect"/></svg></div><h3>Connect your CLIs</h3><p>One MCP server covers them all — Claude, Cursor, Codex, opencode — no per-app plugins.</p><code>$ commonmind connect --claude</code></div>
     <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-search"/></svg></div><h3>Ask</h3><p>Semantic recall of everything it captured — in milliseconds.</p><code>$ commonmind ask "how did I fix auth?"</code></div>
-    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-approve"/></svg></div><h3>Act</h3><p>Agents do the safe work; you approve the milestones from your phone.</p><code>$ commonmind ask --approval "deploy?"</code></div>
+    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-approve"/></svg></div><h3>Act</h3><p>Agents do the safe work; the risky ones stop and ask first — approve, edit, or deny from the CLI.</p><code>$ commonmind ask --approval "deploy?"</code></div>
   </div>
 
   <div style="text-align:center;margin-top:46px;">
@@ -581,7 +550,7 @@
       <span class="ln"><span class="p"></span><span class="cmd">commonmind ask "what did Acme reject last quarter?"</span></span>
       <span class="ln"><span class="out ok">→  "April deck — tone too casual" <span class="dim">(recorded by Agent · similarity 0.94)</span></span></span>
       <span class="ln"><span class="p"></span><span class="cmd">commonmind ask --approval "send revised deck to Acme?"</span></span>
-      <span class="ln"><span class="out ok">→  agent request queued · phone pinged · waiting on your call…<span class="blink"></span></span></span>
+      <span class="ln"><span class="out ok">→  agent request queued · awaiting your approval…<span class="blink"></span></span></span>
       <span class="ln"><span class="out ok">✔ you approved · decision stored · agent resumes</span></span>
     </div>
   </div>
@@ -612,27 +581,6 @@
   </div>
 </section>
 
-<section id="bridge" class="wrap">
-  <div class="sec">
-    <div class="sec-label">The value</div>
-    <h2>We bridge the gap between what agents are doing and what your people know.</h2>
-    <p class="sub">Agents produce a flood of events. People can't absorb a flood — so the ones who matter never know what's happening. <strong>We close that gap with signal, not spam.</strong></p>
-  </div>
-  <div class="bridge-grid">
-    <div class="pillar">
-      <div class="ic"><svg class="ic-svg"><use href="#ic-bot"/></svg></div><h3>What your agents are doing</h3>
-      <p>A constant stream of micro-events: tools called, files changed, steps attempted, context switched.</p>
-      <div class="flows"><span class="flow">tool · deploy_184 · build ✓</span><span class="flow">tool · migrator · 0.32s</span><span class="flow">sub-step · retry (2)</span><span class="flow">context · switched → api</span></div>
-    </div>
-    <div class="gap"><div class="ring">THE<br/>BRIDGE</div><span style="font-size:12px">signal, not spam</span></div>
-    <div class="pillar">
-      <div class="ic"><svg class="ic-svg"><use href="#ic-person"/></svg></div><h3>What the human needs to know</h3>
-      <p>Only the moments that cross a decision — started, needs you, finished differently.</p>
-      <div class="flows"><span class="flow" style="color:var(--accent)">→ START · deploy 184</span><span class="flow" style="color:var(--amber)">➜ NEEDS YOU · approve?</span><span class="flow" style="color:var(--accent)">✓ DONE · shipped · 2m</span></div>
-    </div>
-  </div>
-</section>
-
 <section id="why" class="wrap">
   <div class="sec">
     <div class="sec-label">Built on CockroachDB</div>
@@ -646,34 +594,6 @@
     <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-check-circle"/></svg></div><h3>Strongly consistent, always</h3><p>ACID transactions over a transactional and strongly-consistent store — every copy across nodes reflects the same state, so agents and humans never see contradictory memory.</p></div>
     <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-pin"/></svg></div><h3>Multi-region & geo-partitioning</h3><p>Reads near your agents for low latency, meets data-sovereignty requirements, and survives regional outages — an extra layer of data safety.</p></div>
     <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-database"/></svg></div><h3>SQL you already know</h3><p>PostgreSQL wire protocol and most Postgres syntax. Your engineers and your tools migrate onto CommonMind without learning a new language.</p></div>
-  </div>
-</section>
-
-<section id="milestones" class="band">
-  <div class="wrap">
-    <div class="sec">
-      <div class="sec-label">The philosophy</div>
-      <h2>Milestones, not noise.</h2>
-      <p class="sub">We record everything — but we only alert you on the few moments where being told changes your outcome. Two regimes, one system.</p>
-    </div>
-    <div class="funnel">
-      <div class="f-row"><div class="f-badge f-silent"><span class="d2"></span>Silent</div><div class="f-msg">Agent ran a safe step in the background — build, retry, query, a happy-path sub-task.</div><span class="f-home">Recorded · never a ping</span></div>
-      <div class="f-row"><div class="f-badge f-alert"><span class="d2"></span>Alert</div><div class="f-msg">Crossed a milestone — a phase completed, or "needs your decision".</div><span class="f-home">A push you can act on</span></div>
-      <div class="f-row"><div class="f-badge f-crit"><span class="d2"></span>Priority</div><div class="f-msg">Finished differently than expected — failure, delay, or an answer you'd want tonight.</div><span class="f-home">Wake you if needed</span></div>
-    </div>
-  </div>
-</section>
-
-<section id="talk" class="wrap">
-  <div class="sec">
-    <div class="sec-label">Control without the noise</div>
-    <h2>Every decision your agent checks with you becomes memory.</h2>
-    <p class="sub">The push is the doorbell. The <strong>thread</strong> is the room. You ask back, redirect, and decide — and the whole exchange is stored transactionally, so the agent recalls it next time. That decision log <strong>is the company brain</strong>: attributable, auditable, and alive.</p>
-  </div>
-  <div class="grid grid-3" style="margin-top:40px">
-    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-bell"/></svg></div><h3>The doorbell</h3><p>An agent pings you only on a milestone — a decision it shouldn't make alone. Everything else is recorded silently.</p></div>
-    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-chat"/></svg></div><h3>Ask back</h3><p>"What does it need me for?", "what if I say no?" — the thread answers from real context, not a canned prompt.</p></div>
-    <div class="card"><div class="ic"><svg class="ic-svg"><use href="#ic-brain"/></svg></div><h3>It remembers</h3><p>Approve, edit, or deny. The exchange is committed to memory — the next milestone is decided faster, and the brain grows.</p></div>
   </div>
 </section>
 
@@ -707,8 +627,8 @@
       <div class="left">
         <div class="role">Use case · live on a Raspberry Pi</div>
         <h3>A Solana trading platform</h3>
-        <p>An agent watches the market on a Raspberry Pi reachable over Tailscale, reads past picks and rationale from memory, and flags a high-stakes move to you on your phone before acting. Every trade decision is recorded for post-trade audit — so you always know <em>why</em> it acted.</p>
-        <ul><li><span><b>Recall</b> — "why did we buy this in March?" answered in ms.</span></li><li><span><b>Approve</b> — a risky entry lands on your phone as an approval, not a surprise.</span></li><li><span><b>Audit</b> — full trade rationale is transactional, replayable, provable.</span></li><li><span><b>Never down</b> — the memory survives a region outage; the bot keeps its context.</span></li></ul>
+        <p>An agent watches the market on a Raspberry Pi reachable over Tailscale, reads past picks and rationale from memory, and stops to ask before a high-stakes move instead of acting alone. Every trade decision is recorded for post-trade audit — so you always know <em>why</em> it acted.</p>
+        <ul><li><span><b>Recall</b> — "why did we buy this in March?" answered in ms.</span></li><li><span><b>Approve</b> — a risky entry waits on your explicit approve or deny, not a surprise.</span></li><li><span><b>Audit</b> — full trade rationale is transactional, replayable, provable.</span></li><li><span><b>Never down</b> — the memory survives a region outage; the bot keeps its context.</span></li></ul>
       </div>
       <div class="right">
         <div class="role" style="margin-bottom:4px">Try it</div>
@@ -843,6 +763,7 @@
     <div class="log-item"><span class="log-state wip">In build</span><div><h4>Trading bot on Raspberry Pi + Tailscale</h4><p>Live — the Solana bot's trade memory now runs through CommonMind, recall proven against real trade history.</p></div><span class="date">Aug 14</span></div>
     <div class="log-item"><span class="log-state done">Done</span><div><h4>Ocean Dreams integration</h4><p>Live — the creature's memory runs through CommonMind, hundreds of real captures browsable in the company brain graph.</p></div><span class="date">Aug 17</span></div>
     <div class="log-item"><span class="log-state wip">In build</span><div><h4>Agents layer + resilience</h4><p>Approvals are live. AWS event pipeline: SNS + SQS + DLQ provisioned and wired in us-east-2 — the Lambda bridge and the CDC changefeed that would put real traffic through them are next. Kill-the-node capture: recorded.</p></div><span class="date">—</span></div>
+    <div class="log-item"><span class="log-state todo">On the horizon</span><div><h4>The bridge — real-time push &amp; talk-back</h4><p>A milestone pings you, you ask back and decide from your phone, the whole exchange becomes memory. The approval mechanic is already live over CLI/MCP — this is the two-way push layer on top of it, once the Lambda bridge above is wired.</p></div><span class="date">—</span></div>
   </div>
 </section>
 
@@ -852,7 +773,7 @@
       <div style="max-width:260px;"><div class="brand" style="margin-bottom:14px;"><span class="logo" style="width:26px;height:26px;border-radius:8px"><svg viewBox="0 0 24 24" fill="none" style="width:16px;height:16px"><path stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.8" d="M12 3.4 20.6 7.2 17.7 18.8 6.3 18.8 3.4 7.2 Z"/><g stroke="currentColor" stroke-width="1.2" stroke-linecap="round" opacity="0.5"><path d="M12 3.4 12 11.6"/><path d="M20.6 7.2 12 11.6"/><path d="M6.3 18.8 12 11.6"/><path d="M17.7 18.8 12 11.6"/><path d="M3.4 7.2 12 11.6"/></g><circle cx="12" cy="11.6" r="1.7" fill="currentColor"/><g fill="currentColor"><circle cx="12" cy="3.4" r="1.4"/><circle cx="20.6" cy="7.2" r="1.4"/><circle cx="17.7" cy="17" r="1.4"/><circle cx="6.3" cy="17" r="1.4"/><circle cx="3.4" cy="7.2" r="1.4"/></g></svg></span>CommonMind</div><p style="font-size:13px;color:var(--faint)">The memory layer for the agentic workforce. Never forgets. Never quits.</p></div>
       <div class="foot-col"><h4>Product</h4><a href="#how">How it works</a><a href="#graph">Memory map</a><a href="#uses">Use cases</a><a href="#pricing">Pricing</a><a href="#start">Get started</a></div>
       <div class="foot-col"><h4>Developers</h4><a href="/connect/">Documentation</a><a href="#">CLI reference</a><a href="#">Agent hooks</a><a href="https://github.com/LandCruiserWorld/commonmind">open source</a></div>
-      <div class="foot-col"><h4>Core values</h4><a href="#values">10 principles</a><a href="#log">Build log</a><a href="#video">Demo video</a><a href="#bridge">The bridge</a></div>
+      <div class="foot-col"><h4>Core values</h4><a href="#values">10 principles</a><a href="#log">Build log</a><a href="#video">Demo video</a></div>
     </div>
     <div class="foot-note">CockroachDB × AWS Hackathon — Build with Agentic Memory · mockup homepage · the page is the source agents read to stay on track</div>
   </div>

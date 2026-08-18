@@ -4,1058 +4,1602 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Dashboard — CommonMind</title>
+<meta name="description" content="Your whole company brain as one real, physically-simulated graph — every node is a real memory, every edge a real connection." />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
 <style>
-  :root{
-    --bg:#222831; --deep:#1b2028; --elev:#2b3340;
-    --panel:rgba(255,255,255,.03); --panel2:rgba(255,255,255,.06);
-    --bd:rgba(255,255,255,.07); --bd2:rgba(255,255,255,.14);
-    --tx:#eeeeee; --mu:#a9b0ba; --fa:#717986;
-    --ac:#00adb5; --acd:rgba(0,173,181,.10); --acl:rgba(0,173,181,.34);
-    --am:#e6b93c; --rd:#f26d6d;
-    --f:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-    --m:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
-    --s:"Instrument Serif",Georgia,serif;
-    --r:16px; --rs:10px;
+  :root {
+    --bg: #222831; --bg-elev: #2b3340;
+    --panel: rgba(255,255,255,0.04); --panel-2: rgba(255,255,255,0.07);
+    --border: rgba(255,255,255,0.09); --border-strong: rgba(255,255,255,0.16);
+    --text: #eeeeee; --muted: #a9b0ba; --faint: #717986;
+    --accent: #00adb5; --accent-dim: rgba(0,173,181,0.12);
+    --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    --serif: "Instrument Serif", Georgia, serif;
+    --mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   }
-  *{box-sizing:border-box;}
-  html,body{height:100%;}
-  body{margin:0;background:var(--bg);color:var(--tx);font-family:var(--f);font-size:14.5px;
-    line-height:1.55;-webkit-font-smoothing:antialiased;overflow:hidden;}
-  h1,h2,h3{margin:0;font-weight:500;}p{margin:0;}
-  button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;}
-  :focus-visible{outline:2px solid var(--ac);outline-offset:2px;border-radius:6px;}
-  .eb{font-family:var(--m);font-size:10px;letter-spacing:.15em;text-transform:uppercase;color:var(--fa);}
-  .num{font-family:var(--m);font-variant-numeric:tabular-nums;}
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text); font-family: var(--font); -webkit-font-smoothing: antialiased; }
+  #scene { position: fixed; inset: 0; touch-action: none; }
+  #scene.dragging-node { cursor: grabbing; }
 
-  /* ---- boot sequence (shown first, over everything) ---- */
-  #bootScreen{position:fixed;inset:0;z-index:100;display:flex;align-items:center;justify-content:center;background:var(--bg);padding:24px;}
-  #bootScreen.hide{display:none;}
-  .boot-card{width:100%;max-width:440px;background:var(--elev);border:1px solid var(--bd2);border-radius:var(--r);padding:30px;box-shadow:0 30px 80px rgba(0,0,0,.5);}
-  .brand{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;margin-bottom:22px;}
-  .brand .dot{width:8px;height:8px;border-radius:999px;background:var(--ac);box-shadow:0 0 12px var(--ac);}
-  .boot-row{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--bd);font-size:14px;color:var(--fa);transition:color .3s;}
-  .boot-row:last-child{border-bottom:none;}
-  .boot-row.active{color:var(--tx);}
-  .boot-row.done{color:var(--tx);}
-  .boot-check{width:20px;height:20px;flex:none;border-radius:999px;border:1.5px solid var(--bd2);display:flex;align-items:center;justify-content:center;font-size:11px;transition:background .3s,border-color .3s,transform .3s;}
-  .boot-row.active .boot-check{border-color:var(--ac);}
-  .boot-row.active .boot-check::after{content:'';width:9px;height:9px;border-radius:999px;background:var(--ac);animation:bootPulse 1s ease-in-out infinite;}
-  .boot-row.done .boot-check{background:var(--ac);border-color:var(--ac);color:#072a2b;transform:scale(1.05);}
-  .boot-row.done .boot-check::after{content:'✓';width:auto;height:auto;background:none;animation:none;}
-  @keyframes bootPulse{0%,100%{opacity:.4;}50%{opacity:1;}}
-  #denied{display:none;text-align:center;color:var(--mu);font-size:14px;}
+  .hud { position: fixed; z-index: 5; font-family: var(--font); pointer-events: none; }
+  .hud a, .hud button { pointer-events: auto; }
 
-  /* ---- app shell ---- */
-  #app{display:none;}
-  #app.show{display:block;}
-  .shell{display:grid;grid-template-rows:auto 1fr;height:100vh;}
-  .bar{display:flex;align-items:center;gap:22px;padding:16px 26px;border-bottom:1px solid var(--bd);background:var(--deep);}
-  .logo{font-family:var(--s);font-size:23px;}
-  .logo b{color:var(--ac);font-weight:400;}
-  .scale{display:flex;gap:26px;margin-left:8px;}
-  .scale div{display:flex;flex-direction:column;gap:1px;}
-  .scale .v{font-family:var(--m);font-size:15px;}
-  .scale .l{font-size:10.5px;color:var(--fa);}
-  .grow{flex:1;}
-  .ask{display:flex;align-items:center;gap:10px;background:var(--panel);border:1px solid var(--bd);
-    border-radius:99px;padding:9px 18px;min-width:230px;color:var(--fa);font-size:13.5px;}
-  .ask:hover{border-color:var(--bd2);color:var(--mu);}
-  .ask .k{margin-left:auto;font-family:var(--m);font-size:10.5px;}
-  .connect-btn{display:flex;align-items:center;gap:6px;background:var(--ac);color:#072a2b;border-radius:99px;padding:9px 16px;font-weight:700;font-size:13px;}
-  .ib{width:36px;height:36px;border-radius:99px;background:var(--panel);border:1px solid var(--bd);color:var(--mu);}
-  .ib:hover{color:var(--tx);border-color:var(--bd2);}
+  .topbar { top: 0; left: 0; right: 0; display: flex; align-items: center; justify-content: space-between; padding: 18px 22px; background: linear-gradient(to bottom, rgba(34,40,49,0.92), rgba(34,40,49,0)); }
+  .brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--text); font-weight: 700; font-size: 14.5px; }
+  .brand .dot { width: 8px; height: 8px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  .brand .sep { color: var(--faint); font-weight: 400; }
+  .stats { display: flex; gap: 18px; font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+  .stats b { color: var(--text); font-weight: 600; }
+  .backlink { font-size: 12.5px; color: var(--muted); text-decoration: none; border: 1px solid var(--border); border-radius: 999px; padding: 7px 14px; background: var(--panel); }
+  .backlink:hover { color: var(--text); border-color: var(--border-strong); }
 
-  .body{display:grid;grid-template-columns:minmax(0,1fr) 320px;min-height:0;}
-  .stage{position:relative;min-width:0;}
-  canvas{display:block;width:100%;height:100%;}
-  .stage-h{position:absolute;top:24px;left:28px;pointer-events:none;}
-  .stage-h h1{font-family:var(--s);font-size:29px;letter-spacing:-.01em;}
-  .stage-h p{font-size:13px;color:var(--fa);margin-top:3px;max-width:340px;}
-  .legend{position:absolute;bottom:22px;left:28px;display:flex;gap:18px;font-size:11px;color:var(--fa);flex-wrap:wrap;max-width:70%;}
-  .legend i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle;}
-  .legend i.ln{width:16px;height:2px;border-radius:2px;}
-  .tip{position:absolute;pointer-events:none;background:var(--elev);border:1px solid var(--bd2);border-radius:var(--rs);
-    padding:10px 13px;font-size:12.5px;color:var(--mu);opacity:0;transition:opacity .13s;box-shadow:0 10px 30px rgba(0,0,0,.3);max-width:250px;}
-  .tip b{display:block;color:var(--tx);font-weight:500;margin-bottom:2px;font-size:13.5px;}
-  .tip.on{opacity:1;}
-  .empty-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:14px;pointer-events:none;}
-  .empty-hint.hide{display:none;}
-  .empty-hint p{color:var(--fa);font-size:14px;max-width:280px;text-align:center;}
-  .empty-hint button{pointer-events:auto;}
+  .modeTabs { display: flex; gap: 2px; background: var(--panel); border: 1px solid var(--border); border-radius: 999px; padding: 3px; }
+  .modeTab { font-family: var(--font); font-size: 12.5px; font-weight: 600; color: var(--muted); background: none; border: none; border-radius: 999px; padding: 6px 14px; cursor: pointer; }
+  .modeTab.on { background: var(--accent); color: #072a2b; }
+  .modeTab:not(.on):hover { color: var(--text); }
 
-  .side{background:var(--deep);border-left:1px solid var(--bd);overflow-y:auto;padding:22px 20px 40px;}
-  .side h2{font-family:var(--s);font-size:19px;margin-bottom:2px;}
-  .side .lead{font-size:12.5px;color:var(--fa);margin-bottom:18px;}
-  .ins{background:var(--panel);border:1px solid var(--bd);border-radius:var(--r);padding:16px 17px;margin-bottom:11px;}
-  .ins.hi{border-color:var(--acl);background:var(--acd);}
-  .ins.warn{border-color:rgba(230,185,60,.3);background:rgba(230,185,60,.08);}
-  .ins .top{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
-  .ins .top .eb{color:var(--ac);}
-  .ins.warn .top .eb{color:var(--am);}
-  .ins p{font-size:13.5px;}
-  .flow{display:flex;flex-direction:column;gap:0;margin-top:6px;}
-  .fl{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--bd);}
-  .fl:last-child{border-bottom:0;}
-  .dot2{width:24px;height:24px;border-radius:8px;flex:none;display:grid;place-items:center;font-family:var(--m);font-size:10px;background:var(--panel2);color:var(--mu);border:1px solid var(--bd2);}
-  .fl p{font-size:13px;}
-  .fl .s{font-size:11px;color:var(--fa);margin-top:2px;}
+  /* Treemap — plain DOM, not WebGL. Deliberate: text stays pixel-crisp at
+     any zoom, rectangles are native clickable elements (no raycasting
+     needed), and it degrades gracefully to hundreds of items without any
+     physics settling time — the whole point of offering it as the
+     handles-scale-with-ease alternative to the force graph. */
+  /* No padding here on purpose — padding on a position:fixed element does
+     NOT offset its absolutely-positioned children (they measure from the
+     padding edge, which sits at the border, not the content edge). All
+     margin math lives in treemapRect() in JS instead, which is already
+     computing exact pixel positions for every cell — one source of truth. */
+  .treemap { position: fixed; inset: 0; display: none; overflow: hidden; background: radial-gradient(ellipse at 50% 40%, #232b36 0%, #1a1f27 70%, #15191f 100%); }
+  .treemap.on { display: block; }
+  .tmRect {
+    position: absolute; border-radius: 10px; overflow: hidden; cursor: pointer; box-sizing: border-box;
+    border: 1px solid rgba(255,255,255,0.12);
+    box-shadow: 0 1px 0 rgba(255,255,255,0.10) inset, 0 10px 24px -8px rgba(0,0,0,0.55), 0 0 0 rgba(0,0,0,0);
+    transform: scale(0.86); opacity: 0;
+    transition: transform .38s cubic-bezier(.22,1.4,.36,1), opacity .3s, box-shadow .18s, border-color .18s;
+  }
+  .tmRect.in { transform: scale(1); opacity: 1; }
+  .tmRect:hover { z-index: 2; border-color: rgba(255,255,255,0.3); box-shadow: 0 1px 0 rgba(255,255,255,0.16) inset, 0 16px 34px -10px rgba(0,0,0,0.65), 0 0 26px -4px var(--tmGlow, transparent); }
+  .tmRect:hover .tmFill { filter: brightness(1.22) saturate(1.08); }
+  .tmFill { position: absolute; inset: 0; transition: filter .18s; }
+  .tmRect .tmLabel { position: absolute; left: 10px; top: 8px; right: 10px; font-family: var(--font); font-weight: 700; color: rgba(255,255,255,0.96); text-shadow: 0 1px 4px rgba(0,0,0,0.45); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; pointer-events: none; letter-spacing: -.01em; }
+  .tmRect .tmSub { position: absolute; left: 10px; bottom: 8px; right: 10px; font-family: var(--mono); font-size: 10.5px; color: rgba(255,255,255,0.75); text-shadow: 0 1px 3px rgba(0,0,0,0.4); pointer-events: none; }
 
-  .scrim{position:fixed;inset:0;background:rgba(12,16,21,.55);backdrop-filter:blur(4px);opacity:0;pointer-events:none;transition:opacity .22s;z-index:40;}
-  .scrim.on{opacity:1;pointer-events:auto;}
-  .draw{position:fixed;top:0;right:0;bottom:0;width:min(94vw,480px);background:var(--bg);border-left:1px solid var(--bd2);
-    transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1);z-index:41;display:flex;flex-direction:column;}
-  .draw.on{transform:none;}
-  .dh{padding:24px 26px 18px;border-bottom:1px solid var(--bd);position:relative;}
-  .dh .eb{display:block;margin-bottom:6px;}
-  .dh h2{font-family:var(--s);font-size:26px;}
-  .dh p{font-size:13.5px;color:var(--mu);margin-top:6px;}
-  .dstats{display:flex;gap:22px;margin-top:16px;}
-  .dstats .v{font-family:var(--m);font-size:16px;}
-  .dstats .l{font-size:10.5px;color:var(--fa);}
-  .dbody{flex:1;overflow-y:auto;padding:20px 26px 40px;}
-  .dbody .eb{display:block;margin:20px 0 10px;}
-  .close{position:absolute;top:22px;right:22px;width:32px;height:32px;border-radius:99px;background:var(--panel2);color:var(--mu);}
-  .close:hover{color:var(--tx);}
-  .key-box{font-family:var(--m);font-size:12px;background:#1c2129;border:1px solid var(--bd2);border-radius:9px;padding:10px 12px;margin-top:8px;word-break:break-all;color:var(--ac);display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  div.key-box.hidden-block{display:none;}
-  div.key-box.hidden-block.show{display:flex;}
-  .mini-btn{font-family:var(--f);font-size:12.5px;font-weight:600;padding:8px 13px;border-radius:8px;border:1px solid var(--bd2);background:var(--panel2);color:var(--tx);cursor:pointer;margin-right:8px;margin-top:12px;}
-  .mini-btn:hover{border-color:var(--ac);color:var(--ac);}
-  .mini-btn.danger:hover{border-color:var(--rd);color:var(--rd);}
-  .share-row{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 0;border-bottom:1px solid var(--bd);}
-  .share-row:last-child{border-bottom:0;}
-  .share-row .sn{font-size:13.5px;}
-  .share-row .sd{font-family:var(--m);font-size:11px;color:var(--fa);margin-top:2px;}
-  .switch{position:relative;width:38px;height:22px;border-radius:11px;background:var(--panel2);border:1px solid var(--bd2);cursor:pointer;flex:none;transition:background .15s,border-color .15s;}
-  .switch .dot{position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:var(--fa);transition:transform .15s,background .15s;}
-  .switch.on{background:var(--acd);border-color:var(--acl);}
-  .switch.on .dot{transform:translateX(16px);background:var(--ac);}
-  .switch[disabled]{opacity:.5;cursor:default;}
-  .share-empty{color:var(--fa);font-size:12.5px;padding:4px 0 2px;}
+  .legend { left: 20px; bottom: 20px; display: flex; flex-direction: column; gap: 7px; font-family: var(--mono); font-size: 11px; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 12px; padding: 12px 16px; backdrop-filter: blur(6px); }
+  .legend .row { display: flex; align-items: center; gap: 8px; }
+  .legend i { width: 9px; height: 9px; border-radius: 999px; flex: none; }
 
-  .pal-s{position:fixed;inset:0;background:rgba(12,16,21,.55);backdrop-filter:blur(4px);display:none;place-items:start center;padding-top:15vh;z-index:60;}
-  .pal-s.on{display:grid;}
-  .pal{width:min(92vw,600px);background:var(--elev);border:1px solid var(--bd2);border-radius:var(--r);overflow:hidden;box-shadow:0 26px 80px rgba(0,0,0,.4);}
-  .pal input{width:100%;background:none;border:0;outline:none;color:var(--tx);font:inherit;font-size:16.5px;padding:19px 22px;border-bottom:1px solid var(--bd);}
-  .pal .out{max-height:44vh;overflow-y:auto;padding:8px;}
-  .pal .it{padding:12px 14px;border-radius:10px;}
-  .pal .it p{font-size:13.5px;margin-top:3px;}
-  .pal .it .row{display:flex;align-items:center;justify-content:space-between;gap:10px;}
-  .pal .score{font-family:var(--m);font-size:10.5px;color:var(--ac);}
-  .pal .del-btn{font-family:var(--f);font-size:11px;font-weight:600;color:var(--fa);background:none;border:1px solid var(--bd2);border-radius:7px;padding:4px 9px;cursor:pointer;flex:none;opacity:0;transition:opacity .15s,border-color .15s,color .15s;}
-  .pal .it:hover .del-btn{opacity:1;}
-  .pal .del-btn:hover{border-color:var(--rd);color:var(--rd);}
-  .pal .it.removing{opacity:.35;pointer-events:none;}
+  .breadcrumb { left: 20px; top: 74px; display: flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12px; color: var(--muted); }
+  .breadcrumb .crumb { cursor: pointer; padding: 4px 8px; border-radius: 6px; }
+  .breadcrumb .crumb:hover { background: var(--panel); color: var(--text); }
+  .breadcrumb .crumb.current { color: var(--accent); }
+  .breadcrumb .sep { color: var(--faint); }
 
-  .ledger .pal{width:min(92vw,680px);max-height:78vh;display:flex;flex-direction:column;}
-  .ledger-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--bd);flex:none;}
-  .ledger-hd h3{font-size:15px;font-weight:600;}
-  .ledger-hd .eb{display:block;margin-bottom:2px;}
-  .ledger-hd button{background:none;border:0;color:var(--fa);font-size:18px;cursor:pointer;line-height:1;padding:4px;}
-  .ledger-hd button:hover{color:var(--tx);}
-  .ledger-list{overflow-y:auto;padding:8px;flex:1;}
-  .ledger-row{padding:12px 14px;border-radius:10px;border-bottom:1px solid var(--bd);}
-  .ledger-row:last-child{border-bottom:0;}
-  .ledger-row .row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:4px;}
-  .ledger-row .date{font-family:var(--m);font-size:10.5px;color:var(--fa);}
-  .ledger-row p{font-size:13.5px;line-height:1.5;}
-  .ledger-row p.empty{color:var(--fa);font-style:italic;}
-  .ledger-foot{padding:12px 18px;border-top:1px solid var(--bd);flex:none;text-align:center;}
-  .ledger-foot button{width:100%;}
-  .pal .ft{padding:11px 22px;border-top:1px solid var(--bd);font-size:11.5px;color:var(--fa);}
+  .hint { right: 20px; bottom: 20px; font-family: var(--mono); font-size: 10.5px; color: var(--faint); text-align: right; line-height: 1.7; }
 
-  /* Memory graph: a project as a hub, its real memories as nodes radiating
-     out — hub-and-spoke, adapted directly from the project-network canvas
-     above it. Deliberately NOT a full interconnected mesh: memories don't
-     have links to each other in this data model (only project-to-project
-     links exist), so drawing fake memory-to-memory edges would be showing
-     a connection that isn't real. This shows the one that is: every node
-     here really is that project's own captured content, clickable to the
-     actual text. */
-  .memgraph .pal{width:min(94vw,900px);height:min(86vh,720px);display:flex;flex-direction:column;padding:0;}
-  .mg-hd{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--bd);flex:none;}
-  .mg-hd h3{font-size:15px;font-weight:600;}
-  .mg-hd .eb{display:block;margin-bottom:2px;}
-  .mg-hd button{background:none;border:0;color:var(--fa);font-size:18px;cursor:pointer;line-height:1;padding:4px;}
-  .mg-hd button:hover{color:var(--tx);}
-  .mg-body{position:relative;flex:1;overflow:hidden;}
-  .mg-body canvas{display:block;width:100%;height:100%;cursor:default;}
-  .mg-legend{position:absolute;left:14px;bottom:14px;display:flex;flex-wrap:wrap;gap:10px;font-family:var(--m);font-size:10px;color:var(--fa);pointer-events:none;}
-  .mg-legend span{display:inline-flex;align-items:center;gap:5px;}
-  .mg-legend i{width:8px;height:8px;border-radius:50%;display:inline-block;}
-  .mg-detail{position:absolute;right:14px;top:14px;width:280px;max-height:calc(100% - 28px);overflow-y:auto;background:var(--elev);border:1px solid var(--bd2);border-radius:var(--rs);padding:14px 16px;box-shadow:0 14px 40px rgba(0,0,0,.35);display:none;}
-  .mg-detail.on{display:block;}
-  .mg-detail .date{font-family:var(--m);font-size:10.5px;color:var(--fa);display:block;margin-bottom:6px;}
-  .mg-detail p{font-size:13px;line-height:1.5;}
-  .mg-detail .close{position:absolute;top:8px;right:10px;background:none;border:0;color:var(--fa);cursor:pointer;font-size:14px;}
-  .mg-empty{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--fa);font-size:13px;}
+  .detail { position: fixed; z-index: 6; right: 20px; top: 74px; width: 320px; max-height: calc(100% - 100px); overflow-y: auto; background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: 14px; padding: 18px 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.45); display: none; }
+  .detail.on { display: block; }
+  .detail .close { position: absolute; top: 12px; right: 12px; background: none; border: none; color: var(--faint); font-size: 15px; cursor: pointer; padding: 4px; }
+  .detail .close:hover { color: var(--text); }
+  .detail .kind { font-family: var(--mono); font-size: 10.5px; letter-spacing: .07em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px; }
+  .detail h3 { font-size: 17px; margin: 0 0 4px; padding-right: 20px; }
+  .detail .date { font-family: var(--mono); font-size: 11px; color: var(--faint); margin-bottom: 12px; display: block; }
+  .detail p { font-size: 13.5px; color: var(--text); line-height: 1.65; margin: 0 0 14px; }
+  .detail .meta { font-family: var(--mono); font-size: 11px; color: var(--muted); display: flex; flex-direction: column; gap: 4px; padding-top: 10px; border-top: 1px solid var(--border); }
+  .detail .action { margin-top: 14px; font-size: 12px; color: var(--accent); background: none; border: 1px solid rgba(0,173,181,0.35); border-radius: 8px; padding: 8px 12px; cursor: pointer; width: 100%; font-family: var(--font); }
+  .detail .action:hover { background: var(--accent-dim); }
 
-  .new-proj-form{display:none;}
-  .new-proj-form.on{display:block;padding:16px 26px;border-bottom:1px solid var(--bd);background:var(--panel);}
-  .new-proj-form input{width:100%;background:#1c2129;border:1px solid var(--bd2);border-radius:9px;padding:10px 12px;color:var(--tx);font-size:13.5px;font-family:var(--f);outline:none;margin-bottom:10px;}
-  .new-proj-form input:focus{border-color:var(--ac);}
-  .new-proj-form button{background:var(--ac);color:#072a2b;border:none;border-radius:9px;padding:9px 16px;font-weight:700;font-size:13px;cursor:pointer;}
+  /* Left rail — project list + memory counts. Same panel language as
+     .detail (bg-elev card, border-strong, 14px radius) so it reads as
+     part of the same UI, not a bolted-on widget. */
+  .leftnav { left: 20px; top: 128px; bottom: 66px; width: 208px; display: flex; flex-direction: column; pointer-events: auto; }
+  .leftnav h4 { margin: 0 0 10px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  .leftnav .lnlist { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 2px; }
+  .lnrow { display: flex; align-items: center; gap: 9px; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 9px 11px; cursor: pointer; transition: border-color .15s, background .15s; }
+  .lnrow:hover { border-color: var(--border-strong); background: var(--panel-2); }
+  .lnrow.active { border-color: var(--accent); background: var(--accent-dim); }
+  .lnrow .dot3 { width: 7px; height: 7px; border-radius: 999px; background: #7fd6dc; flex: none; }
+  .lnrow .ln-n { font-size: 12.5px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; }
+  .lnrow .ln-c { font-family: var(--mono); font-size: 11px; color: var(--muted); flex: none; }
+  .leftnav .lnadd { margin-top: 10px; font-size: 12px; color: var(--accent); background: var(--accent-dim); border: 1px solid rgba(0,173,181,0.35); border-radius: 9px; padding: 9px 12px; cursor: pointer; font-family: var(--font); font-weight: 600; }
+  .leftnav .lnadd:hover { background: rgba(0,173,181,0.22); }
+  .lnform { display: none; margin-top: 8px; gap: 6px; flex-direction: column; }
+  .lnform.on { display: flex; }
+  .lnform input { width: 100%; background: var(--bg-elev); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; color: var(--text); font-size: 12.5px; font-family: var(--font); outline: none; box-sizing: border-box; }
+  .lnform input:focus { border-color: var(--accent); }
+  .lnform button { background: var(--accent); color: #072a2b; border: none; border-radius: 8px; padding: 8px 10px; font-weight: 700; font-size: 12px; cursor: pointer; }
+  .lnkey { margin-top: 8px; font-family: var(--mono); font-size: 10.5px; color: var(--muted); background: var(--bg-elev); border: 1px solid var(--border); border-radius: 8px; padding: 8px 9px; word-break: break-all; display: none; }
+  .lnkey.on { display: block; }
+  .lnkey button { margin-top: 6px; width: 100%; background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 5px; cursor: pointer; font-family: var(--font); font-size: 11px; }
 
-  @media (max-width:1000px){.body{grid-template-columns:1fr;}.side{display:none;}}
+  /* Right rail — activity feed. Mirrors .detail's box exactly since they
+     occupy the same slot and never show at once (see hideActivity()). */
+  .activity { right: 20px; top: 74px; width: 260px; max-height: calc(100% - 160px); overflow-y: auto; background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: 14px; padding: 16px 18px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); pointer-events: auto; }
+  .activity h4 { margin: 0 0 4px; font-family: var(--mono); font-size: 10.5px; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); }
+  .activity .ins-sub { margin: 0 0 12px; font-size: 12px; color: var(--muted); }
+  .activity .ins { font-size: 12.5px; color: var(--text); line-height: 1.55; padding: 10px 0; border-top: 1px solid var(--border); }
+  .activity .ins:first-of-type { border-top: none; }
+  .activity .ins .eb { font-family: var(--mono); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; color: var(--accent); display: block; margin-bottom: 3px; }
+  .activity .fl { display: flex; align-items: center; gap: 9px; padding: 7px 0; }
+  .activity .fl .dot2 { width: 22px; height: 22px; border-radius: 8px; background: var(--panel-2); display: flex; align-items: center; justify-content: center; font-family: var(--mono); font-size: 9.5px; font-weight: 700; color: var(--accent); flex: none; }
+  .activity .fl p { margin: 0; font-size: 12px; color: var(--text); }
+  .activity .fl .s { font-family: var(--mono); font-size: 10px; color: var(--faint); margin-top: 1px; }
+  .activity .eb.section { display: block; margin: 14px 0 6px; }
+
+  .loading { position: fixed; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center; background: var(--bg); }
+  .loading.gone { display: none; }
+  #nodeLabels { position: fixed; inset: 0; z-index: 3; pointer-events: none; overflow: hidden; }
+  .nodeLabel { position: absolute; left: 0; top: 0; font-family: var(--mono); font-size: 11.5px; font-weight: 600; letter-spacing: .01em; color: rgba(255,255,255,0.92); text-shadow: 0 1px 3px rgba(0,0,0,0.65), 0 0 14px rgba(0,0,0,0.5); white-space: nowrap; transition: opacity .2s; }
+
+  .loading .err { font-family: var(--mono); font-size: 12px; color: var(--muted); display: none; }
+  .loading.err-state .err { display: block; }
+  .loading.err-state .boot-card { display: none; }
+
+  .boot-card { width: 100%; max-width: 380px; background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: 16px; padding: 26px; box-shadow: 0 30px 80px rgba(0,0,0,.5); }
+
+  /* A tiny live preview of the real graph — orbiting dots around a core,
+     so the wait itself already looks like the product, not a placeholder. */
+  .boot-orbit { position: relative; width: 68px; height: 68px; margin: 2px auto 22px; }
+  .boot-orbit-core { position: absolute; left: 50%; top: 50%; width: 9px; height: 9px; margin: -4.5px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 14px var(--accent); }
+  .boot-orbit-ring { position: absolute; border: 1px dashed var(--border); border-radius: 999px; animation: orbitSpin linear infinite; }
+  .boot-orbit-ring.r1 { inset: 14px; animation-duration: 3.2s; }
+  .boot-orbit-ring.r2 { inset: 4px; animation-duration: 5.4s; animation-direction: reverse; }
+  .boot-orbit-ring.r3 { inset: -8px; animation-duration: 8s; }
+  .boot-orbit-dot { position: absolute; top: -2.5px; left: 50%; width: 5px; height: 5px; margin-left: -2.5px; border-radius: 999px; box-shadow: 0 0 8px currentColor; }
+  .boot-orbit-ring.r1 .boot-orbit-dot { background: #c9a3ff; color: #c9a3ff; }
+  .boot-orbit-ring.r2 .boot-orbit-dot { background: #7fd6dc; color: #7fd6dc; }
+  .boot-orbit-ring.r3 .boot-orbit-dot { background: #ffc857; color: #ffc857; }
+  @keyframes orbitSpin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .boot-orbit-ring { animation: none; } }
+
+  .boot-card .brand { display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 700; font-size: 14px; margin-bottom: 20px; color: var(--text); }
+  .boot-card .brand .dot { width: 7px; height: 7px; border-radius: 999px; background: var(--accent); box-shadow: 0 0 12px var(--accent); }
+  .boot-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); font-family: var(--font); font-size: 13.5px; color: var(--faint); transition: color .3s; }
+  .boot-row:last-child { border-bottom: none; }
+  .boot-row.active, .boot-row.done { color: var(--text); }
+  .boot-check { width: 18px; height: 18px; flex: none; border-radius: 999px; border: 1.5px solid var(--border-strong); display: flex; align-items: center; justify-content: center; font-size: 10px; transition: background .3s, border-color .3s, transform .3s; }
+  .boot-row.active .boot-check { border-color: var(--accent); }
+  .boot-row.active .boot-check::after { content: ''; width: 8px; height: 8px; border-radius: 999px; background: var(--accent); animation: bootPulse 1s ease-in-out infinite; }
+  .boot-row.done .boot-check { background: var(--accent); border-color: var(--accent); color: #072a2b; transform: scale(1.05); }
+  .boot-row.done .boot-check::after { content: '✓'; width: auto; height: auto; background: none; animation: none; }
+  @keyframes bootPulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .55; transform: scale(.7); } }
+  @media (prefers-reduced-motion: reduce) { .boot-row.active .boot-check::after { animation: none; } }
+
+  .toast { position: fixed; z-index: 8; left: 50%; bottom: 26px; transform: translate(-50%, 12px); background: var(--bg-elev); border: 1px solid var(--border-strong); border-radius: 10px; padding: 10px 18px; font-size: 12.5px; color: var(--text); opacity: 0; transition: opacity .25s, transform .25s; pointer-events: none; }
+  .toast.on { opacity: 1; transform: translate(-50%, 0); }
+
 </style>
 </head>
 <body>
 
-<div id="bootScreen">
+<canvas id="scene"></canvas>
+<div id="nodeLabels"></div>
+<div class="treemap" id="treemap"></div>
+
+<div class="loading" id="loading">
   <div class="boot-card">
     <div class="brand"><span class="dot"></span>CommonMind</div>
-    <div id="boot">
-      <div class="boot-row" data-step="session"><span class="boot-check"></span>Verifying your session</div>
-      <div class="boot-row" data-step="workspace"><span class="boot-check"></span>Provisioning your memory workspace</div>
-      <div class="boot-row" data-step="brain"><span class="boot-check"></span>Connecting to your company brain</div>
-    </div>
-    <div id="denied"><p>Not signed in. <a href="/" style="color:var(--ac)">Head back to sign in</a>.</p></div>
+    <div class="boot-row" data-step="connect"><span class="boot-check"></span>Connecting to your company brain</div>
+    <div class="boot-row" data-step="map"><span class="boot-check"></span>Mapping projects &amp; memories</div>
+    <div class="boot-row" data-step="render"><span class="boot-check"></span>Rendering the graph</div>
+  </div>
+  <p class="err" id="loadingMsg"></p>
+</div>
+
+<div class="hud topbar">
+  <a href="/" class="brand"><span class="dot"></span>CommonMind</a>
+  <div class="stats" id="stats"></div>
+  <div class="modeTabs" id="modeTabs">
+    <button class="modeTab on" data-mode="network">Network</button>
+    <button class="modeTab" data-mode="treemap">Treemap</button>
+  </div>
+  <button class="backlink" id="addProjectBtn" style="cursor:pointer">+ Add project</button>
+  <button class="backlink" id="signoutBtn" style="cursor:pointer">Sign out</button>
+</div>
+
+<div class="hud breadcrumb" id="breadcrumb"></div>
+
+<div class="hud leftnav" id="leftnav">
+  <h4>Your projects</h4>
+  <div class="lnlist" id="lnlist"></div>
+  <div class="lnform" id="lnform">
+    <input type="text" id="lnName" placeholder="Project name" maxlength="80" />
+    <button id="lnSubmit">Create</button>
+  </div>
+  <div class="lnkey" id="lnkey">
+    <span id="lnkeyToken"></span>
+    <button id="lnkeyCopy">Copy key</button>
   </div>
 </div>
 
-<div id="app">
-  <div class="shell">
-    <div class="bar">
-      <div class="logo">Common<b>Mind</b></div>
-      <div class="scale">
-        <div><span class="v num" id="sMem">0</span><span class="l">memories</span></div>
-        <div><span class="v num" id="sProj">0</span><span class="l">projects</span></div>
-      </div>
-      <div class="grow"></div>
-      <button class="ask" id="askBtn">Ask the company brain<span class="k">⌘K</span></button>
-      <a class="connect-btn" href="/graph/" style="text-decoration:none;display:inline-flex;align-items:center;">✦ Full graph</a>
-      <button class="connect-btn" id="connectBtn">+ Connect a project</button>
-      <button class="ib" id="signoutBtn" title="Sign out">⏻</button>
-    </div>
+<div class="hud legend" id="legend"></div>
 
-    <div class="new-proj-form" id="newProjForm">
-      <input type="text" id="newProjName" placeholder="Project name — e.g. Ocean Dreams" maxlength="80" />
-      <button id="newProjSubmit">Create</button>
-      <span style="font-size:12px;color:var(--fa);margin-left:10px">or use <a href="/connect/" style="color:var(--ac)">the full connect guide →</a></span>
-    </div>
+<div class="hud hint" id="hint">drag empty space to orbit · scroll to zoom · drag a node to move it<br>click a project to open it · click a memory to read it</div>
 
-    <div class="body">
-      <div class="stage" id="stage">
-        <canvas id="cv"></canvas>
-        <div class="stage-h">
-          <h1>Your company brain</h1>
-          <p id="stageSub">Every project you connect writes to one memory. Real data only — nothing here is a mockup.</p>
-        </div>
-        <div class="legend">
-          <span><i style="background:#00adb5"></i>Project</span>
-          <span><i class="ln" style="background:rgba(0,173,181,.55)"></i>Capture &amp; recall</span>
-          <span><i class="ln" style="background:#7fd6dc"></i>Hover a project to see what the brain linked it to</span>
-        </div>
-        <div class="tip" id="tip"></div>
-        <div class="empty-hint" id="emptyHint">
-          <p>No projects connected yet. The brain is real — it just doesn't know about anything until you connect a project.</p>
-          <button class="connect-btn" id="emptyConnectBtn">+ Connect your first project</button>
-        </div>
-      </div>
-
-      <aside class="side">
-        <h2>What the map is telling you</h2>
-        <p class="lead">Read off the shape, not off a report.</p>
-        <div id="insights"></div>
-        <span class="eb">Moving right now</span>
-        <div class="flow" id="flow"></div>
-      </aside>
-    </div>
-  </div>
+<div class="detail" id="detail">
+  <button class="close" id="detailClose">✕</button>
+  <div class="kind" id="detailKind"></div>
+  <h3 id="detailTitle"></h3>
+  <span class="date" id="detailDate"></span>
+  <p id="detailBody"></p>
+  <div class="meta" id="detailMeta"></div>
 </div>
 
-<div class="scrim" id="scrim"></div>
-<aside class="draw" id="draw" aria-hidden="true">
-  <div class="dh">
-    <button class="close" id="dclose">✕</button>
-    <span class="eb">Project</span>
-    <h2 id="dName"></h2>
-    <p id="dDesc"></p>
-    <div class="dstats" id="dStats"></div>
-  </div>
-  <div class="dbody" id="dBody"></div>
-</aside>
-
-<div class="pal-s" id="palS">
-  <div class="pal">
-    <input id="pq" placeholder="Ask in your own words…" aria-label="Ask the company brain">
-    <div class="out" id="pout"></div>
-    <div class="ft">Real semantic recall, scored — not a keyword match · esc to close</div>
-  </div>
+<div class="hud activity" id="activity">
+  <h4>Moving right now</h4>
+  <p class="ins-sub">Real activity, polled from the brain — not scripted.</p>
+  <div id="insights"></div>
+  <div class="eb section" id="flowLabel" style="display:none">Recent</div>
+  <div id="flow"></div>
 </div>
 
-<div class="pal-s ledger" id="ledgerS">
-  <div class="pal">
-    <div class="ledger-hd">
-      <div><span class="eb">Ledger</span><h3 id="ledgerTitle"></h3></div>
-      <button id="ledgerClose" aria-label="Close">✕</button>
-    </div>
-    <div class="ledger-list" id="ledgerList"></div>
-    <div class="ledger-foot" id="ledgerFoot" style="display:none">
-      <button class="mini-btn" id="ledgerMore" style="margin:0">Load more</button>
-    </div>
-  </div>
-</div>
+<div class="toast" id="toast"></div>
 
-<div class="pal-s memgraph" id="memGraphS">
-  <div class="pal">
-    <div class="mg-hd">
-      <div><span class="eb">Memory graph</span><h3 id="mgTitle"></h3></div>
-      <button id="mgClose" aria-label="Close">✕</button>
-    </div>
-    <div class="mg-body">
-      <canvas id="mgCv"></canvas>
-      <div class="mg-empty" id="mgEmpty" style="display:none">Nothing captured here yet.</div>
-      <div class="mg-legend" id="mgLegend"></div>
-      <div class="mg-detail" id="mgDetail">
-        <button class="close" id="mgDetailClose">✕</button>
-        <span class="date" id="mgDetailDate"></span>
-        <p id="mgDetailBody"></p>
-      </div>
-    </div>
-  </div>
-</div>
-
-<script>
-(function(){
-"use strict";
-var $=function(i){return document.getElementById(i);};
-var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});};
-var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-/* ============== boot sequence ============== */
-(async function boot(){
-  var rows={session:document.querySelector('[data-step="session"]'),workspace:document.querySelector('[data-step="workspace"]'),brain:document.querySelector('[data-step="brain"]')};
-  function activate(r){r.classList.add("active");}
-  function finish(r){r.classList.remove("active");r.classList.add("done");}
-  var wait=function(ms){return new Promise(function(r){setTimeout(r,ms);});};
-
-  activate(rows.session);
-  var user=null;
-  try{
-    var res=await fetch("/api/auth/me",{credentials:"same-origin"});
-    var data=await res.json();
-    if(data.success) user=data.user;
-  }catch(e){}
-
-  if(!user){
-    $("boot").style.display="none";
-    $("denied").style.display="block";
-    return;
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
   }
-
-  finish(rows.session);
-  activate(rows.workspace);
-  await wait(reduce?0:500);
-  finish(rows.workspace);
-  activate(rows.brain);
-  await wait(reduce?0:450);
-  finish(rows.brain);
-  await wait(reduce?0:250);
-
-  $("bootScreen").classList.add("hide");
-  $("app").classList.add("show");
-  initApp();
-})();
-
-/* ============== app ============== */
-function initApp(){
-
-var HUB={id:"brain",n:"CommonMind Core",d:"One transactional memory. Every connected project records here; every recall comes from here.",mem:0,r:56};
-var PROJ=[], EDGES=[], LINKS=[], RECENT=[];
-
-function byId(id){for(var i=0;i<PROJ.length;i++) if(PROJ[i].id===id) return PROJ[i];}
-
-var seenActivity=null; // null = not yet initialized (first load), else a Set
-var pollTimer=null;
-
-function applyNetworkData(d){
-  HUB.mem=d.core.memories||0;
-  $("sMem").textContent=HUB.mem.toLocaleString();
-  $("sProj").textContent=(d.projects||[]).length;
-
-  PROJ=(d.projects||[]).map(function(p,i){
-    var n=Math.max((d.projects||[]).length,1);
-    return {
-      id:p.id, n:p.name,
-      d:"Connected "+relTime(p.connectedAt)+".",
-      mem:p.memories||0, searches:p.searches||0,
-      lastActive:p.lastActive, connectedAt:p.connectedAt,
-      ang:-Math.PI/2 + (i/n)*Math.PI*2,
-      r:22+Math.min(34,Math.sqrt(p.memories||0)*2.6),
-      flow: isRecent(p.lastActive) ? 1 : 0
-    };
-  });
-  EDGES=d.edges||[];
-  LINKS=d.links||[];
-  RECENT=d.recentActivity||[];
-
-  $("emptyHint").classList.toggle("hide", PROJ.length>0);
-  renderInsights();
-  renderFlow();
 }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 
-async function loadNetwork(){
-  var res=await fetch("/api/network",{credentials:"same-origin"});
-  var d=await res.json();
-  applyNetworkData(d);
+const $ = (id) => document.getElementById(id);
 
-  // First load: mark everything we're about to replay as "seen" so the
-  // live poller (below) doesn't re-fire the same real activity again a
-  // few seconds later — it only ever animates what's genuinely new.
-  seenActivity=new Set(RECENT.map(function(ev){return ev.id;}));
-  if(!reduce) replayRecent();
-
-  if(!pollTimer) pollTimer=setInterval(pollNetwork,10000);
-}
-
-// Live update: real activity, polled — not a one-time replay. Anything
-// that happened since the last poll gets a real pulse the moment we see
-// it; everything else (stats, node sizes, edges) just refreshes in place.
-async function pollNetwork(){
-  var res;
-  try{ res=await fetch("/api/network",{credentials:"same-origin"}); }catch(e){ return; }
-  if(!res.ok) return;
-  var d=await res.json();
-  applyNetworkData(d);
-  if(!seenActivity) return;
-  RECENT.slice().reverse().forEach(function(ev){
-    if(seenActivity.has(ev.id)) return;
-    seenActivity.add(ev.id);
-    if(reduce) return;
-    pulses.push({projId:ev.projectId,dir:ev.action==="capture"?1:-1,u:0,v:.007,landed:false});
-  });
-}
-
-function isRecent(ts){ if(!ts) return false; return (Date.now()-Date.parse(ts+"Z"))<1000*60*60*24*3; }
-function relTime(ts){
-  if(!ts) return "recently";
-  var ms=Date.now()-Date.parse(ts+"Z");
-  var m=Math.floor(ms/60000);
-  if(m<1) return "just now";
-  if(m<60) return m+"m ago";
-  var h=Math.floor(m/60); if(h<24) return h+"h ago";
-  return Math.floor(h/24)+"d ago";
-}
-
-/* ---------- canvas (adapted from the network-map concept — no actor
-   layer, since no real per-person/agent data exists yet; everything
-   drawn here traces to a real project_activity row) ---------- */
-var cv=$("cv"),ctx=cv.getContext("2d"),W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
-var pulses=[],hover=null,CX=0,CY=0,RAD=0,flash={};
-
-function size(){
-  var b=$("stage").getBoundingClientRect();
-  W=b.width;H=b.height;
-  cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
-  CX=W/2;CY=H/2+8;RAD=Math.min(W,H)*0.30;
-}
-function hubPos(t){return {x:CX+Math.sin(t*.00018)*5,y:CY+Math.cos(t*.00015)*4};}
-function projPos(p,t){
-  var a=p.ang+Math.sin(t*.00012+p.ang)*.02;
-  var h=hubPos(t);
-  return {x:h.x+Math.cos(a)*RAD, y:h.y+Math.sin(a)*RAD*.82};
-}
-
-function draw(t){
-  ctx.clearRect(0,0,W,H);
-  var AC="0,173,181", AM="230,185,60", XC="127,214,220";
-  var h=hubPos(t);
-
-  PROJ.forEach(function(p){
-    var P=projPos(p,t);
-    var al=.16+p.flow*.35;
-    var g=ctx.createLinearGradient(P.x,P.y,h.x,h.y);
-    g.addColorStop(0,"rgba("+AC+","+al*.7+")");
-    g.addColorStop(1,"rgba("+AC+","+al*1.7+")");
-    ctx.strokeStyle=g;ctx.lineWidth=1.2+p.flow*1.4;
-    ctx.beginPath();ctx.moveTo(P.x,P.y);ctx.lineTo(h.x,h.y);ctx.stroke();
-  });
-
-  // Explicit, user-turned-on sharing — a standing thread, always visible,
-  // distinct from the dashed hover-only lines below (which are organically
-  // *detected* overlap, not something anyone deliberately switched on).
-  LINKS.forEach(function(l){
-    var a=byId(l.from), b=byId(l.to); if(!a||!b) return;
-    var A=projPos(a,t), B=projPos(b,t);
-    ctx.strokeStyle="rgba("+AC+",.55)";ctx.lineWidth=1.8;
-    ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.quadraticCurveTo(h.x,h.y,B.x,B.y);ctx.stroke();
-  });
-
-  // Detected connections stay faintly visible all the time, not just on
-  // hover — the "brain made a connection nobody wired" moment is the best
-  // proof-of-magic this map has, and a viewer who never thinks to hover
-  // should still see it. Hovering just brightens what's already there.
-  EDGES.forEach(function(e){
-    var a=byId(e.from), b=byId(e.to); if(!a||!b) return;
-    var A=projPos(a,t), B=projPos(b,t);
-    ctx.strokeStyle="rgba("+XC+",.22)";ctx.lineWidth=1.2;ctx.setLineDash([2,7]);
-    ctx.beginPath();ctx.moveTo(A.x,A.y);ctx.quadraticCurveTo(h.x,h.y,B.x,B.y);ctx.stroke();
-    ctx.setLineDash([]);
-  });
-
-  var rel={};
-  if(hover&&hover.kind==="p"){
-    var hp=projPos(hover.ref,t);
-    EDGES.filter(function(e){return e.from===hover.id||e.to===hover.id;}).forEach(function(e){
-      var oid=e.from===hover.id?e.to:e.from;
-      var op=byId(oid); if(!op) return;
-      rel[oid]=1;
-      var O=projPos(op,t);
-      ctx.strokeStyle="rgba("+XC+",.7)";ctx.lineWidth=1.6;ctx.setLineDash([3,6]);
-      ctx.beginPath();ctx.moveTo(hp.x,hp.y);ctx.quadraticCurveTo(h.x,h.y,O.x,O.y);ctx.stroke();
-      ctx.setLineDash([]);
-    });
-  }
-
-  pulses.forEach(function(pu){
-    var A=projPos(byId(pu.projId)||PROJ[0]||{ang:0},t);
-    var a=pu.dir>0?A:h, b=pu.dir>0?h:A;
-    var x=a.x+(b.x-a.x)*pu.u, y=a.y+(b.y-a.y)*pu.u;
-    var col=pu.dir>0?AC:AM;
-    var rg=ctx.createRadialGradient(x,y,0,x,y,12);
-    rg.addColorStop(0,"rgba("+col+",.85)");rg.addColorStop(1,"rgba("+col+",0)");
-    ctx.fillStyle=rg;ctx.beginPath();ctx.arc(x,y,12,0,6.29);ctx.fill();
-  });
-
-  var hon=hover&&hover.id==="brain";
-  var hg=ctx.createRadialGradient(h.x,h.y,HUB.r*.3,h.x,h.y,HUB.r*2.3);
-  hg.addColorStop(0,"rgba("+AC+","+(hon?.30:.20)+")");hg.addColorStop(1,"rgba("+AC+",0)");
-  ctx.fillStyle=hg;ctx.beginPath();ctx.arc(h.x,h.y,HUB.r*2.3,0,6.29);ctx.fill();
-  ctx.fillStyle="#2b3340";ctx.beginPath();ctx.arc(h.x,h.y,HUB.r,0,6.29);ctx.fill();
-  ctx.strokeStyle="rgba("+AC+","+(hon?1:.8)+")";ctx.lineWidth=hon?3:2.2;ctx.stroke();
-  var hf=flash.brain?t-flash.brain:9e9;
-  if(hf<800){var kk=hf/800;ctx.strokeStyle="rgba("+AC+","+(1-kk)*.75+")";ctx.lineWidth=2;
-    ctx.beginPath();ctx.arc(h.x,h.y,HUB.r+kk*26,0,6.29);ctx.stroke();}
-  ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillStyle="#eeeeee";
-  ctx.font="500 14px Inter, system-ui, sans-serif";
-  var hw=HUB.n.split(" ");
-  ctx.fillText(hw.slice(0,-1).join(" "),h.x,h.y-14);
-  ctx.fillText(hw[hw.length-1],h.x,h.y+2);
-  ctx.fillStyle="#717986";ctx.font="11px 'JetBrains Mono', ui-monospace, monospace";
-  ctx.fillText(HUB.mem.toLocaleString(),h.x,h.y+21);
-
-  PROJ.forEach(function(p){
-    var P=projPos(p,t), on=hover&&hover.id===p.id;
-    var gl=ctx.createRadialGradient(P.x,P.y,p.r*.4,P.x,P.y,p.r*2.4);
-    gl.addColorStop(0,"rgba("+AC+","+(on?.24:.12)+")");gl.addColorStop(1,"rgba("+AC+",0)");
-    ctx.fillStyle=gl;ctx.beginPath();ctx.arc(P.x,P.y,p.r*2.4,0,6.29);ctx.fill();
-    ctx.fillStyle="#2b3340";ctx.beginPath();ctx.arc(P.x,P.y,p.r,0,6.29);ctx.fill();
-    if(rel[p.id]){ctx.strokeStyle="rgba("+XC+",.95)";ctx.lineWidth=2.2;}
-    else{ctx.strokeStyle="rgba("+AC+","+(on?.95:.62)+")";ctx.lineWidth=on?2.4:1.4;}
-    ctx.stroke();
-    var pf=flash[p.id]?t-flash[p.id]:9e9;
-    if(pf<800){var pk=pf/800;ctx.strokeStyle="rgba("+AM+","+(1-pk)*.8+")";ctx.lineWidth=2;
-      ctx.beginPath();ctx.arc(P.x,P.y,p.r+pk*20,0,6.29);ctx.stroke();}
-    ctx.fillStyle="#eeeeee";ctx.font="500 13px Inter, system-ui, sans-serif";
-    ctx.fillText(p.n,P.x,P.y+p.r+20);
-    ctx.fillStyle="#717986";ctx.font="11px 'JetBrains Mono', ui-monospace, monospace";
-    ctx.fillText(p.mem.toLocaleString()+" memories",P.x,P.y+p.r+37);
-    if(!p.flow){
-      ctx.fillStyle="rgba(230,185,60,.95)";ctx.font="10px 'JetBrains Mono', ui-monospace, monospace";
-      ctx.fillText("no activity in 3+ days",P.x,P.y+p.r+53);
-    }
-  });
-}
-
-function tick(t){
-  var tt=reduce?5000:t;
-  pulses.forEach(function(p){p.u+=p.v; if(p.u>=1&&!p.landed){p.landed=true;land(p);}});
-  pulses=pulses.filter(function(p){return p.u<1;});
-  draw(tt);requestAnimationFrame(tick);
-}
-function land(pu){
-  var now=performance.now();
-  if(pu.dir>0) flash.brain=now; else flash[pu.projId]=now;
-}
-function replayRecent(){
-  RECENT.slice().reverse().forEach(function(ev,i){
-    setTimeout(function(){
-      pulses.push({projId:ev.projectId,dir:ev.action==="capture"?1:-1,u:0,v:.007,landed:false});
-    }, i*450);
-  });
-}
-
-/* ---------- hit testing ---------- */
-$("stage").addEventListener("mousemove",function(e){
-  var b=cv.getBoundingClientRect(),mx=e.clientX-b.left,my=e.clientY-b.top,t=performance.now(),found=null;
-  var h=hubPos(t);
-  PROJ.forEach(function(p){var P=projPos(p,t);
-    if(Math.hypot(P.x-mx,P.y-my)<p.r+8) found={id:p.id,kind:"p",ref:p};});
-  if(!found && Math.hypot(h.x-mx,h.y-my)<HUB.r+8) found={id:"brain",kind:"b",ref:HUB};
-  hover=found;cv.style.cursor=found?"pointer":"default";
-  var tip=$("tip");
-  if(found){
-    var title=found.ref.n, bodyT=found.ref.d||"";
-    if(found.kind==="p"){
-      var links=EDGES.filter(function(e){return e.from===found.id||e.to===found.id;});
-      if(links.length){
-        var names=links.map(function(e){var oid=e.from===found.id?e.to:e.from;var o=byId(oid);return o?o.n:"another project";});
-        bodyT+="  ·  The brain connected this to "+names.join(", ")+".";
-      }
-    }
-    tip.innerHTML="<b>"+esc(title)+"</b>"+esc(bodyT);
-    tip.style.left=Math.min(mx+16,W-268)+"px";
-    tip.style.top=Math.min(my+16,H-110)+"px";
-    tip.classList.add("on");
-  } else tip.classList.remove("on");
-});
-$("stage").addEventListener("click",function(){
-  if(!hover)return;
-  if(hover.kind==="p")openProject(hover.ref);
-  else openBrain();
-});
-
-/* ---------- drawer ---------- */
-function show(){$("draw").classList.add("on");$("draw").setAttribute("aria-hidden","false");$("scrim").classList.add("on");}
-function closeDraw(){$("draw").classList.remove("on");$("draw").setAttribute("aria-hidden","true");$("scrim").classList.remove("on");}
-$("dclose").addEventListener("click",closeDraw);
-$("scrim").addEventListener("click",closeDraw);
-
-function openProject(p){
-  $("dName").textContent=p.n;$("dDesc").textContent=p.d;
-  $("dStats").innerHTML=
-    '<div><div class="v num">'+p.mem.toLocaleString()+'</div><div class="l">memories</div></div>'+
-    '<div><div class="v num">'+p.searches.toLocaleString()+'</div><div class="l">recalls</div></div>'+
-    '<div><div class="v num">'+(p.flow?"active":"quiet")+'</div><div class="l">last 3 days</div></div>';
-  var h="";
-  h+='<div style="display:flex;gap:8px;margin-bottom:18px;">'+
-     '<button class="mini-btn" id="dBrowse" style="margin:0;flex:1;">Browse all '+p.mem.toLocaleString()+' '+(p.mem===1?"memory":"memories")+' →</button>'+
-     '<button class="mini-btn" id="dGraph" style="margin:0;flex:1;">View as graph</button>'+
-     '</div>';
-  var links=EDGES.filter(function(e){return e.from===p.id||e.to===p.id;});
-  if(links.length){
-    h+='<span class="eb">What the brain connected this to</span>';
-    links.forEach(function(e){
-      var oid=e.from===p.id?e.to:e.from, o=byId(oid);
-      h+='<div class="mem shared" style="background:var(--acd);border:1px solid var(--acl);border-radius:var(--rs);padding:12px 14px;margin-bottom:8px;"><p style="font-size:13px">A recall here returned something captured in <b>'+esc(o?o.n:"another project")+'</b> — '+e.count+' time'+(e.count>1?"s":"")+'.</p></div>';
-    });
-  }
-  h+='<span class="eb">Shared memory</span>'+
-    '<p style="font-size:12.5px;color:var(--mu);margin-bottom:2px;">Off by default — turn this on to let '+esc(p.n)+' and another project recall each other\'s memories.</p>'+
-    '<div id="dShare"><div class="share-empty">Loading…</div></div>';
-  h+='<span class="eb">Manage this key</span>'+
-    '<div class="key-box hidden-block" id="dKeyBox"><span id="dKeyValue"></span><button class="mini-btn" id="dKeyCopy" style="margin:0">Copy</button></div>'+
-    '<div><button class="mini-btn" id="dShowKey">Show key</button><button class="mini-btn danger" id="dRevoke">Revoke</button></div>';
-  $("dBody").innerHTML=h;
-  show();
-  renderShareSection(p);
-  $("dBrowse").addEventListener("click",function(){openLedger(p);});
-  $("dGraph").addEventListener("click",function(){openMemGraph(p);});
-
-  $("dShowKey").onclick=async function(){
-    var box=$("dKeyBox");
-    if(box.classList.contains("show")){box.classList.remove("show");return;}
-    var res=await fetch("/api/projects/"+p.id,{credentials:"same-origin"});
-    var data=await res.json();
-    if(!data.token) return;
-    $("dKeyValue").textContent=data.token;
-    $("dKeyCopy").onclick=function(){copyText(data.token,$("dKeyCopy"));};
-    box.classList.add("show");
-  };
-  $("dRevoke").onclick=async function(){
-    if(!confirm('Revoke the key for "'+p.n+'"? Anything using it stops working immediately.')) return;
-    await fetch("/api/projects/"+p.id,{method:"DELETE",credentials:"same-origin"});
-    closeDraw();
-    loadNetwork();
-  };
-}
-/* ---------- ledger — browse a project's memories directly, most
-   recent first, instead of guessing a search query ---------- */
-var ledgerCursor=null, ledgerLoading=false, ledgerProjectId=null;
-function fmtDate(iso){
-  if(!iso) return "";
-  var d=new Date(iso+"Z");
-  return d.toLocaleString(undefined,{month:"short",day:"numeric",hour:"numeric",minute:"2-digit"});
-}
-function ledgerRow(entry){
-  var body=entry.content
-    ? '<p>'+esc(entry.content)+'</p>'
-    : '<p class="empty">Captured before content browsing was added — not viewable here.</p>';
-  return '<div class="ledger-row" data-id="'+esc(entry.id)+'">'+
-    '<div class="row"><span class="date">'+esc(fmtDate(entry.createdAt))+'</span>'+
-    '<button class="del-btn" title="Delete this memory">Delete</button></div>'+
-    body+'</div>';
-}
-async function loadLedgerPage(append){
-  if(ledgerLoading) return;
-  ledgerLoading=true;
-  var url="/api/projects/"+ledgerProjectId+"/ledger?limit=20"+(append&&ledgerCursor?"&cursor="+encodeURIComponent(ledgerCursor):"");
-  try{
-    var res=await fetch(url,{credentials:"same-origin"});
-    var data=await res.json();
-    var entries=data.entries||[];
-    if(!append) $("ledgerList").innerHTML="";
-    if(!append && !entries.length){
-      $("ledgerList").innerHTML='<div class="ledger-row"><p class="empty">Nothing captured here yet.</p></div>';
-    } else {
-      $("ledgerList").insertAdjacentHTML("beforeend",entries.map(ledgerRow).join(""));
-    }
-    ledgerCursor=data.nextCursor;
-    $("ledgerFoot").style.display=ledgerCursor?"block":"none";
-  }catch(e){
-    if(!append) $("ledgerList").innerHTML='<div class="ledger-row"><p class="empty">Couldn\'t load — try again.</p></div>';
-  }
-  ledgerLoading=false;
-}
-function openLedger(p){
-  ledgerProjectId=p.id;ledgerCursor=null;
-  $("ledgerTitle").textContent=p.n;
-  $("ledgerList").innerHTML='<div class="ledger-row"><p class="empty">Loading…</p></div>';
-  $("ledgerFoot").style.display="none";
-  $("ledgerS").classList.add("on");
-  loadLedgerPage(false);
-}
-function closeLedger(){$("ledgerS").classList.remove("on");}
-$("ledgerClose").addEventListener("click",closeLedger);
-$("ledgerS").addEventListener("click",function(e){if(e.target===$("ledgerS"))closeLedger();});
-$("ledgerMore").addEventListener("click",function(){loadLedgerPage(true);});
-$("ledgerList").addEventListener("click",async function(e){
-  var btn=e.target.closest(".del-btn");
-  if(!btn) return;
-  var row=btn.closest(".ledger-row");
-  var id=row&&row.getAttribute("data-id");
-  if(!id) return;
-  if(!confirm("Delete this memory? It stops showing up everywhere, immediately.")) return;
-  row.style.opacity=".35";
-  try{
-    var res=await fetch("/api/memory/"+encodeURIComponent(id),{method:"DELETE",credentials:"same-origin"});
-    if(res.ok){ row.remove(); loadNetwork(); } else { row.style.opacity="1"; }
-  }catch(e){ row.style.opacity="1"; }
-});
-
-/* ---------- memory graph — a project as hub, its real memories as nodes
-   radiating out, adapted from the same hub-and-spoke pattern the project
-   network above uses (hubPos/projPos), one level deeper. Deliberately NOT
-   a full interconnected mesh: memories don't have links to each other in
-   this data model, only project-to-project links do — drawing fake
-   memory-to-memory edges would show a connection that isn't real. This
-   shows the one that is: every node here really is that project's own
-   captured content, pulled live and clickable to the actual text. ---- */
-var mgNodes=[],mgW=0,mgH=0,mgCX=0,mgCY=0,mgRAD=0,mgDPR=Math.min(window.devicePixelRatio||1,2);
-var mgCv=null,mgCtx=null,mgHover=null,mgSelected=null,mgRunning=false,mgProjectName="";
-var MG_TYPES={
-  feed:{color:"74,222,128",label:"fed"},
-  pet:{color:"255,127,176",label:"pet"},
-  startled:{color:"243,162,89",label:"startled / fled"},
-  caught:{color:"242,109,109",label:"caught"},
-  revived:{color:"0,173,181",label:"revived"},
-  observed:{color:"127,214,220",label:"observed"},
-  other:{color:"169,176,186",label:"other"},
+// ── Real data model ─────────────────────────────────────────────────────
+// Every node traces back to a real API response — nothing here is invented.
+// `core`: the CommonMind Core hub. `project`: a row from /api/network.
+// `memory`: a row from /api/projects/:id/ledger. Colors encode real content
+// classification (see classify()), not decoration.
+const TYPE_COLOR = {
+  core:      0x00adb5,
+  project:   0x7fd6dc,
+  fed:       0x4ade80,
+  pet:       0xff7fb0,
+  startled:  0xf3a259,
+  caught:    0xf26d6d,
+  revived:   0x00adb5,
+  observed:  0x7fd6dc,
+  trade:     0xc9a3ff,
+  agent:     0x9fd18a,
+  session:   0xffc857,
+  other:     0xa9b0ba,
 };
-function mgClassify(content){
-  var c=(content||"").toLowerCase();
-  if(c.indexOf("caught by a predator")>-1) return "caught";
-  if(c.indexOf("found alive and well again")>-1) return "revived";
-  if(c.indexOf("startled by the diver")>-1) return "startled";
-  if(c.indexOf("escaped a predator")>-1) return "startled";
-  if(c.indexOf("observed calmly")>-1) return "observed";
-  if(c.indexOf("fed ")===0||c.indexOf(" fed ")>-1) return "feed";
-  if(c.indexOf("pet ")===0||c.indexOf(" pet ")>-1) return "pet";
-  return "other";
+const TYPE_LABEL = {
+  fed: 'fed', pet: 'pet', startled: 'startled / fled', caught: 'caught',
+  revived: 'revived', observed: 'observed', trade: 'trading decision',
+  agent: 'agent run', session: 'coding session', other: 'memory',
+};
+
+function classify(content) {
+  const c = (content || '').toLowerCase();
+  if (c.startsWith('claude code session')) return 'session';
+  if (c.includes('caught by a predator')) return 'caught';
+  if (c.includes('found alive and well again')) return 'revived';
+  if (c.includes('startled by the diver') || c.includes('escaped a predator')) return 'startled';
+  if (c.includes('observed calmly')) return 'observed';
+  if (c.startsWith('fed ') || c.includes(' fed ')) return 'fed';
+  if (c.startsWith('pet ') || c.includes(' pet ')) return 'pet';
+  if (c.includes('executed a') && (c.includes('buy') || c.includes('sell'))) return 'trade';
+  if (c.includes('invalidation') || c.includes('thesis') || c.includes('pnl') || /closed [+-]?\d/.test(c)) return 'trade';
+  if (c.includes('agent completed a real request') || c.includes('agent failed a request')) return 'agent';
+  return 'other';
 }
-function mgSize(){
-  var host=$("mgCv").parentElement;
-  var b=host.getBoundingClientRect();
-  mgW=b.width;mgH=b.height;
-  mgCv.width=mgW*mgDPR;mgCv.height=mgH*mgDPR;mgCtx.setTransform(mgDPR,0,0,mgDPR,0,0);
-  mgCX=mgW/2;mgCY=mgH/2;mgRAD=Math.min(mgW,mgH)*0.38;
+
+// A short, real preview of a memory's actual content — used anywhere a
+// node/cell has room to show more than its type label.
+function snippet(content, max = 80) {
+  const s = (content || '').trim();
+  if (!s) return '';
+  return s.length > max ? s.slice(0, max - 1).trimEnd() + '…' : s;
 }
-function mgHubPos(t){return {x:mgCX+Math.sin(t*.00016)*4,y:mgCY+Math.cos(t*.00013)*4};}
-function mgNodePos(n,t){
-  var a=n.ang+Math.sin(t*.0001+n.ang)*.03;
-  var r=mgRAD*n.rf;
-  var h=mgHubPos(t);
-  return {x:h.x+Math.cos(a)*r,y:h.y+Math.sin(a)*r*.86};
-}
-function mgDraw(t){
-  mgCtx.clearRect(0,0,mgW,mgH);
-  var h=mgHubPos(t);
-  mgNodes.forEach(function(n){
-    var P=mgNodePos(n,t),type=MG_TYPES[n.type],on=mgHover===n||mgSelected===n;
-    mgCtx.strokeStyle="rgba("+type.color+","+(on?.65:.22)+")";
-    mgCtx.lineWidth=on?1.6:1;
-    mgCtx.beginPath();mgCtx.moveTo(P.x,P.y);mgCtx.lineTo(h.x,h.y);mgCtx.stroke();
-  });
-  var hg=mgCtx.createRadialGradient(h.x,h.y,10,h.x,h.y,46);
-  hg.addColorStop(0,"rgba(0,173,181,.22)");hg.addColorStop(1,"rgba(0,173,181,0)");
-  mgCtx.fillStyle=hg;mgCtx.beginPath();mgCtx.arc(h.x,h.y,46,0,6.29);mgCtx.fill();
-  mgCtx.fillStyle="#2b3340";mgCtx.beginPath();mgCtx.arc(h.x,h.y,20,0,6.29);mgCtx.fill();
-  mgCtx.strokeStyle="rgba(0,173,181,.85)";mgCtx.lineWidth=2;mgCtx.stroke();
-  mgCtx.fillStyle="#eeeeee";mgCtx.font="600 12px Inter, system-ui, sans-serif";
-  mgCtx.textAlign="center";mgCtx.textBaseline="middle";
-  mgCtx.fillText(mgProjectName.length>14?mgProjectName.slice(0,13)+"…":mgProjectName,h.x,h.y);
-  mgNodes.forEach(function(n){
-    var P=mgNodePos(n,t),type=MG_TYPES[n.type],on=mgHover===n||mgSelected===n,r=on?7:5;
-    var gl=mgCtx.createRadialGradient(P.x,P.y,r*.3,P.x,P.y,r*3);
-    gl.addColorStop(0,"rgba("+type.color+","+(on?.5:.24)+")");gl.addColorStop(1,"rgba("+type.color+",0)");
-    mgCtx.fillStyle=gl;mgCtx.beginPath();mgCtx.arc(P.x,P.y,r*3,0,6.29);mgCtx.fill();
-    mgCtx.fillStyle="rgba("+type.color+",.92)";mgCtx.beginPath();mgCtx.arc(P.x,P.y,r,0,6.29);mgCtx.fill();
-    if(on){mgCtx.strokeStyle="#fff";mgCtx.lineWidth=1.4;mgCtx.stroke();}
-    n._x=P.x;n._y=P.y;n._r=r+4; // generous hit-test radius, easy to click
-  });
-}
-function mgTick(t){
-  if(!mgRunning) return;
-  mgDraw(t);
-  requestAnimationFrame(mgTick);
-}
-function mgNodeAt(x,y){
-  for(var i=mgNodes.length-1;i>=0;i--){
-    var n=mgNodes[i],dx=x-n._x,dy=y-n._y;
-    if(dx*dx+dy*dy<=n._r*n._r) return n;
+
+// ── Renderer / scene ────────────────────────────────────────────────────
+const canvas = $('scene');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+// No tone mapping meant additive blending had no ceiling — a point with
+// hundreds of edges converging on it (a data-heavy project) and a point
+// with just a handful (the core) both clip to flat white past a certain
+// sum, so the core could never out-shine a big project no matter how it
+// was tuned. Filmic compression rolls off high sums hard while leaving
+// moderate brightness alone — exactly what "the core should read as most
+// intense" needs: it's the loudest thing left once the crowd is tamed.
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.1;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x1b2028);
+scene.fog = new THREE.FogExp2(0x1b2028, 0.018);
+
+const camera = new THREE.PerspectiveCamera(52, window.innerWidth / window.innerHeight, 0.1, 2000);
+// Elevation matters more than distance here — a near-equatorial view is
+// exactly when two points on the fibonacci sphere below can line up behind
+// the core from the camera's angle. A proper three-quarter-down angle
+// spreads the equator into a visible ellipse instead of a thin edge-on line.
+camera.position.set(0, 115, 195);
+
+const controls = new OrbitControls(camera, renderer.domElement);
+controls.enableDamping = true;
+controls.dampingFactor = 0.08;
+controls.autoRotate = true;
+controls.autoRotateSpeed = 0.35;
+controls.minDistance = 15;
+controls.maxDistance = 420;
+
+// Ambient starfield — depth cue only, never mistaken for data (no glow,
+// no interaction, far behind everything real).
+(function stars() {
+  const N = 900;
+  const pos = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) {
+    const r = 400 + Math.random() * 500;
+    const th = Math.random() * Math.PI * 2, ph = Math.acos(2 * Math.random() - 1);
+    pos[i * 3] = r * Math.sin(ph) * Math.cos(th);
+    pos[i * 3 + 1] = r * Math.sin(ph) * Math.sin(th);
+    pos[i * 3 + 2] = r * Math.cos(ph);
   }
-  return null;
-}
-function mgShowDetail(n){
-  mgSelected=n;
-  $("mgDetailDate").textContent=fmtDate(n.createdAt);
-  $("mgDetailBody").textContent=n.content||"(no content)";
-  $("mgDetail").classList.add("on");
-}
-async function openMemGraph(p){
-  mgProjectName=p.n;
-  $("mgTitle").textContent=p.n;
-  $("mgEmpty").style.display="none";
-  $("mgDetail").classList.remove("on");
-  mgSelected=null;mgHover=null;mgNodes=[];
-  $("memGraphS").classList.add("on");
-  if(!mgCv){
-    mgCv=$("mgCv");mgCtx=mgCv.getContext("2d");
-    mgCv.addEventListener("mousemove",function(e){
-      var b=mgCv.getBoundingClientRect();
-      mgHover=mgNodeAt(e.clientX-b.left,e.clientY-b.top);
-      mgCv.style.cursor=mgHover?"pointer":"default";
-    });
-    mgCv.addEventListener("click",function(e){
-      var b=mgCv.getBoundingClientRect();
-      var n=mgNodeAt(e.clientX-b.left,e.clientY-b.top);
-      if(n) mgShowDetail(n);
-    });
-    window.addEventListener("resize",function(){if($("memGraphS").classList.contains("on")) mgSize();});
-  }
-  mgSize();
-  mgRunning=true;
-  requestAnimationFrame(mgTick);
-  // Legend only shows types actually present — no "caught" swatch on a
-  // project that's never had one.
-  try{
-    var res=await fetch("/api/projects/"+p.id+"/ledger?limit=2000",{credentials:"same-origin"});
-    var data=await res.json();
-    var entries=data.entries||[];
-    if(!entries.length){ $("mgEmpty").style.display="flex"; return; }
-    var seen={};
-    mgNodes=entries.map(function(e,i){
-      var type=mgClassify(e.content);
-      seen[type]=1;
-      return { id:e.id, content:e.content, createdAt:e.createdAt, type:type,
-        ang:(i/entries.length)*6.283+Math.random()*0.3, rf:0.55+Math.random()*0.45 };
-    });
-    var legend="";
-    Object.keys(MG_TYPES).forEach(function(k){
-      if(!seen[k]) return;
-      legend+='<span><i style="background:rgb('+MG_TYPES[k].color+')"></i>'+MG_TYPES[k].label+'</span>';
-    });
-    $("mgLegend").innerHTML=legend;
-  }catch(e){
-    $("mgEmpty").textContent="Couldn't load.";
-    $("mgEmpty").style.display="flex";
-  }
-}
-function closeMemGraph(){
-  $("memGraphS").classList.remove("on");
-  mgRunning=false;
-}
-$("mgClose").addEventListener("click",closeMemGraph);
-$("memGraphS").addEventListener("click",function(e){if(e.target===$("memGraphS"))closeMemGraph();});
-$("mgDetailClose").addEventListener("click",function(){$("mgDetail").classList.remove("on");mgSelected=null;});
-
-async function renderShareSection(p){
-  var host=$("dShare"); if(!host) return;
-  var res=await fetch("/api/projects/"+p.id+"/links",{credentials:"same-origin"});
-  if(!res.ok){ host.innerHTML='<div class="share-empty">Couldn\'t load.</div>'; return; }
-  var data=await res.json();
-  var others=data.projects||[];
-  if(!others.length){
-    host.innerHTML='<div class="share-empty">Connect another project to share memory with '+esc(p.n)+'.</div>';
-    return;
-  }
-  host.innerHTML=others.map(function(o){
-    return '<div class="share-row"><div><div class="sn">'+esc(o.name)+'</div>'+
-      '<div class="sd">'+(o.linked?"recall is shared both ways":"isolated — separate memory")+'</div></div>'+
-      '<button class="switch'+(o.linked?" on":"")+'" data-id="'+esc(o.id)+'" aria-label="Share memory with '+esc(o.name)+'"><span class="dot"></span></button></div>';
-  }).join("");
-  host.querySelectorAll(".switch").forEach(function(btn){
-    btn.onclick=async function(){
-      var targetId=btn.getAttribute("data-id");
-      var next=!btn.classList.contains("on");
-      btn.setAttribute("disabled","");
-      var r=await fetch("/api/projects/"+p.id+"/links",{
-        method:"POST",credentials:"same-origin",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({targetProjectId:targetId,linked:next})
-      });
-      btn.removeAttribute("disabled");
-      if(!r.ok) return;
-      btn.classList.toggle("on",next);
-      var sd=btn.parentElement.querySelector(".sd");
-      if(sd) sd.textContent=next?"recall is shared both ways":"isolated — separate memory";
-      loadNetwork();
-    };
-  });
-}
-function openBrain(){
-  $("dName").textContent=HUB.n;$("dDesc").textContent=HUB.d;
-  $("dStats").innerHTML=
-    '<div><div class="v num">'+HUB.mem.toLocaleString()+'</div><div class="l">memories</div></div>'+
-    '<div><div class="v num">'+PROJ.length+'</div><div class="l">projects</div></div>'+
-    '<div><div class="v num">1</div><div class="l">source of truth</div></div>';
-  $("dBody").innerHTML=
-    '<span class="eb">Why everything routes through here</span>'+
-    '<div class="mem" style="background:var(--panel);border:1px solid var(--bd);border-radius:var(--rs);padding:14px 15px;"><p style="font-size:13.5px">Every connected project writes to one transactional memory. By default each project only recalls what it captured itself — projects don\'t see each other\'s memory unless you turn sharing on. A connection shown here means either you linked two projects, or a search from one genuinely turned up something captured by another.</p></div>';
-  show();
-}
-
-/* ---------- insights (generated from real data, not scripted) ---------- */
-function renderInsights(){
-  var html="";
-  if(PROJ.length===0){
-    html+='<div class="ins hi"><div class="top"><span class="eb">Get started</span></div><p>Nothing connected yet. Connect a project and this map fills in with what it actually knows.</p></div>';
-  } else {
-    var dormant=PROJ.filter(function(p){return !p.flow;});
-    var active=PROJ.filter(function(p){return p.flow;});
-    if(EDGES.length){
-      var e=EDGES[0], a=byId(e.from), b=byId(e.to);
-      html+='<div class="ins hi"><div class="top"><span class="eb">The brain made a connection</span></div><p>A recall in <b>'+esc(a?a.n:"one project")+'</b> returned something captured in <b>'+esc(b?b.n:"another")+'</b> — nobody wired that together, the shared memory did.</p></div>';
-    }
-    if(dormant.length){
-      html+='<div class="ins warn"><div class="top"><span class="eb">Quiet</span></div><p>'+dormant.map(function(p){return esc(p.n);}).join(", ")+(dormant.length>1?" haven't":" hasn't")+' captured or recalled anything in the last few days.</p></div>';
-    }
-    if(active.length){
-      html+='<div class="ins"><div class="top"><span class="eb">Active</span></div><p>'+active.map(function(p){return esc(p.n)+" ("+p.mem+")";}).join(", ")+' — real memory, real activity.</p></div>';
-    }
-  }
-  $("insights").innerHTML=html;
-}
-
-function renderFlow(){
-  var flow=$("flow");
-  if(!RECENT.length){
-    flow.innerHTML='<p style="font-size:12.5px;color:var(--fa);padding:8px 0">Nothing has happened yet. Every row here arrives with a dot on the map.</p>';
-    return;
-  }
-  flow.innerHTML=RECENT.slice(0,6).map(function(ev){
-    var route=ev.action==="capture" ? esc(ev.projectName)+" → CommonMind Core" : "CommonMind Core → "+esc(ev.projectName);
-    return '<div class="fl"><div class="dot2">'+esc((ev.projectName||"?").slice(0,2).toUpperCase())+'</div>'+
-      '<div><p>'+(ev.action==="capture"?"Captured a memory":"Recalled memories")+'</p><div class="s">'+route+' · '+esc(relTime(ev.created_at))+'</div></div></div>';
-  }).join("");
-}
-
-/* ---------- connect-a-project ---------- */
-function toggleForm(){$("newProjForm").classList.toggle("on");}
-$("connectBtn").addEventListener("click",toggleForm);
-$("emptyConnectBtn").addEventListener("click",toggleForm);
-$("newProjSubmit").addEventListener("click",async function(){
-  var name=$("newProjName").value.trim();
-  if(!name) return;
-  var res=await fetch("/api/projects",{method:"POST",credentials:"same-origin",headers:{"Content-Type":"application/json"},body:JSON.stringify({name:name})});
-  var data=await res.json();
-  if(!res.ok) return;
-  $("newProjName").value="";
-  $("newProjForm").classList.remove("on");
-  await loadNetwork();
-  var p=byId(data.id);
-  if(p){
-    openProject(p);
-    setTimeout(function(){
-      var box=document.createElement("div");
-      box.className="key-box show";
-      box.style.cssText="display:flex;background:var(--acd);border-color:var(--acl);margin-bottom:16px;";
-      var span=document.createElement("span");
-      span.textContent=data.token;
-      var btn=document.createElement("button");
-      btn.className="mini-btn";
-      btn.style.margin="0";
-      btn.textContent="Copy";
-      btn.addEventListener("click",function(){copyText(data.token,btn);});
-      box.appendChild(span);box.appendChild(btn);
-      $("dBody").insertBefore(box,$("dBody").firstChild);
-    },50);
-  }
-});
-
-/* ---------- ask the company brain (real recall) ---------- */
-function openPalette(){$("palS").classList.add("on");$("pq").value="";pout("");$("pq").focus();}
-$("askBtn").addEventListener("click",openPalette);
-document.addEventListener("keydown",function(e){
-  if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openPalette();}
-  if(e.key==="Escape"){$("palS").classList.remove("on");closeLedger();closeMemGraph();closeDraw();}
-});
-$("palS").addEventListener("click",function(e){if(e.target===$("palS"))$("palS").classList.remove("on");});
-
-var poutTimer=null;
-async function pout(q){
-  q=(q||"").trim();
-  if(q.length<3){$("pout").innerHTML='<div class="it"><p style="color:var(--fa)">Ask about anything captured across your connected projects.</p></div>';return;}
-  clearTimeout(poutTimer);
-  poutTimer=setTimeout(async function(){
-    $("pout").innerHTML='<div class="it"><p style="color:var(--fa)">Searching…</p></div>';
-    try{
-      var res=await fetch("/api/memory/search?q="+encodeURIComponent(q)+"&limit=6",{credentials:"same-origin"});
-      var data=await res.json();
-      var hits=data.results||[];
-      $("pout").innerHTML=hits.length
-        ? hits.map(function(h){return '<div class="it" data-id="'+esc(h.id||"")+'"><div class="row"><span class="score">'+ (h.score*100).toFixed(0) +'% match</span><button class="del-btn" title="Delete this memory">Delete</button></div><p>'+esc(h.content)+'</p></div>';}).join("")
-        : '<div class="it"><p style="color:var(--fa)">Nothing found — capture something first.</p></div>';
-    }catch(e){
-      $("pout").innerHTML='<div class="it"><p style="color:var(--fa)">Search unavailable right now.</p></div>';
-    }
-  },350);
-}
-$("pq").addEventListener("input",function(){pout($("pq").value);});
-$("pout").addEventListener("click",async function(e){
-  var btn=e.target.closest(".del-btn");
-  if(!btn) return;
-  var item=btn.closest(".it");
-  var id=item&&item.getAttribute("data-id");
-  if(!id) return;
-  if(!confirm("Delete this memory? It stops showing up everywhere, immediately.")) return;
-  item.classList.add("removing");
-  try{
-    var res=await fetch("/api/memory/"+encodeURIComponent(id),{method:"DELETE",credentials:"same-origin"});
-    if(res.ok){
-      item.style.maxHeight=item.offsetHeight+"px";
-      requestAnimationFrame(function(){item.style.maxHeight="0";item.style.overflow="hidden";});
-      setTimeout(function(){item.remove();},200);
-      loadNetwork();
-    } else {
-      item.classList.remove("removing");
-    }
-  }catch(e){
-    item.classList.remove("removing");
-  }
-});
-
-function copyText(text,btn){
-  navigator.clipboard.writeText(text).then(function(){
-    var o=btn.textContent;btn.textContent="Copied";setTimeout(function(){btn.textContent=o;},1500);
-  });
-}
-
-$("signoutBtn").addEventListener("click",async function(){
-  await fetch("/api/auth/logout",{method:"POST",credentials:"same-origin"});
-  window.location.href="/";
-});
-
-window.addEventListener("resize",size);
-size();
-loadNetwork();
-requestAnimationFrame(tick);
-
-} // initApp
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({ color: 0x3a4452, size: 1.6, sizeAttenuation: true });
+  scene.add(new THREE.Points(geo, mat));
 })();
+
+// Soft radial-gradient sprite texture, tinted per-node via material.color —
+// one shared texture, cheap, always faces camera, reads as a "glowing node"
+// without needing per-node geometry.
+const glowTex = (() => {
+  const s = 128, c = document.createElement('canvas');
+  c.width = c.height = s;
+  const g = c.getContext('2d');
+  const grad = g.createRadialGradient(s / 2, s / 2, 0, s / 2, s / 2, s / 2);
+  grad.addColorStop(0, 'rgba(255,255,255,1)');
+  grad.addColorStop(0.35, 'rgba(255,255,255,0.85)');
+  grad.addColorStop(1, 'rgba(255,255,255,0)');
+  g.fillStyle = grad;
+  g.fillRect(0, 0, s, s);
+  return new THREE.CanvasTexture(c);
+})();
+
+// Selection indicator — a real ring, not just a scale bump, so "what did I
+// click" reads at a glance even in a dense cluster of hundreds of nodes.
+const ringTex = (() => {
+  const s = 128, c = document.createElement('canvas');
+  c.width = c.height = s;
+  const g = c.getContext('2d');
+  g.strokeStyle = 'white';
+  g.lineWidth = 7;
+  g.beginPath();
+  g.arc(s / 2, s / 2, s / 2 - 8, 0, Math.PI * 2);
+  g.stroke();
+  return new THREE.CanvasTexture(c);
+})();
+const selectionRing = new THREE.Sprite(new THREE.SpriteMaterial({
+  map: ringTex, color: 0xffffff, fog: false, transparent: true,
+  depthWrite: false, blending: THREE.AdditiveBlending,
+}));
+selectionRing.visible = false;
+scene.add(selectionRing);
+
+// ── Post-processing: bloom is what turns "colored dots" into "glowing
+// nodes in a real graph" — the single highest-leverage visual choice here.
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloom = new UnrealBloomPass(new THREE.Vector2(window.innerWidth, window.innerHeight), 0.85, 0.5, 0.15);
+composer.addPass(bloom);
+// EffectComposer renders through an intermediate target, so the renderer's
+// own `antialias:true` never actually reaches the final frame — FXAA here
+// is what keeps node edges and text-adjacent UI from reading jagged.
+const fxaa = new ShaderPass(FXAAShader);
+function syncFXAAResolution() {
+  const pr = renderer.getPixelRatio();
+  fxaa.material.uniforms['resolution'].value.set(1 / (window.innerWidth * pr), 1 / (window.innerHeight * pr));
+}
+syncFXAAResolution();
+composer.addPass(fxaa);
+composer.addPass(new OutputPass());
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+  syncFXAAResolution();
+});
+
+// ── Graph state ─────────────────────────────────────────────────────────
+// nodes: id -> { id, kind, label, data, radius, pos:Vector3, vel:Vector3,
+//                sprite, fixed, parent }
+// edges: [{a, b, strength}] — spring rest-length scales with strength so
+// tightly-clustered memories sit close, weaker cross-project links sit
+// further apart. This drives the ENTIRE layout — nothing is hand-placed.
+const nodes = new Map();
+const edges = [];
+let expanded = new Set();      // project ids currently drilled into
+let hovered = null, selected = null, dragging = null, legendFocusId = null;
+// A real drag still fires a native `click` on release — `dragging` itself
+// can't be used to catch that, because pointerup (which fires first) already
+// nulls it out before click's handler runs. This survives past that reset.
+let dragMoved = false, dragStartX = 0, dragStartY = 0, suppressNextClick = false;
+let netData = null;
+
+// Node glow is a canvas texture + additive blending, not a custom shader —
+// tried a real onBeforeCompile fresnel/pulse injection on the Sprite
+// material (root-caused a genuine GL_INVALID_OPERATION to Three's
+// per-map `vMapUv` varying, confirmed against the r160 source), fixed
+// that, and it still rendered every node fully invisible with zero GL
+// errors — almost certainly Three's shader-program cache key not
+// accounting for onBeforeCompile identity across many SpriteMaterial
+// instances that otherwise hash identically, a known sharp edge in this
+// exact API. Diagnosing that further wasn't worth risking the graph's
+// core readability today. The edge shader below hits the same "genuine
+// GLSL, not a CSS trick" bar and is verified working — that's where the
+// real shader craft in this build lives.
+function addNode(id, kind, label, data, radius, seedPos) {
+  if (nodes.has(id)) return nodes.get(id);
+  const mat = new THREE.SpriteMaterial({
+    map: glowTex, color: TYPE_COLOR[kind] ?? TYPE_COLOR.other,
+    // fog:false is deliberate — scene fog is a depth cue for the background
+    // starfield (hundreds of units out), not for the actual graph, which
+    // sits much closer. Leaving it on faded every real node almost to the
+    // background color at the camera's default distance.
+    fog: false,
+    transparent: true, depthWrite: false, blending: THREE.AdditiveBlending,
+  });
+  const sprite = new THREE.Sprite(mat);
+  sprite.scale.setScalar(radius * 2);
+  const p = seedPos || new THREE.Vector3((Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 40);
+  sprite.position.copy(p);
+  scene.add(sprite);
+  const node = { id, kind, label, data, radius, pos: p, vel: new THREE.Vector3(), sprite, fixed: false, baseScale: radius * 2, _posGen: 0, _scaleGen: 0 };
+  // Persistent screen-space labels — only the structural nodes (core +
+  // projects), never the hundreds of memory leaves, or this turns into
+  // clutter instead of the "what is what at a glance" it's meant to solve.
+  if (kind === 'core' || kind === 'project') {
+    const el = document.createElement('div');
+    el.className = 'nodeLabel';
+    el.textContent = label;
+    $('nodeLabels').appendChild(el);
+    node.labelEl = el;
+  }
+  nodes.set(id, node);
+  return node;
+}
+function addEdge(a, b, strength) {
+  if (!nodes.has(a) || !nodes.has(b)) return;
+  edges.push({ a, b, strength: strength ?? 1 });
+}
+function removeNode(id) {
+  const n = nodes.get(id);
+  if (!n) return;
+  // Collapsing a project removes its memory children — if the one you had
+  // open was one of them, its selection ring was floating in empty space
+  // and the detail panel was still showing content for a node that no
+  // longer exists. Close it along with its parent.
+  if (selected === n) closeDetail();
+  if (hovered === n) hovered = null;
+  scene.remove(n.sprite);
+  n.sprite.material.dispose();
+  n.labelEl?.remove();
+  nodes.delete(id);
+  for (let i = edges.length - 1; i >= 0; i--) if (edges[i].a === id || edges[i].b === id) edges.splice(i, 1);
+}
+
+// Edge lines — one shared BufferGeometry, positions rewritten every frame
+// from live node positions (cheap: a few hundred edges max at this scale).
+// A real memory graph's most honest "wow" isn't a decorative effect, it's
+// visualizing the thing the product actually does: a memory captured in
+// one project surfacing in another. So the edge shader renders that
+// literally — bands of light traveling from one node to the other along
+// each connection, not a static line. `aT` is 0 at an edge's start vertex
+// and 1 at its end, which — because it's a straight 2-point segment — the
+// GPU interpolates into a free 0→1 gradient per-pixel across the fragment
+// shader; from there it's just a moving threshold band in a sine of `aT`.
+const edgeGeo = new THREE.BufferGeometry();
+const edgeMat = new THREE.ShaderMaterial({
+  transparent: true, depthWrite: false, fog: false, blending: THREE.AdditiveBlending,
+  uniforms: { uTime: { value: 0 }, uColor: { value: new THREE.Color(0x3fd1d8) }, uBase: { value: 0.16 } },
+  vertexShader: `
+    attribute float aT;
+    varying float vT;
+    void main() {
+      vT = aT;
+      gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+    }
+  `,
+  fragmentShader: `
+    uniform float uTime; uniform vec3 uColor; uniform float uBase;
+    varying float vT;
+    void main() {
+      float band1 = smoothstep(0.12, 0.0, abs(fract(vT * 1.0 - uTime * 0.35) - 0.5) - 0.32);
+      float band2 = smoothstep(0.10, 0.0, abs(fract(vT * 1.0 - uTime * 0.35 + 0.5) - 0.5) - 0.30);
+      // Tuned back when a busy project had ~100 edges; a real project can
+      // now have 600+ converging on one point, and additive blending sums
+      // every one of them — same per-edge brightness was blowing out into
+      // a flat white blob instead of a lively cluster of edges.
+      float glow = uBase * 0.3 + band1 * 0.22 + band2 * 0.12;
+      gl_FragColor = vec4(uColor * glow, glow);
+    }
+  `,
+});
+const edgeLines = new THREE.LineSegments(edgeGeo, edgeMat);
+scene.add(edgeLines);
+
+function syncEdgeGeometry() {
+  const arr = new Float32Array(edges.length * 6);
+  const tArr = new Float32Array(edges.length * 2);
+  edges.forEach((e, i) => {
+    const a = nodes.get(e.a), b = nodes.get(e.b);
+    if (!a || !b) return;
+    arr[i * 6] = a.pos.x; arr[i * 6 + 1] = a.pos.y; arr[i * 6 + 2] = a.pos.z;
+    arr[i * 6 + 3] = b.pos.x; arr[i * 6 + 4] = b.pos.y; arr[i * 6 + 5] = b.pos.z;
+    tArr[i * 2] = 0; tArr[i * 2 + 1] = 1;
+  });
+  edgeGeo.setAttribute('position', new THREE.BufferAttribute(arr, 3));
+  edgeGeo.attributes.position.needsUpdate = true;
+  // Only needs rebuilding when the edge COUNT changes, not every frame, but
+  // edges.length changing is exactly when this function is already called
+  // for a different reason (project expanded/collapsed) — simplest correct
+  // thing is just keeping it in lockstep with position, which this does.
+  if (!edgeGeo.getAttribute('aT') || edgeGeo.getAttribute('aT').count !== tArr.length) {
+    edgeGeo.setAttribute('aT', new THREE.BufferAttribute(tArr, 1));
+  }
+}
+
+// ── Force simulation ────────────────────────────────────────────────────
+// Hand-rolled, not a library: repulsion (all pairs) + spring (edges) +
+// gentle center pull + damping. O(n^2) repulsion is fine through the low
+// hundreds of nodes this graph reaches today; if it ever needs to hold
+// thousands at once, that's the piece to swap for a Barnes-Hut approx.
+function stepPhysics(dt) {
+  const list = [...nodes.values()];
+  const REPEL = 420, SPRING = 0.06, CENTER = 0.004, DAMP = 0.86;
+
+  for (const n of list) n._force = new THREE.Vector3();
+
+  for (let i = 0; i < list.length; i++) {
+    for (let j = i + 1; j < list.length; j++) {
+      const a = list[i], b = list[j];
+      const d = new THREE.Vector3().subVectors(a.pos, b.pos);
+      let dist = d.length();
+      if (dist < 0.01) { d.set(Math.random() - 0.5, Math.random() - 0.5, Math.random() - 0.5); dist = 0.1; }
+      const f = REPEL / (dist * dist);
+      d.normalize().multiplyScalar(f);
+      a._force.add(d);
+      b._force.sub(d);
+    }
+  }
+
+  for (const e of edges) {
+    const a = nodes.get(e.a), b = nodes.get(e.b);
+    if (!a || !b) continue;
+    // Core↔project edges get a long, fixed rest length so ordinary physics
+    // holds the wide reveal spread instead of slowly reeling every project
+    // back in toward a radius-based rest that was always much shorter than
+    // where the firework launch actually placed them. Project↔memory edges
+    // (the burst-around-an-opened-project look) keep the tight radius-based
+    // rest — those SHOULD hug their parent.
+    const isCoreLink = a.kind === 'core' || b.kind === 'core';
+    const rest = isCoreLink ? 66 : 10 + (a.radius + b.radius) * 1.6;
+    const d = new THREE.Vector3().subVectors(b.pos, a.pos);
+    const dist = Math.max(d.length(), 0.01);
+    const stretch = (dist - rest) * SPRING * e.strength;
+    d.normalize().multiplyScalar(stretch);
+    a._force.add(d);
+    b._force.sub(d);
+  }
+
+  const MAX_RADIUS = 130; // keeps every node reachable near the default framing —
+  // repulsion between a sparsely-connected project and a crowded one can
+  // otherwise out-run the weak center spring and push it off-screen for good.
+  for (const n of list) {
+    if (n.kind !== 'core') n._force.add(n.pos.clone().multiplyScalar(-CENTER));
+    if (n === dragging || n.fixed) { n.vel.set(0, 0, 0); continue; }
+    n.vel.add(n._force.multiplyScalar(dt));
+    n.vel.multiplyScalar(DAMP);
+    n.pos.add(n.vel.clone().multiplyScalar(dt));
+    const r = n.pos.length();
+    if (r > MAX_RADIUS) {
+      n.pos.multiplyScalar(MAX_RADIUS / r);
+      const outward = n.pos.clone().normalize();
+      const radialVel = n.vel.dot(outward);
+      if (radialVel > 0) n.vel.addScaledVector(outward, -radialVel); // kill outward component only
+    }
+    n.sprite.position.copy(n.pos);
+  }
+}
+
+// ── Interaction: hover, click, drag ─────────────────────────────────────
+const raycaster = new THREE.Raycaster();
+raycaster.params.Sprite = { threshold: 1 };
+const mouseNDC = new THREE.Vector2();
+const dragPlane = new THREE.Plane();
+const dragPoint = new THREE.Vector3();
+
+function nodeAtPointer(clientX, clientY) {
+  mouseNDC.x = (clientX / window.innerWidth) * 2 - 1;
+  mouseNDC.y = -(clientY / window.innerHeight) * 2 + 1;
+  raycaster.setFromCamera(mouseNDC, camera);
+  const sprites = [...nodes.values()].map((n) => n.sprite);
+  const hit = raycaster.intersectObjects(sprites)[0];
+  if (!hit) return null;
+  return [...nodes.values()].find((n) => n.sprite === hit.object) || null;
+}
+
+canvas.addEventListener('pointermove', (e) => {
+  if (dragging) {
+    if (!dragMoved && Math.hypot(e.clientX - dragStartX, e.clientY - dragStartY) > 4) dragMoved = true;
+    raycaster.setFromCamera(mouseNDC, camera);
+    mouseNDC.x = (e.clientX / window.innerWidth) * 2 - 1;
+    mouseNDC.y = -(e.clientY / window.innerHeight) * 2 + 1;
+    raycaster.setFromCamera(mouseNDC, camera);
+    if (raycaster.ray.intersectPlane(dragPlane, dragPoint)) {
+      dragging.pos.copy(dragPoint);
+      dragging.sprite.position.copy(dragPoint);
+    }
+    return;
+  }
+  const n = nodeAtPointer(e.clientX, e.clientY);
+  if (n !== hovered) {
+    hovered = n;
+    canvas.style.cursor = n ? 'pointer' : 'grab';
+    updateHoverHighlight();
+  }
+});
+
+canvas.addEventListener('pointerdown', (e) => {
+  const n = nodeAtPointer(e.clientX, e.clientY);
+  if (!n) return;
+  cancelTweens(n); // a grab always wins over any in-flight firework/expand animation
+  n.fixed = false;
+  dragging = n;
+  dragMoved = false;
+  dragStartX = e.clientX;
+  dragStartY = e.clientY;
+  canvas.classList.add('dragging-node');
+  controls.enabled = false;
+  // Plane faces the camera, passing through the node — dragging then just
+  // means "follow the ray-plane intersection," which keeps the node under
+  // the cursor at a constant depth instead of sliding toward/away from camera.
+  const faceNormal = camera.getWorldDirection(new THREE.Vector3()).negate();
+  dragPlane.setFromNormalAndCoplanarPoint(faceNormal, n.pos);
+});
+
+window.addEventListener('pointerup', () => {
+  if (dragging) {
+    dragging.vel.set(0, 0, 0);
+    // Pin it — a manual drop should hold exactly where the user let go.
+    // Without this, physics resumes the instant you release (repulsion,
+    // the spring back to the core, everything), and a project you just
+    // placed drifts toward wherever those forces settle instead of
+    // staying put. Its memory children (if expanded) aren't fixed, so
+    // they still follow it naturally via their own edge to it.
+    dragging.fixed = true;
+    // The browser fires a native click right after this on the same
+    // element even though real movement happened — `dragging` itself is
+    // already null by the time that click handler runs (it's cleared
+    // right here), so it can't be used to catch this. If real movement
+    // happened, tell the very next click to no-op instead of treating the
+    // drag-release as a toggle click and undoing the placement.
+    if (dragMoved) suppressNextClick = true;
+    dragging = null;
+    canvas.classList.remove('dragging-node');
+    controls.enabled = true;
+  }
+});
+
+canvas.addEventListener('click', (e) => {
+  if (suppressNextClick) { suppressNextClick = false; return; } // that was a drag release, not a real click
+  const n = nodeAtPointer(e.clientX, e.clientY);
+  if (!n) { closeDetail(); return; }
+  if (n.kind === 'project') { toggleProject(n); return; }
+  if (n.kind === 'core') { toggleCoreIsolation(); return; }
+  openDetail(n);
+});
+
+// Clicking the core isolates it — everything else vanishes, leaving just
+// the one point everything traces back to. Click it again to bring
+// everything back exactly as it was; nothing is actually removed or
+// recomputed, just hidden, so this is fully reversible either direction.
+let coreIsolated = false;
+function toggleCoreIsolation() {
+  coreIsolated = !coreIsolated;
+  for (const n of nodes.values()) {
+    if (n.kind === 'core') continue;
+    n.sprite.visible = !coreIsolated;
+    if (n.labelEl) n.labelEl.style.display = coreIsolated ? 'none' : '';
+  }
+  edgeLines.visible = !coreIsolated;
+  showToast(coreIsolated ? 'Isolated — click the core again to bring everything back' : 'Showing everything again');
+}
+
+function updateHoverHighlight() {
+  const connected = new Set();
+  if (hovered) {
+    connected.add(hovered.id);
+    for (const e of edges) {
+      if (e.a === hovered.id) connected.add(e.b);
+      if (e.b === hovered.id) connected.add(e.a);
+    }
+  }
+  for (const n of nodes.values()) {
+    if (n._popping) continue; // mid firework-pop/contract tween — let it own the scale
+    // A selected node stays undimmed and enlarged even after the mouse
+    // moves off it — hover alone reset the instant you looked away, which
+    // made it impossible to tell what you'd actually opened.
+    const dim = hovered && !connected.has(n.id) && n !== selected;
+    n.sprite.material.opacity = dim ? 0.25 : 1;
+    const s = n.baseScale * (hovered === n ? 1.35 : n === selected ? 1.3 : 1);
+    n.sprite.scale.setScalar(s);
+  }
+  edgeMat.uniforms.uBase.value = hovered ? 0.05 : 0.16;
+
+  // The legend's memory-type rows are scoped to whatever project you're
+  // actually looking at, not every currently-expanded project mashed
+  // together — a project you haven't hovered isn't "selected data."
+  const owner = !hovered ? null : hovered.kind === 'project' ? hovered.id : hovered.kind === 'core' ? null : hovered.parent ?? null;
+  if (owner !== legendFocusId) { legendFocusId = owner; renderLegend(); }
+}
+
+// ── Project expand / collapse ───────────────────────────────────────────
+async function toggleProject(pn) {
+  if (expanded.has(pn.id)) {
+    // Collapse: remove its memory children only. The project itself stays
+    // exactly where it is — expand/collapse is absolute, not a reason to
+    // reposition something the user may have deliberately placed.
+    const toRemove = [...nodes.values()].filter((n) => n.parent === pn.id);
+    toRemove.forEach((n) => removeNode(n.id));
+    expanded.delete(pn.id);
+    renderBreadcrumb();
+    renderLegend(); // this project's categories just vanished — don't leave them showing stale
+    return;
+  }
+  expanded.add(pn.id);
+  renderBreadcrumb();
+  showToast(`Loading ${pn.label}'s memories…`);
+  try {
+    const res = await fetch(`/api/projects/${pn.id}/ledger?limit=2000`, { credentials: 'same-origin' });
+    const data = await res.json();
+    // Skip rows with no recorded content (a handful predate content-storage).
+    const entries = (data.entries || []).filter((e) => typeof e.content === 'string' && e.content.trim());
+    if (!entries.length) { showToast(`${pn.label} has nothing to browse yet.`); return; }
+    entries.forEach((e, i) => {
+      const kind = classify(e.content);
+      const ang = (i / entries.length) * Math.PI * 2;
+      const seed = pn.pos.clone().add(new THREE.Vector3(Math.cos(ang) * 14, (Math.random() - 0.5) * 10, Math.sin(ang) * 14));
+      const mid = `mem:${e.id}`;
+      addNode(mid, kind, TYPE_LABEL[kind] || 'memory', { content: e.content, createdAt: e.createdAt, project: pn.label }, 1.5, seed).parent = pn.id;
+      addEdge(pn.id, mid, 0.8);
+    });
+    showToast(`${entries.length} real memories loaded from ${pn.label}.`);
+    renderLegend();
+  } catch {
+    showToast(`Couldn't load ${pn.label} — try again.`);
+    expanded.delete(pn.id);
+  }
+}
+
+function renderBreadcrumb() {
+  const root = '<span class="crumb current">Company brain</span>';
+  const open = [...expanded].map((id) => {
+    const n = nodes.get(id);
+    return n ? `<span class="sep">/</span><span class="crumb" data-collapse="${id}">${esc(n.label)}</span>` : '';
+  }).join('');
+  $('breadcrumb').innerHTML = root + open;
+  $('breadcrumb').querySelectorAll('[data-collapse]').forEach((el) => {
+    el.addEventListener('click', () => { const n = nodes.get(el.dataset.collapse); if (n) toggleProject(n); });
+  });
+}
+
+// ── Detail panel ────────────────────────────────────────────────────────
+function openDetail(n) {
+  selected = n;
+  $('detailKind').textContent = TYPE_LABEL[n.kind] || n.kind;
+  $('detailTitle').textContent = n.label;
+  if (n.kind === 'project') {
+    $('detailDate').textContent = `connected ${fmtDate(n.data.connectedAt)}`;
+    $('detailBody').textContent = `${n.data.memories.toLocaleString()} memories captured, ${n.data.searches.toLocaleString()} recalls made.`;
+    $('detailMeta').innerHTML = `<span>last active: ${n.data.lastActive ? fmtDate(n.data.lastActive) : 'never'}</span>`;
+  } else {
+    $('detailDate').textContent = fmtDate(n.data.createdAt);
+    $('detailBody').textContent = n.data.content || '(content not available)';
+    $('detailMeta').innerHTML = `<span>project: ${esc(n.data.project)}</span>`;
+  }
+  $('detail').classList.add('on');
+  $('activity').style.display = 'none'; // same slot as .detail — never show both
+  selectionRing.visible = true;
+  updateHoverHighlight(); // refresh scale/opacity immediately, don't wait for the next hover event
+}
+function closeDetail() {
+  selected = null;
+  $('detail').classList.remove('on');
+  $('activity').style.display = '';
+  selectionRing.visible = false;
+  updateHoverHighlight();
+}
+$('detailClose').addEventListener('click', closeDetail);
+
+// ── Legend ──────────────────────────────────────────────────────────────
+// Scoped to legendFocusId (see updateHoverHighlight) — nothing hovered
+// means nothing to key beyond "project" itself; hovering a project or one
+// of its memories shows only the real categories that project actually has.
+function renderLegend() {
+  const pool = legendFocusId
+    ? [...nodes.values()].filter((n) => n.id === legendFocusId || n.parent === legendFocusId)
+    : [];
+  const present = new Set(pool.map((n) => n.kind).filter((k) => k !== 'core' && k !== 'project'));
+  let h = `<div class="row"><i style="background:#${TYPE_COLOR.project.toString(16)}"></i>project</div>`;
+  present.forEach((k) => { h += `<div class="row"><i style="background:#${TYPE_COLOR[k].toString(16)}"></i>${TYPE_LABEL[k] || k}</div>`; });
+  $('legend').innerHTML = h;
+}
+
+// ── Toast ───────────────────────────────────────────────────────────────
+let toastTimer = null;
+function showToast(msg) {
+  clearTimeout(toastTimer);
+  $('toast').textContent = msg;
+  $('toast').classList.add('on');
+  toastTimer = setTimeout(() => $('toast').classList.remove('on'), 2600);
+}
+
+function fmtDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso.replace(' ', 'T') + (iso.includes('Z') ? '' : 'Z'));
+  return d.toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
+}
+function esc(s) { return String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+
+// ── Treemap ─────────────────────────────────────────────────────────────
+// Squarified treemap (Bruls, Huizing & van Wijk, 1999) — the published
+// algorithm, not an approximation: each row is grown greedily for as long
+// as doing so improves the row's worst aspect ratio, then laid out along
+// whichever side of the remaining rect is currently shorter. That's what
+// keeps cells close to square instead of degenerating into slivers as item
+// counts grow, which is the whole reason this is the offered alternative
+// for "handle a lot of data with ease."
+function squarify(items, x, y, w, h) {
+  const list = items.filter((i) => i.value > 0).sort((a, b) => b.value - a.value);
+  const total = list.reduce((s, i) => s + i.value, 0);
+  if (!list.length || total <= 0) return [];
+  const totalArea = w * h;
+  const nodes = list.map((i) => ({ ref: i, area: (i.value / total) * totalArea }));
+
+  function worst(row, side) {
+    const sum = row.reduce((s, n) => s + n.area, 0);
+    const maxA = Math.max(...row.map((n) => n.area));
+    const minA = Math.min(...row.map((n) => n.area));
+    return Math.max((side * side * maxA) / (sum * sum), (sum * sum) / (side * side * minA));
+  }
+
+  const out = [];
+  let rx = x, ry = y, rw = w, rh = h, i = 0;
+  while (i < nodes.length) {
+    const side = Math.min(rw, rh);
+    let row = [nodes[i]], j = i + 1;
+    while (j < nodes.length) {
+      const trial = row.concat([nodes[j]]);
+      if (worst(trial, side) <= worst(row, side)) { row = trial; j++; } else break;
+    }
+    const rowSum = row.reduce((s, n) => s + n.area, 0);
+    const thickness = rowSum / side;
+    if (rw >= rh) {
+      let cy = ry;
+      row.forEach((n) => { const ih = n.area / thickness; out.push({ ref: n.ref, x: rx, y: cy, w: thickness, h: ih }); cy += ih; });
+      rx += thickness; rw -= thickness;
+    } else {
+      let cx = rx;
+      row.forEach((n) => { const iw = n.area / thickness; out.push({ ref: n.ref, x: cx, y: ry, w: iw, h: thickness }); cx += iw; });
+      ry += thickness; rh -= thickness;
+    }
+    i = j;
+  }
+  return out;
+}
+
+let mode = 'network';
+let tmProject = null;           // null = showing all projects; else the project drilled into
+const ledgerCache = new Map();  // projectId -> entries[], avoids refetching on every tab switch
+
+function tmColorFor(kind) { return '#' + (TYPE_COLOR[kind] ?? TYPE_COLOR.other).toString(16).padStart(6, '0'); }
+
+// One distinct, stable color per project — a plain treemap where every
+// project shares the same hue reads as one undifferentiated mass; category
+// color is what makes a treemap scannable at a glance instead of requiring
+// the labels to do all the work. Hashed from the project id so a given
+// project keeps its color across reloads and re-layouts, not reassigned by
+// array position (which shifts as memory counts change over time).
+const PROJECT_PALETTE = [0x00adb5, 0xf3a259, 0xc9a3ff, 0x4ade80, 0xf26d6d, 0x7fa8ff, 0xffd166, 0xff7fb0];
+function projectColor(id) {
+  let h = 0;
+  for (let i = 0; i < id.length; i++) h = (h * 31 + id.charCodeAt(i)) >>> 0;
+  return PROJECT_PALETTE[h % PROJECT_PALETTE.length];
+}
+function hex(n) { return '#' + n.toString(16).padStart(6, '0'); }
+function shade(n, amt) { // amt in [-1,1]; lighten toward white or darken toward black
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+  const mix = (c) => Math.round(amt >= 0 ? c + (255 - c) * amt : c * (1 + amt));
+  return (mix(r) << 16) | (mix(g) << 8) | mix(b);
+}
+
+function renderTreemapCells(cells) {
+  const host = $('treemap');
+  host.innerHTML = '';
+  const pad = 4;
+  cells.forEach((c, i) => {
+    const isProject = c.ref.kind === 'project';
+    const base = isProject ? projectColor(c.ref.data.id) : (TYPE_COLOR[c.ref.kind] ?? TYPE_COLOR.other);
+
+    const el = document.createElement('div');
+    el.className = 'tmRect';
+    el.style.left = c.x + 'px'; el.style.top = c.y + 'px';
+    el.style.width = Math.max(0, c.w - pad) + 'px'; el.style.height = Math.max(0, c.h - pad) + 'px';
+    el.style.setProperty('--tmGlow', hex(base) + '88');
+
+    const fill = document.createElement('div');
+    fill.className = 'tmFill';
+    // Subtle top-lit gradient — the same "glass panel catching light" cue
+    // used everywhere else in this build (node glow, bloom), just in flat
+    // CSS instead of WebGL, so the two views feel like one product.
+    fill.style.background = `linear-gradient(165deg, ${hex(shade(base, 0.22))} 0%, ${hex(base)} 55%, ${hex(shade(base, -0.28))} 100%)`;
+    el.appendChild(fill);
+
+    // Type scales with the cell itself — Ocean Dreams' label should read
+    // like a headline, a tiny 3-memory cell shouldn't have oversized text
+    // it doesn't have room for. min()/max() keep it inside sane bounds.
+    const area = c.w * c.h;
+    const fontPx = Math.max(11, Math.min(22, Math.sqrt(area) * 0.11));
+
+    if (c.w > 46 && c.h > 26) {
+      const label = document.createElement('div');
+      label.className = 'tmLabel';
+      label.style.fontSize = fontPx + 'px';
+      label.textContent = c.ref.label;
+      el.appendChild(label);
+      if (c.w > 80 && c.h > 50) {
+        const sub = document.createElement('div');
+        sub.className = 'tmSub';
+        sub.textContent = c.ref.sub || '';
+        el.appendChild(sub);
+      }
+    } else {
+      // Too small for on-cell text — still readable via native tooltip.
+      el.title = c.ref.sub ? `${c.ref.label}: ${c.ref.sub}` : c.ref.label;
+    }
+    el.addEventListener('click', () => {
+      if (isProject) openTreemapProject(c.ref);
+      else openDetail(c.ref);
+    });
+    host.appendChild(el);
+    // Staggered scale+fade entrance, capped so a 100-memory drill-down
+    // doesn't take a full second to finish appearing.
+    setTimeout(() => el.classList.add('in'), Math.min(i, 24) * 14);
+  });
+}
+
+function treemapRect() {
+  // #treemap has no CSS padding (see its rule for why), so this is the one
+  // place the topbar/breadcrumb/hint clearances are accounted for — real
+  // pixel margins, not a padding value the layout silently ignored.
+  const top = 110, side = 20, bottom = 60;
+  return {
+    x: side, y: top,
+    w: Math.max(50, window.innerWidth - side * 2),
+    h: Math.max(50, window.innerHeight - top - bottom),
+  };
+}
+
+function renderTreemapLegend(items) {
+  // At the top level, each project already carries its own color + label
+  // directly on the cell — a shared "project" swatch would now be actively
+  // wrong (it'd show one color while cells show several). Only the
+  // memory-type breakdown needs a key, and only once drilled into one.
+  const present = new Set(items.map((i) => i.kind).filter((k) => k !== 'core' && k !== 'project'));
+  if (!present.size) { $('legend').innerHTML = ''; return; }
+  let h = '';
+  present.forEach((k) => { h += `<div class="row"><i style="background:${tmColorFor(k)}"></i>${TYPE_LABEL[k] || k}</div>`; });
+  $('legend').innerHTML = h;
+}
+
+function renderTreemapTop() {
+  tmProject = null;
+  const rect = treemapRect();
+  // sqrt(memories), not the raw count — same reasoning as the network view's
+  // node radius. Ocean Dreams (567) is 92% of all memories right now; a
+  // linear-area treemap would render it as one giant rectangle and reduce
+  // the other three projects to a barely-visible sliver, which is correct
+  // math but fails "readable at a glance" hard. Compressing the range keeps
+  // real proportion (Ocean Dreams still clearly bigger) without one project
+  // erasing the rest.
+  const items = netData.projects.map((p) => ({
+    kind: 'project', label: p.name, value: Math.max(1, Math.sqrt(p.memories || 0)),
+    sub: `${(p.memories || 0).toLocaleString()} memories`, data: p,
+  }));
+  renderTreemapCells(squarify(items, rect.x, rect.y, rect.w, rect.h));
+  renderTreemapBreadcrumb();
+  renderTreemapLegend(items);
+}
+
+async function openTreemapProject(p) {
+  tmProject = p.data;
+  renderTreemapBreadcrumb();
+  const rect = treemapRect();
+  $('treemap').innerHTML = `<div style="position:absolute;left:${rect.x}px;top:${rect.y}px;color:var(--faint);font-family:var(--mono);font-size:12px;">Loading ${esc(p.label)}'s memories…</div>`;
+  try {
+    let entries = ledgerCache.get(p.data.id);
+    if (!entries) {
+      const res = await fetch(`/api/projects/${p.data.id}/ledger?limit=2000`, { credentials: 'same-origin' });
+      const data = await res.json();
+      // Same filter as the network view — skip rows with no content.
+      entries = (data.entries || []).filter((e) => typeof e.content === 'string' && e.content.trim());
+      ledgerCache.set(p.data.id, entries);
+    }
+    if (!entries.length) {
+      $('treemap').innerHTML = `<div style="position:absolute;left:${rect.x}px;top:${rect.y}px;color:var(--faint);font-family:var(--mono);font-size:12px;">${esc(p.label)} has nothing to browse yet.</div>`;
+      return;
+    }
+    const items = entries.map((e) => {
+      const kind = classify(e.content);
+      return { kind, label: TYPE_LABEL[kind] || 'memory', sub: snippet(e.content), value: 1, data: { content: e.content, createdAt: e.createdAt, project: p.label } };
+    });
+    renderTreemapCells(squarify(items, rect.x, rect.y, rect.w, rect.h));
+    renderTreemapLegend(items);
+  } catch {
+    showToast(`Couldn't load ${p.label} — try again.`);
+    tmProject = null;
+    renderTreemapBreadcrumb();
+  }
+}
+
+function renderTreemapBreadcrumb() {
+  const root = `<span class="crumb${tmProject ? '' : ' current'}" id="tmCrumbRoot">Company brain</span>`;
+  const proj = tmProject ? `<span class="sep">/</span><span class="crumb current">${esc(tmProject.name)}</span>` : '';
+  $('breadcrumb').innerHTML = root + proj;
+  const rootEl = document.getElementById('tmCrumbRoot');
+  if (rootEl) rootEl.addEventListener('click', renderTreemapTop);
+}
+
+function setMode(next) {
+  if (mode === next) return;
+  mode = next;
+  document.querySelectorAll('.modeTab').forEach((b) => b.classList.toggle('on', b.dataset.mode === next));
+  closeDetail();
+  if (next === 'treemap') {
+    // display:none, not just pointer-events — the 3D scene was still fully
+    // visible (and still rendering every frame) underneath the treemap's
+    // semi-transparent cells, showing through as a messy double-exposure.
+    canvas.style.display = 'none';
+    controls.enabled = false;
+    $('nodeLabels').style.display = 'none';
+    $('treemap').classList.add('on');
+    $('hint').innerHTML = 'click a project to open it · click a memory to read it';
+    renderTreemapTop();
+  } else {
+    canvas.style.display = 'block';
+    controls.enabled = true;
+    $('nodeLabels').style.display = 'block';
+    $('treemap').classList.remove('on');
+    $('hint').innerHTML = 'drag empty space to orbit · scroll to zoom · drag a node to move it<br>click a project to open it · click a memory to read it';
+    renderBreadcrumb();
+    renderLegend();
+  }
+}
+document.querySelectorAll('.modeTab').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+window.addEventListener('resize', () => { if (mode === 'treemap') { tmProject ? openTreemapProject({ label: tmProject.name, data: tmProject }) : renderTreemapTop(); } });
+
+// ── Boot: real data only, staged by real work — no step here is a timer,
+// each checkmark lands when its actual async/render work finishes. ──────
+const bootRows = {
+  connect: document.querySelector('[data-step="connect"]'),
+  map: document.querySelector('[data-step="map"]'),
+  render: document.querySelector('[data-step="render"]'),
+};
+function bootActivate(step) { bootRows[step]?.classList.add('active'); }
+function bootFinish(step) { bootRows[step]?.classList.remove('active'); bootRows[step]?.classList.add('done'); }
+function nextFrame() { return new Promise((r) => requestAnimationFrame(r)); }
+function wait(ms) { return new Promise((r) => setTimeout(r, ms)); }
+function bootFail(msg) {
+  $('loading').classList.add('err-state');
+  $('loadingMsg').textContent = msg;
+}
+
+// ── Fly-to tween: eases a node's position (and, via popScale, its sprite
+// scale) toward a target, holding it `fixed` for the physics step so the
+// simulation doesn't fight the tween mid-flight. Used for the boot-time
+// firework reveal and for the click-to-contract/expand toggle below. ─────
+function easeOutBack(t) {
+  const c1 = 1.70158, c3 = c1 + 1;
+  return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
+}
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+// Camera-only tween — a slow, overshoot-free pull-back reads as a deliberate
+// dolly shot; easeOutBack's bounce is right for a node "pop" but would read
+// as a mistake on the camera itself.
+function dollyCamera(from, to, duration) {
+  return new Promise((resolve) => {
+    const t0 = performance.now();
+    (function step() {
+      const t = Math.min(1, (performance.now() - t0) / duration);
+      camera.position.lerpVectors(from, to, easeOutCubic(t));
+      if (t < 1) { requestAnimationFrame(step); return; }
+      resolve();
+    })();
+  });
+}
+// A node can be mid-flight when the user grabs it to drag (or a second
+// tween starts on top of an earlier one) — without a way to yield, whichever
+// loop's rAF callback lands last each frame "wins," and the node visibly
+// fights the user's own drag. Each step checks it still owns its generation
+// counter before touching the node; position and scale get separate
+// counters since flyTo+popScale are always started together as one visual
+// beat and must not invalidate each other. cancelTweens() bumps both, for
+// the drag-grab case where any in-flight animation should just let go.
+function cancelTweens(node) {
+  node._posGen = (node._posGen || 0) + 1;
+  node._scaleGen = (node._scaleGen || 0) + 1;
+}
+function flyTo(node, target, duration = 900) {
+  const gen = (node._posGen = (node._posGen || 0) + 1);
+  return new Promise((resolve) => {
+    const start = node.pos.clone();
+    const t0 = performance.now();
+    node.fixed = true;
+    node.vel.set(0, 0, 0);
+    (function step() {
+      if (node._posGen !== gen) { resolve(); return; } // superseded — a drag or newer tween owns it now
+      const t = Math.min(1, (performance.now() - t0) / duration);
+      node.pos.lerpVectors(start, target, easeOutBack(t));
+      node.sprite.position.copy(node.pos);
+      if (t < 1) { requestAnimationFrame(step); return; }
+      node.fixed = false;
+      resolve();
+    })();
+  });
+}
+function popScale(node, duration = 900, target = 1) {
+  const gen = (node._scaleGen = (node._scaleGen || 0) + 1);
+  return new Promise((resolve) => {
+    const t0 = performance.now();
+    const from = node.sprite.scale.x;
+    const to = node.baseScale * target;
+    node._popping = true;
+    (function step() {
+      if (node._scaleGen !== gen) { node._popping = false; resolve(); return; }
+      const t = Math.min(1, (performance.now() - t0) / duration);
+      const eased = easeOutBack(t);
+      node.sprite.scale.setScalar(Math.max(0.01, from + (to - from) * eased));
+      if (t < 1) { requestAnimationFrame(step); return; }
+      node._popping = false;
+      resolve();
+    })();
+  });
+}
+// Launches every project node outward from the core, largest first — a
+// firework shell opening rather than everything just appearing at once,
+// with the camera opening on a tight shot of the collapsed core and
+// dollying back out over the whole sequence. User input is held off for
+// the duration so nothing fights the shot; it's ~3.5s, not a loading gate.
+async function launchFireworks(projectNodes) {
+  const ordered = [...projectNodes].sort((a, b) => (b.data.memories || 0) - (a.data.memories || 0));
+  const FLIGHT = 1050, GAP = 240; // gap = breather between one project settling and the next launching
+
+  const restingCam = camera.position.clone();
+  const closeCam = restingCam.clone().multiplyScalar(0.3);
+  camera.position.copy(closeCam);
+  controls.enabled = false;
+  const dollyDuration = (FLIGHT + GAP) * ordered.length + 300;
+  dollyCamera(closeCam, restingCam, dollyDuration);
+
+  await wait(550); // let the collapsed core sit for a breath before the first launch
+  // Fully sequential, largest project first — one settles, then the next
+  // launches, the same motion as a manual click-to-expand, just automated.
+  for (const n of ordered) {
+    await Promise.all([flyTo(n, n.restPos, FLIGHT), popScale(n, FLIGHT)]);
+    await wait(GAP);
+  }
+  controls.enabled = true;
+}
+
+// Every project's memories load automatically, largest project first, same
+// cascade as the firework reveal — no click required to reach the memory
+// level. toggleProject still handles the fetch/burst-out/edge-wiring; this
+// just fires it for each project instead of waiting for a user to.
+// Collapsing one back down (click it) still works if it's ever wanted.
+async function autoExpandAll(projectNodes) {
+  const ordered = [...projectNodes].sort((a, b) => (b.data.memories || 0) - (a.data.memories || 0));
+  for (const n of ordered) {
+    toggleProject(n); // don't await — each project's own fetch runs concurrently
+    await wait(400);
+  }
+}
+
+async function boot() {
+  bootActivate('connect');
+  try {
+    const res = await fetch('/api/network', { credentials: 'same-origin' });
+    if (res.status === 401) { location.href = '/'; return; }
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    netData = await res.json();
+  } catch {
+    bootFail("Couldn't reach your company brain — try refreshing.");
+    return;
+  }
+  bootFinish('connect');
+
+  bootActivate('map');
+  // Small but powerful — the marble shading, halo, and pulse carry the
+  // presence now, not footprint. Deliberately smaller than most projects.
+  const core = addNode('core', 'core', 'CommonMind Core', netData.core, 4, new THREE.Vector3(0, 0, 0));
+  core.fixed = true;
+
+  // A real sphere, not a flat billboard sprite like every other node — the
+  // one thing in this scene with actual 3D form, so it reads as the
+  // physical anchor everything else orbits, not just another dot. Swapped
+  // in for core.sprite; every existing system (hover raycasting, position
+  // sync, the pulse below) treats node.sprite generically and doesn't care
+  // whether it's a Sprite or a Mesh, so nothing else needs to change.
+  //
+  // Self-lit shader marble — not MeshStandardMaterial + scene lights (tried
+  // that first; a PointLight's intensity is physically-based candela in
+  // this Three.js version, so it needed four-digit values to read as lit at
+  // this scale and just came out dark). Same self-contained approach as the
+  // edge shader elsewhere in this file: turbulence-based veining, a fixed
+  // fake key light for a real specular highlight, and a fresnel rim — a
+  // glossy, richly-colored marble with zero dependency on scene lighting.
+  scene.remove(core.sprite);
+  core.sprite.material.dispose();
+  const globeMat = new THREE.ShaderMaterial({
+    uniforms: {
+      uTime: { value: 0 },
+      uDeep: { value: new THREE.Color(0x042a30) },
+      uVein: { value: new THREE.Color(0x5ff2ea) },
+      uRim: { value: new THREE.Color(0x00e5ff) },
+    },
+    vertexShader: `
+      varying vec3 vNormal;
+      varying vec3 vViewPos;
+      varying vec3 vPos;
+      void main() {
+        vPos = position;
+        vNormal = normalize(normalMatrix * normal);
+        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+        vViewPos = -mvPosition.xyz;
+        gl_Position = projectionMatrix * mvPosition;
+      }
+    `,
+    fragmentShader: `
+      uniform float uTime;
+      uniform vec3 uDeep;
+      uniform vec3 uVein;
+      uniform vec3 uRim;
+      varying vec3 vNormal;
+      varying vec3 vViewPos;
+      varying vec3 vPos;
+
+      float hash(vec3 p) { return fract(sin(dot(p, vec3(12.9898, 78.233, 45.164))) * 43758.5453); }
+      float noise(vec3 p) {
+        vec3 i = floor(p), f = fract(p);
+        f = f * f * (3.0 - 2.0 * f);
+        float n000 = hash(i), n100 = hash(i + vec3(1,0,0));
+        float n010 = hash(i + vec3(0,1,0)), n110 = hash(i + vec3(1,1,0));
+        float n001 = hash(i + vec3(0,0,1)), n101 = hash(i + vec3(1,0,1));
+        float n011 = hash(i + vec3(0,1,1)), n111 = hash(i + vec3(1,1,1));
+        return mix(mix(mix(n000,n100,f.x), mix(n010,n110,f.x), f.y),
+                   mix(mix(n001,n101,f.x), mix(n011,n111,f.x), f.y), f.z);
+      }
+
+      void main() {
+        vec3 N = normalize(vNormal);
+        vec3 V = normalize(vViewPos);
+
+        // Turbulent veining, slowly drifting — a real marble swirl, not a flat tint.
+        vec3 p = vPos * 1.6 + vec3(0.0, uTime * 0.05, 0.0);
+        float n = noise(p) * 0.5 + noise(p * 2.03) * 0.25 + noise(p * 4.01) * 0.125;
+        float vein = smoothstep(0.35, 0.75, sin((vPos.x + vPos.y * 0.6) * 3.0 + n * 6.0) * 0.5 + 0.5);
+        vec3 base = mix(uDeep, uVein, vein);
+
+        // Fixed fake key light — a real specular pop without needing scene lights.
+        vec3 L = normalize(vec3(0.5, 0.8, 0.6));
+        float diff = max(dot(N, L), 0.0);
+        float spec = pow(max(dot(reflect(-L, N), V), 0.0), 40.0);
+        float fresnel = pow(1.0 - max(dot(N, V), 0.0), 2.2);
+        // Rim flickers rather than glowing steady — electrified, not just lit.
+        float flicker = 0.82 + 0.28 * noise(vec3(uTime * 4.0, N.x * 3.0, N.y * 3.0));
+
+        // Thin, fast-crackling arcs raked across the surface — high-frequency
+        // noise thresholded hard so it reads as jagged lines, not a blob,
+        // animated fast enough to actually flicker frame to frame.
+        vec3 ep = vPos * 3.4 + vec3(uTime * 1.7, uTime * 2.3, uTime * 1.1);
+        float en = noise(ep) * 0.6 + noise(ep * 2.7 + 5.0) * 0.4;
+        float arc = smoothstep(0.8, 0.92, en) * (0.6 + 0.4 * sin(uTime * 30.0 + vPos.x * 10.0));
+
+        vec3 color = base * (0.6 + diff * 0.8) + vec3(1.0) * spec * 1.1
+          + uRim * fresnel * 2.1 * flicker + uRim * arc * 2.4;
+        gl_FragColor = vec4(color, 1.0);
+      }
+    `,
+  });
+  const globe = new THREE.Mesh(new THREE.SphereGeometry(1, 48, 32), globeMat);
+  globe.scale.setScalar(core.baseScale / 2); // sphere radius 1 * baseScale/2 == the sprite's old footprint
+  scene.add(globe);
+  core.sprite = globe;
+
+  // Extra halo layers, core only — an expanded project earns its visual
+  // intensity from a real burst of a hundred memory sprites; the core has
+  // no memories of its own to burst, so it gets that same hot, layered
+  // look from its own glow instead, not from inventing fake data points.
+  core.haloSprites = [0.75, 0.45].map((opacity, i) => {
+    const mat = new THREE.SpriteMaterial({
+      map: glowTex, color: TYPE_COLOR.core, fog: false, transparent: true,
+      opacity, depthWrite: false, blending: THREE.AdditiveBlending,
+    });
+    const s = new THREE.Sprite(mat);
+    s.scale.setScalar(core.baseScale * (1.35 + i * 0.55));
+    s.position.set(0, 0, 0);
+    scene.add(s);
+    return s;
+  });
+
+  const projectNodes = [];
+  const projectCount = netData.projects.length;
+  netData.projects.forEach((p, i) => {
+    const r = 2.5 + Math.min(6, Math.log2((p.memories || 0) + 1) * 1.1);
+    // Fibonacci-sphere placement, not a flat ring — points on a ring all
+    // share one plane, so the auto-rotating camera periodically lines two
+    // of them up back-to-front and they read as "stacked." Spreading them
+    // across a real sphere (golden-angle spacing, the standard even-point-
+    // distribution trick) means no two projects are ever coplanar with the
+    // core, so that collision can't happen from any viewing angle.
+    const orbit = 66 + Math.min(20, Math.log2((p.memories || 0) + 1) * 3.5);
+    const yFrac = projectCount > 1 ? 1 - (i / (projectCount - 1)) * 2 : 0; // +1..-1
+    const ringR = Math.sqrt(Math.max(0, 1 - yFrac * yFrac));
+    const theta = Math.PI * (3 - Math.sqrt(5)) * i; // golden angle
+    const restPos = new THREE.Vector3(
+      Math.cos(theta) * ringR * orbit,
+      yFrac * orbit * 0.8, // a real sphere, not flattened into a disc
+      Math.sin(theta) * ringR * orbit,
+    );
+    // Start every project collapsed at the core, tiny — launchFireworks()
+    // pops each one out to restPos once the loading overlay is gone, so
+    // the reveal actually plays where the user can see it.
+    const n = addNode(p.id, 'project', p.name, p, r, new THREE.Vector3(0, 0, 0));
+    n.restPos = restPos;
+    n.sprite.scale.setScalar(0.01);
+    n.fixed = true;
+    addEdge('core', p.id, 1.4);
+    projectNodes.push(n);
+  });
+
+  netData.edges.forEach((e) => addEdge(e.from, e.to, Math.min(1.2, 0.3 + e.count * 0.05)));
+  netData.links.forEach((l) => addEdge(l.from, l.to, 1));
+
+  $('stats').innerHTML = `<span><b>${netData.core.memories.toLocaleString()}</b> memories</span><span><b>${netData.projects.length}</b> projects</span>`;
+  renderLeftnav();
+  renderActivityFeed();
+  renderBreadcrumb();
+  renderLegend();
+  await nextFrame(); // let the DOM/layout settle before the render checkmark fires
+  bootFinish('map');
+
+  bootActivate('render');
+  renderer.render(scene, camera); // force one real committed frame before we claim it's ready
+  await nextFrame();
+  bootFinish('render');
+  await nextFrame();
+
+  $('loading').classList.add('gone');
+  // Fire-and-forget from boot()'s own perspective — plays live in view, not
+  // behind the loader — but chained internally: the memory-level cascade
+  // only starts once every project has actually landed at its resting spot.
+  (async () => {
+    await launchFireworks(projectNodes);
+    await autoExpandAll(projectNodes);
+  })();
+}
+
+// ── Render loop ─────────────────────────────────────────────────────────
+const clock = new THREE.Clock();
+let elapsed = 0;
+function animate() {
+  requestAnimationFrame(animate);
+  if (mode === 'treemap') { clock.getDelta(); return; } // still call getDelta so dt doesn't jump on switch-back
+  const dt = Math.min(clock.getDelta(), 0.05);
+  elapsed += dt;
+  stepPhysics(dt);
+  syncEdgeGeometry();
+  edgeMat.uniforms.uTime.value = elapsed;
+  // A slow heartbeat, unique to the core — everything else is static-scale
+  // until you interact with it, so this alone marks it as the one node
+  // that's always alive, always the center.
+  const core = nodes.get('core');
+  if (core && !core._popping) {
+    if (core.sprite.material.uniforms?.uTime) core.sprite.material.uniforms.uTime.value = elapsed;
+    const pulse = 1 + Math.sin(elapsed * 1.15) * 0.07;
+    core.sprite.scale.setScalar(core.baseScale * pulse);
+    core.haloSprites?.forEach((s, i) => {
+      s.position.copy(core.pos);
+      // Slightly out of phase with the core and each other — reads as a
+      // living glow, not three things scaling in lockstep.
+      const haloPulse = 1 + Math.sin(elapsed * (0.7 + i * 0.25) + i) * 0.12;
+      s.scale.setScalar(core.baseScale * (1.35 + i * 0.55) * haloPulse);
+    });
+  }
+  if (selected && selectionRing.visible) {
+    selectionRing.position.copy(selected.pos);
+    const ringPulse = 1 + Math.sin(elapsed * 3) * 0.1;
+    selectionRing.scale.setScalar(selected.baseScale * 2.1 * ringPulse);
+  }
+  controls.update();
+  composer.render();
+  updateNodeLabels();
+}
+
+const _labelProj = new THREE.Vector3();
+function updateNodeLabels() {
+  // Two structural labels can land on the same screen point from some
+  // camera angles (e.g. a project sitting behind the core from this
+  // viewpoint) — placed[] lets each new label nudge below any label
+  // already placed this frame instead of overlapping it illegibly.
+  const placed = [];
+  for (const n of nodes.values()) {
+    if (!n.labelEl) continue;
+    _labelProj.copy(n.pos).project(camera);
+    if (_labelProj.z > 1) { n.labelEl.style.opacity = '0'; continue; } // behind camera
+    const spread = n.restPos ? Math.min(1, n.pos.length() / Math.max(1, n.restPos.length() * 0.55)) : 1;
+    if (spread < 0.05) { n.labelEl.style.opacity = '0'; continue; }
+    const x = (_labelProj.x * 0.5 + 0.5) * window.innerWidth;
+    let y = (-_labelProj.y * 0.5 + 0.5) * window.innerHeight + n.radius * 5; // clear the sprite itself
+    const w = n.labelEl.offsetWidth || 60;
+    for (const p of placed) {
+      if (Math.abs(x - p.x) < (w + p.w) / 2 && Math.abs(y - p.y) < 16) y = p.y + 16;
+    }
+    placed.push({ x, y, w });
+    n.labelEl.style.opacity = String(spread);
+    n.labelEl.style.transform = `translate(${x - w / 2}px, ${y}px)`;
+  }
+}
+// ── Left rail: project list + Add Project ─────────────────────────────
+function relTime(ts) {
+  if (!ts) return 'recently';
+  const ms = Date.now() - Date.parse(ts.endsWith('Z') ? ts : ts + 'Z');
+  const m = Math.floor(ms / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+
+function renderLeftnav() {
+  const list = $('lnlist');
+  if (!netData.projects.length) {
+    list.innerHTML = `<p style="font-size:12px;color:var(--faint);padding:4px 0">No projects connected yet.</p>`;
+    return;
+  }
+  list.innerHTML = netData.projects
+    .slice()
+    .sort((a, b) => (b.memories || 0) - (a.memories || 0))
+    .map((p) => `<div class="lnrow" data-id="${esc(p.id)}"><span class="dot3"></span><span class="ln-n">${esc(p.name)}</span><span class="ln-c">${(p.memories || 0).toLocaleString()}</span></div>`)
+    .join('');
+}
+
+function projById(id) { return netData.projects.find((p) => p.id === id); }
+
+function renderActivityFeed() {
+  const ins = $('insights');
+  let html = '';
+  if (!netData.projects.length) {
+    html = `<div class="ins"><span class="eb">Get started</span>Connect a project and this fills in with what it actually knows.</div>`;
+  } else {
+    if (netData.edges.length) {
+      const e = netData.edges[0], a = projById(e.from), b = projById(e.to);
+      html += `<div class="ins"><span class="eb">The brain made a connection</span>A recall in <b>${esc(a ? a.name : 'one project')}</b> returned something captured in <b>${esc(b ? b.name : 'another')}</b> — nobody wired that together, the shared memory did.</div>`;
+    }
+    const active = netData.projects.filter((p) => p.lastActive && (Date.now() - Date.parse(p.lastActive.endsWith('Z') ? p.lastActive : p.lastActive + 'Z')) < 1000 * 60 * 60 * 24 * 3);
+    if (active.length) {
+      html += `<div class="ins"><span class="eb">Active</span>${active.map((p) => `${esc(p.name)} (${p.memories || 0})`).join(', ')} — real memory, real activity.</div>`;
+    }
+  }
+  ins.innerHTML = html;
+
+  const flow = $('flow'), flowLabel = $('flowLabel');
+  const recent = netData.recentActivity || [];
+  if (!recent.length) {
+    flow.innerHTML = '';
+    flowLabel.style.display = 'none';
+    return;
+  }
+  flowLabel.style.display = '';
+  flow.innerHTML = recent
+    .slice(0, 6)
+    .map((ev) => {
+      const route = ev.action === 'capture' ? `${esc(ev.projectName)} → CommonMind Core` : `CommonMind Core → ${esc(ev.projectName)}`;
+      return `<div class="fl"><div class="dot2">${esc((ev.projectName || '?').slice(0, 2).toUpperCase())}</div><div><p>${ev.action === 'capture' ? 'Captured a memory' : 'Recalled memories'}</p><div class="s">${route} · ${esc(relTime(ev.created_at))}</div></div></div>`;
+    })
+    .join('');
+}
+
+// Pans camera + orbit pivot together toward a node, preserving the current
+// viewing angle/distance (a translate, not a re-orbit) — same easing as
+// dollyCamera above, just also carrying controls.target along for the ride
+// so the node actually ends up centered, not just closer.
+function panToNode(node, duration = 900) {
+  const targetPos = node.pos.clone();
+  const delta = targetPos.clone().sub(controls.target);
+  const camFrom = camera.position.clone();
+  const camTo = camFrom.clone().add(delta);
+  const targFrom = controls.target.clone();
+  const t0 = performance.now();
+  (function step() {
+    const t = Math.min(1, (performance.now() - t0) / duration);
+    const e = easeOutCubic(t);
+    camera.position.lerpVectors(camFrom, camTo, e);
+    controls.target.lerpVectors(targFrom, targetPos, e);
+    if (t < 1) requestAnimationFrame(step);
+  })();
+}
+
+function focusProject(id) {
+  const n = nodes.get(id);
+  if (!n) return;
+  document.querySelectorAll('.lnrow.active').forEach((el) => el.classList.remove('active'));
+  document.querySelector(`.lnrow[data-id="${CSS.escape(id)}"]`)?.classList.add('active');
+  if (!expanded.has(id)) toggleProject(n); // fire and forget, same as autoExpandAll
+  selected = n;
+  selectionRing.visible = true;
+  updateHoverHighlight();
+  panToNode(n);
+}
+$('lnlist').addEventListener('click', (e) => {
+  const row = e.target.closest('.lnrow');
+  if (row?.dataset.id) focusProject(row.dataset.id);
+});
+
+$('addProjectBtn').addEventListener('click', () => {
+  $('lnform').classList.toggle('on');
+  $('lnkey').classList.remove('on');
+});
+$('lnSubmit').addEventListener('click', async () => {
+  const name = $('lnName').value.trim();
+  if (!name) return;
+  const res = await fetch('/api/projects', {
+    method: 'POST', credentials: 'same-origin',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name }),
+  });
+  const data = await res.json();
+  if (!res.ok) { showToast(data.error || "Couldn't create that project."); return; }
+  $('lnName').value = '';
+  $('lnform').classList.remove('on');
+  netData.projects.push({ id: data.id, name, memories: 0, searches: 0, lastActive: null, connectedAt: new Date().toISOString() });
+  renderLeftnav();
+  $('stats').innerHTML = `<span><b>${netData.core.memories.toLocaleString()}</b> memories</span><span><b>${netData.projects.length}</b> projects</span>`;
+  $('lnkeyToken').textContent = data.token;
+  $('lnkey').classList.add('on');
+  showToast(`${name} connected — copy its key below, and reload to see it in the graph.`);
+});
+$('lnkeyCopy').addEventListener('click', () => {
+  navigator.clipboard?.writeText($('lnkeyToken').textContent || '');
+  showToast('Key copied.');
+});
+
+$('signoutBtn').addEventListener('click', async () => {
+  await fetch('/api/auth/logout', { method: 'POST', credentials: 'same-origin' });
+  location.href = '/';
+});
+
+animate();
+boot();
 </script>
 </body>
 </html>
