@@ -103,11 +103,14 @@ export async function onRequestGet(context) {
     `SELECT pa.id, pa.action, pa.created_at, pt.id AS projectId, pt.name AS projectName
      FROM project_activity pa
      JOIN project_tokens pt ON pa.project_id = pt.id
-     WHERE pt.user_id = ?
+     WHERE pt.user_id = ? AND pt.revoked_at IS NULL
+       AND (pa.action != 'capture'
+            OR pa.memory_id IS NULL
+            OR pa.memory_id NOT IN (SELECT memory_id FROM hidden_memories WHERE user_id = ?))
      ORDER BY pa.created_at DESC
      LIMIT 12`,
   )
-    .bind(session.id)
+    .bind(session.id, session.id)
     .all();
 
   return json(
